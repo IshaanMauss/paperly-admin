@@ -1,0 +1,152 @@
+{
+  "syllabus_code": "0580",
+  "syllabus_label": "Cambridge IGCSE 0580 Mathematics",
+  "topics": [
+    {
+      "value": "number",
+      "label": "Number",
+      "subtopics": [
+        { "value": "types of number", "label": "Types of Number" },
+        { "value": "prime factorization/hcf/lcm", "label": "Prime Factorization/HCF/LCM" },
+        { "value": "fractions decimals percentages", "label": "Fractions Decimals Percentages" },
+        { "value": "ordering and comparing", "label": "Ordering and Comparing" },
+        { "value": "four operations", "label": "Four Operations" },
+        { "value": "indices and standard form", "label": "Indices and Standard Form" },
+        { "value": "surds", "label": "Surds" },
+        { "value": "ratio and proportion", "label": "Ratio and Proportion" },
+        { "value": "percentages increase decrease", "label": "Percentages (Increase Decrease)" },
+        { "value": "simple interest", "label": "Simple Interest" },
+        { "value": "compound interest", "label": "Compound Interest" },
+        { "value": "reverse percentage", "label": "Reverse Percentage" },
+        { "value": "currency conversion", "label": "Currency Conversion" },
+        { "value": "rounding and estimation", "label": "Rounding and Estimation" },
+        { "value": "limits of accuracy", "label": "Limits of Accuracy" },
+        { "value": "time and speed", "label": "Time and Speed" },
+        { "value": "personal finance", "label": "Personal Finance" },
+        { "value": "set notation and venn diagrams", "label": "Set Notation and Venn Diagrams" }
+      ]
+    },
+    {
+      "value": "algebra",
+      "label": "Algebra",
+      "subtopics": [
+        { "value": "linear equations", "label": "Linear Equations" },
+        { "value": "simultaneous equations", "label": "Simultaneous Equations" },
+        { "value": "quadratic equations", "label": "Quadratic Equations" },
+        { "value": "inequalities", "label": "Inequalities" },
+        { "value": "indices algebraic", "label": "Indices (Algebraic)" },
+        { "value": "expanding and factorizing", "label": "Expanding and Factorizing" },
+        { "value": "algebraic fractions", "label": "Algebraic Fractions" },
+        { "value": "change of subject", "label": "Change of Subject" },
+        { "value": "sequences", "label": "Sequences" },
+        { "value": "direct and inverse proportion", "label": "Direct and Inverse Proportion" },
+        { "value": "functions", "label": "Functions" },
+        { "value": "differentiation", "label": "Differentiation" },
+        { "value": "graphs of functions", "label": "Graphs of Functions" },
+        { "value": "graphical solution of equations", "label": "Graphical Solution of Equations" },
+        { "value": "distance-time and speed-time graphs", "label": "Distance-Time and Speed-Time Graphs" }
+      ]
+    },
+    {
+      "value": "geometry",
+      "label": "Geometry",
+      "subtopics": [
+        { "value": "angle properties", "label": "Angle Properties" },
+        { "value": "parallel lines", "label": "Parallel Lines" },
+        { "value": "polygon properties", "label": "Polygon Properties" },
+        { "value": "symmetry", "label": "Symmetry" },
+        { "value": "similarity and congruence", "label": "Similarity and Congruence" },
+        { "value": "circle theorems", "label": "Circle Theorems" },
+        { "value": "constructions and loci", "label": "Constructions and Loci" },
+        { "value": "bearings", "label": "Bearings" },
+        { "value": "transformations", "label": "Transformations" }
+      ]
+    },
+    {
+      "value": "mensuration",
+      "label": "Mensuration",
+      "subtopics": [
+        { "value": "perimeter and area", "label": "Perimeter and Area" },
+        { "value": "surface area", "label": "Surface Area" },
+        { "value": "volume", "label": "Volume" },
+        { "value": "arc length and sector area", "label": "Arc Length and Sector Area" },
+        { "value": "composite shapes", "label": "Composite Shapes" }
+      ]
+    },
+    {
+      "value": "coordinate geometry",
+      "label": "Coordinate Geometry",
+      "subtopics": [
+        { "value": "distance between points", "label": "Distance Between Points" },
+        { "value": "midpoint", "label": "Midpoint" },
+        { "value": "gradient", "label": "Gradient" },
+        { "value": "equation of a line", "label": "Equation of a Line" },
+        { "value": "parallel and perpendicular lines", "label": "Parallel and Perpendicular Lines" },
+        { "value": "length of a line segment", "label": "Length of a Line Segment" }
+      ]
+    },
+    {
+      "value": "trigonometry",
+      "label": "Trigonometry",
+      "subtopics": [
+        { "value": "right-angled triangle trigonometry", "label": "Right-Angled Triangle Trigonometry" },
+        { "value": "angles of elevation and depression", "label": "Angles of Elevation and Depression" },
+        { "value": "bearings with trigonometry", "label": "Bearings with Trigonometry" },
+        { "value": "sine rule", "label": "Sine Rule" },
+        { "value": "cosine rule", "label": "Cosine Rule" },
+        { "value": "area of a triangle", "label": "Area of a Triangle" },
+        { "value": "3d trigonometry", "label": "3D Trigonometry" },
+        { "value": "trigonometric graphs", "label": "Trigonometric Graphs" },
+        { "value": "trigonometric equations", "label": "Trigonometric Equations" }
+      ]
+    },
+    {
+      "value": "statistics",
+      "label": "Statistics",
+      "subtopics": [
+        { "value": "mean median mode", "label": "Mean Median Mode" },
+        { "value": "range and quartiles", "label": "Range and Quartiles" },
+        { "value": "frequency tables", "label": "Frequency Tables" },
+        { "value": "histograms", "label": "Histograms" },
+        { "value": "cumulative frequency", "label": "Cumulative Frequency" },
+        { "value": "box-and-whisker plots", "label": "Box-and-Whisker Plots" },
+        { "value": "scatter diagrams and correlation", "label": "Scatter Diagrams and Correlation" },
+        { "value": "pie and bar charts", "label": "Pie and Bar Charts" },
+        { "value": "estimating mean from grouped data", "label": "Estimating Mean from Grouped Data" }
+      ]
+    },
+    {
+      "value": "probability",
+      "label": "Probability",
+      "subtopics": [
+        { "value": "basic probability", "label": "Basic Probability" },
+        { "value": "combined events", "label": "Combined Events" },
+        { "value": "tree diagrams", "label": "Tree Diagrams" },
+        { "value": "venn diagram probability", "label": "Venn Diagram Probability" },
+        { "value": "conditional probability", "label": "Conditional Probability" },
+        { "value": "relative frequency", "label": "Relative Frequency" }
+      ]
+    },
+    {
+      "value": "sets",
+      "label": "Sets",
+      "subtopics": [
+        { "value": "set notation", "label": "Set Notation" },
+        { "value": "venn diagrams", "label": "Venn Diagrams" },
+        { "value": "union intersection complement", "label": "Union Intersection Complement" },
+        { "value": "number of elements", "label": "Number of Elements" }
+      ]
+    },
+    {
+      "value": "vectors and transformations",
+      "label": "Vectors and Transformations",
+      "subtopics": [
+        { "value": "vector notation and operations", "label": "Vector Notation and Operations" },
+        { "value": "magnitude of a vector", "label": "Magnitude of a Vector" },
+        { "value": "position vectors", "label": "Position Vectors" },
+        { "value": "vector geometry proofs", "label": "Vector Geometry Proofs" },
+        { "value": "combined transformations", "label": "Combined Transformations" }
+      ]
+    }
+  ]
+}

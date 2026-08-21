@@ -1,0 +1,28 @@
+{
+    "name":  "paperly-admin-panel",
+    "version":  "0.1.0",
+    "private":  true,
+    "scripts":  {
+                    "dev":  "next dev --webpack",
+                    "build":  "next build",
+                    "start":  "next start",
+                    "lint":  "next lint"
+                },
+    "dependencies":  {
+                         "@types/node":  "22.10.5",
+                         "@types/react":  "19.0.2",
+                         "@types/react-dom":  "19.0.2",
+                         "katex":  "^0.17.0",
+                         "next":  "^16.2.10",
+                         "react":  "^19.2.7",
+                         "react-dom":  "^19.2.7",
+                         "typescript":  "5.7.2"
+                     },
+    "devDependencies":  {
+                            "autoprefixer":  "^10.5.2",
+                            "tailwindcss":  "^3.4.17"
+                        },
+    "overrides":  {
+                      "postcss":  "8.5.10"
+                  }
+}
