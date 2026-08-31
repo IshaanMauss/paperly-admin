@@ -1,0 +1,20 @@
+flowchart TD
+  admin[Admin user] --> ztna[Mandatory hosted-production ZTNA gate]
+  ztna --> signin[Admin sign-in]
+  signin --> session[Admin JWT + refresh session]
+  session --> router[Admin panel route/tab]
+  router --> api[FastAPI admin endpoint]
+  api --> token[Verify admin token audience, expiry, token_version]
+  token --> role[Resolve admin role]
+  role --> perm{Required permission present?}
+  perm -- no --> denied[403 denied]
+  denied --> audit[(Security event: admin_permission_denied)]
+  perm -- yes --> action[Run scoped admin action]
+  action --> db[(Paperly database)]
+  action --> audit
+  db --> response[Admin response]
+  audit --> response
+  maintenance[Maintenance write] --> confirm[Typed confirmation required]
+  backup[Backup export] --> stepup[Step-up auth recommended before GA]
+  stepup --> api
+  confirm --> api

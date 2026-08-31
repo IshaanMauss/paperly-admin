@@ -1,0 +1,25 @@
+flowchart TD
+  owner[Owner/admin user] --> ztna[Mandatory hosted-production ZTNA gate]
+  ztna --> login[Admin panel sign-in]
+  login --> adminSession[Admin-purpose session + role]
+  adminSession --> overview[Overview / health summary]
+  adminSession --> users[Users and organizations]
+  adminSession --> billing[Billing subscriptions + payment events]
+  adminSession --> support[Support and callbacks]
+  adminSession --> backups[Backup exports]
+  adminSession --> maintenance[Maintenance mode]
+  adminSession --> security[Security events]
+  overview --> api[FastAPI admin routes]
+  users --> api
+  billing --> api
+  support --> api
+  backups --> api
+  maintenance --> api
+  security --> api
+  api --> authz[Admin auth + per-route permission checks]
+  authz --> denied[Denied permission attempt]
+  authz --> db[(Paperly database)]
+  denied --> audit[(Admin audit/security events)]
+  authz --> audit
+  db --> response[Admin-only dashboard response]
+  audit --> response

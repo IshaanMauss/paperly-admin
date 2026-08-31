@@ -1,56 +1,19 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
+import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminSecurityEventRow, api } from "@/lib/apiClient";
 
-const protections = [
-  {
-    title: "ZTNA for admin/backoffice",
-    risk: "An attacker finds the admin, backoffice, or internal API URL and tries to reach it directly.",
-    prevention: "Put admin/backoffice behind Cloudflare Access or Tailscale. Only approved admin identities and trusted devices should reach these routes before app login starts.",
-    action: "Block public access, require identity login, review access logs, and rotate admin tokens if bypass is suspected.",
-  },
-  {
-    title: "Fake plan upgrade",
-    risk: "A user patches the browser or request payload to pretend Free/Monthly is Yearly.",
-    prevention: "Never trust frontend plan state. Backend must check subscription rows and verified gateway webhook state before generation, Popular IGCSE, checking, and no-ad access.",
-    action: "Log event, revoke sessions, force re-login, suspend repeat offenders for manual review.",
-  },
-  {
-    title: "No-ad patch or premium unlock",
-    risk: "A user modifies the client bundle to hide ads or expose premium controls.",
-    prevention: "Premium data and protected actions must be blocked server-side. UI hiding is only presentation, not security.",
-    action: "Record mismatch between plan and attempted feature; add account/device risk score.",
-  },
-  {
-    title: "DDoS or scraping",
-    risk: "High-volume requests try to slow the system, scrape templates, or mass-export papers.",
-    prevention: "Use CDN/WAF, per-IP and per-account rate limits, request size limits, queue slow OCR/LLM jobs, and block repeated abuse.",
-    action: "Throttle first, then temporary block, then manual ban for confirmed abuse.",
-  },
-  {
-    title: "Account takeover",
-    risk: "Someone logs in using stolen credentials or attacks OTP/login routes.",
-    prevention: "Email OTP, password hashing, session rotation, failed-login throttling, device/session history, and suspicious-login alerts.",
-    action: "Force logout everywhere, require OTP, lock account if repeated.",
-  },
-  {
-    title: "Product cloning attempt",
-    risk: "A user exports unusually large amounts or repeatedly browses the full template bank.",
-    prevention: "Quota limits, export watermarks later, anomaly logs, and template-list pagination.",
-    action: "Flag account, hide bulk access, ask admin to review before permanent ban.",
-  },
-];
+const PAGE_SIZE = 25;
 
-const adminControls = [
-  "Force logout all sessions for a user",
-  "Suspend account until manual review",
-  "Block verified phone/email after confirmed abuse",
-  "Add device/session fingerprint to watchlist with privacy notice",
-  "Reset plan from gateway truth",
-  "Export security events for audit",
-  "Enable maintenance mode during active incident",
+const protections = [
+  ["ZTNA for admin/backoffice", "Protect admin/backoffice routes behind Cloudflare Access or Tailscale before app login starts."],
+  ["Fake plan upgrade", "Backend checks subscription/webhook truth before paid generation, Popular IGCSE, checking, and no-ad access."],
+  ["Premium patch attempt", "Premium data and protected actions stay blocked server-side even if browser UI is modified."],
+  ["DDoS or scraping", "CDN/WAF, per-IP and per-account rate limits, queueing, and repeated-abuse blocks."],
+  ["Account takeover", "OTP, password hashing, session rotation, failed-login throttling, and suspicious-login alerts."],
+  ["Product cloning attempt", "Quota limits, export watermarks later, anomaly logs, and admin review before permanent bans."],
 ];
 
 function eventLabel(eventType: string) {
@@ -59,15 +22,29 @@ function eventLabel(eventType: string) {
 
 export default function SecurityPage() {
   const [events, setEvents] = useState<AdminSecurityEventRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [severity, setSeverity] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState("");
+
+  useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setPage(0), 250);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   async function loadEvents() {
     setLoading(true);
     setError("");
     try {
-      const response = await api.listAdminSecurityEvents();
+      const response = await api.listAdminSecurityEvents({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, search: search.trim(), severity, status, sort });
       setEvents(response.items || []);
+      setTotal(response.total || 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load security events.");
     } finally {
@@ -77,12 +54,21 @@ export default function SecurityPage() {
 
   useEffect(() => {
     void loadEvents();
-  }, []);
+  }, [page, refreshTick, search, severity, sort, status]);
 
   const highRiskCount = useMemo(
     () => events.filter((event) => ["high", "critical"].includes((event.severity || "").toLowerCase())).length,
     [events]
   );
+  const start = total ? page * PAGE_SIZE + 1 : 0;
+  const end = Math.min(page * PAGE_SIZE + events.length, total);
+  const reset = () => {
+    setSearch("");
+    setSeverity("all");
+    setStatus("all");
+    setSort("newest");
+    setPage(0);
+  };
 
   return (
     <AppShell title="Security & Risk Monitoring">
@@ -92,30 +78,66 @@ export default function SecurityPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Production security model</p>
             <h2 className="mt-2 text-2xl font-black text-slate-950">Frontend is never trusted for paid access.</h2>
             <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-600">
-              Browser buttons can be patched. Real security must live in backend checks, verified payment webhooks, signed sessions, rate limits, audit logs, and admin response actions.
+              Server-side paged risk logs. Browser buttons can be patched, so real security must live in backend checks, signed sessions, rate limits, audit logs, and admin actions.
             </p>
           </div>
           <button type="button" onClick={loadEvents} className="rounded-2xl bg-purple-700 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-purple-800">
             Refresh events
           </button>
         </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-5">
+          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
+            Search
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="user, email, event, reason..." className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
+          </label>
+          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+            Severity
+            <select value={severity} onChange={(event) => { setSeverity(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+              <option value="all">All severity</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </label>
+          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+            Status
+            <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+              <option value="all">All status</option>
+              <option value="detected">Detected</option>
+              <option value="active">Active</option>
+              <option value="mitigated">Mitigated</option>
+              <option value="resolved">Resolved</option>
+              <option value="false_positive">False positive</option>
+            </select>
+          </label>
+          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+            Sort
+            <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </label>
+          <button type="button" onClick={reset} className="rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-black text-purple-900 md:self-end">Reset filters</button>
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <article className={panel}>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Security Events</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{events.length}</p>
-          <p className="mt-1 text-sm font-bold text-slate-500">Recent server-side risk logs</p>
+          <p className="mt-2 text-3xl font-black text-slate-950">{total}</p>
+          <p className="mt-1 text-sm font-bold text-slate-500">Matching server-side risk logs</p>
         </article>
         <article className={panel}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">High Risk</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">High Risk On Page</p>
           <p className="mt-2 text-3xl font-black text-rose-700">{highRiskCount}</p>
           <p className="mt-1 text-sm font-bold text-slate-500">Needs owner review first</p>
         </article>
         <article className={panel}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Source</p>
-          <p className="mt-2 text-xl font-black text-slate-950">Backend audit stream</p>
-          <p className="mt-1 text-sm font-bold text-slate-500">Events are stored server-side, not trusted from UI state</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Page</p>
+          <p className="mt-2 text-xl font-black text-slate-950">{total ? `${start}-${end}` : "0"}</p>
+          <p className="mt-1 text-sm font-bold text-slate-500">Only current rows are loaded</p>
         </article>
       </section>
 
@@ -128,9 +150,7 @@ export default function SecurityPage() {
           {loading ? <span className="text-sm font-bold text-slate-500">Loading...</span> : null}
         </div>
         {error ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</p> : null}
-        {!loading && !error && events.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">No security events recorded yet.</p>
-        ) : null}
+        {!loading && !error && events.length === 0 ? <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">No matching security events.</p> : null}
         <div className="mt-4 grid gap-3">
           {events.map((event) => (
             <article key={event.id} className="rounded-2xl border border-purple-100 bg-white/80 p-4 shadow-sm">
@@ -153,28 +173,19 @@ export default function SecurityPage() {
             </article>
           ))}
         </div>
+        <div className="mt-4 flex items-center justify-between gap-3 text-sm font-black">
+          <button disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Previous</button>
+          <button disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Next</button>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        {protections.map((item) => (
-          <article key={item.title} className={panel}>
-            <h3 className="text-xl font-black text-slate-950">{item.title}</h3>
-            <p className="mt-3 text-sm font-bold text-rose-700">Risk: {item.risk}</p>
-            <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">Prevention: {item.prevention}</p>
-            <p className="mt-3 rounded-2xl border border-violet-100 bg-violet-50/70 p-3 text-sm font-bold text-purple-900">Admin action: {item.action}</p>
+        {protections.map(([title, body]) => (
+          <article key={title} className={panel}>
+            <h3 className="text-xl font-black text-slate-950">{title}</h3>
+            <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{body}</p>
           </article>
         ))}
-      </section>
-
-      <section className={panel}>
-        <h2 className="text-xl font-black text-slate-950">Buttons and programs to build next</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {adminControls.map((item) => (
-            <div key={item} className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-black text-amber-900">
-              Planned: {item}
-            </div>
-          ))}
-        </div>
       </section>
     </AppShell>
   );

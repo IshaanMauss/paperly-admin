@@ -1,6 +1,6 @@
 # Paperly Admin Control Panel
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-21.
 
 This folder is the owner/admin monitoring panel for Paperly. It is not the template ingestion dashboard and it is not the sellable teacher product.
 
@@ -43,7 +43,7 @@ Current health-page truth as of 2026-08-20:
 - Current: Backend-only plan gates are active for teacher-side protected access, but must keep regression tests.
 - Partial: Audit/security event logging exists for risk events, but not every admin action is actor-traced yet.
 - Partial: Manual JSON/XLSX backup export exists, but scheduled cloud backup and restore dry-run are pending.
-- Partial: Health uses backend pagination limits, but full server-side pagination/filtering is not complete across all admin datasets.
+- Stale as of 2026-08-21: Health previously used backend pagination limits, but full server-side pagination/filtering was not complete across all admin datasets.
 - Partial: Upload type and size limits belong mostly to MVP/backoffice upload routes and must remain server-enforced.
 - Partial: Session revoke/ban workflow exists conceptually through session expiry/maintenance, but admin response actions are not fully wired.
 - Partial: Role-based admin auth now has backend admin users, signed sessions, refresh cookies, and admin-panel gating; permission-specific route enforcement and fallback removal are still pending.
@@ -182,3 +182,22 @@ Default preserved scope:
 - Security configuration.
 - Public landing-page content and product settings.
 - Migration history.
+
+
+### Current Update - 2026-08-21
+
+- Current: Admin Users, Support, Billing Subscriptions, Payment Events, and Security Events now use server-side `limit`, `offset`, `search`, filters, and sort contracts.
+- Current: Admin UI pages now request one page at a time instead of loading full large datasets into the browser.
+- Scale rule: for 50k+ users, every new admin dataset must follow this backend-paged pattern; client-only filtering is no longer acceptable for growing tables.
+- Verification: backend admin route syntax/import checks passed and the admin production build completed successfully.
+
+## Current truth - 2026-08-26
+
+Status: Current. Earlier notes remain for history; this section is the active launch reading.
+
+- The admin panel is the owner control plane for monitoring, billing, support, backups, health, maintenance, security events, and admin users.
+- It must not duplicate MVP/backoffice template ingestion, Manage JSON, approval, or QA preview. Those remain in `paperly-mvp/dashboard`.
+- Admin-panel authentication is separate from teacher authentication and separate from MVP/backoffice template-management sessions. It should use admin-purpose sessions, admin roles, and admin audit events.
+- Admin actions must be traceable to a real admin identity, especially maintenance, backup/export, support status changes, billing review, user suspension, and future archive/reset actions.
+- The panel should explain platform state without corrupting product state. A health or billing outage must not silently change teacher plan state or selected-paper workflow.
+- Level 1 admin flow is documented in `docs/dfd/admin-control-panel-level1-flow.mmd`.

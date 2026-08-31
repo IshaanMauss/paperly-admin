@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 import { useAdminSession } from "@/lib/adminAuth";
+import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 
 const navItems = [
   { href: "/", label: "Overview" },
@@ -16,16 +17,7 @@ const navItems = [
 ];
 
 function AquaPattern() {
-  return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#f4efff]">
-      <div className="absolute inset-x-0 top-[38%] h-[29%] bg-violet-200/45" />
-      <div className="absolute inset-x-0 bottom-0 h-[35%] bg-violet-300/35" />
-      <div className="absolute -left-24 top-[-8%] h-[120%] w-80 -skew-x-[22deg] bg-white/45 blur-[1px]" />
-      <div className="absolute left-[34%] top-[-12%] h-[128%] w-[28rem] -skew-x-[24deg] bg-violet-300/25 blur-[1px]" />
-      <div className="absolute right-[-10%] top-[-10%] h-[120%] w-[25rem] skew-x-[24deg] bg-white/45 blur-[1px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-violet-100/25" />
-    </div>
-  );
+  return <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(135deg,#fbfaff_0%,#f4efff_42%,#ece3ff_100%)]" />;
 }
 
 export function AppShell({ title, children }: { title: string; children: ReactNode }) {
@@ -74,7 +66,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       <main className="mx-auto max-w-7xl px-4 py-6 text-slate-700 sm:px-6 lg:px-8 lg:py-8">
         <nav className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <Link href="/" className="inline-flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 font-black text-white shadow-lg shadow-violet-200">P</span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 font-black text-white shadow-soft">P</span>
             <span>
               <span className="block text-lg font-extrabold text-slate-950">Paperly Admin Control</span>
               <span className="block text-sm text-slate-500">Signed in as {admin.name} · {admin.role}</span>
@@ -87,7 +79,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-full border px-3 py-2 text-sm font-bold transition ${
+                  className={`rounded-full border px-3 py-2 text-sm font-bold transition-colors ${
                     active
                       ? "border-violet-200 bg-white/80 text-purple-800 shadow-soft"
                       : "border-transparent text-slate-600 hover:border-violet-200 hover:bg-white/70 hover:text-purple-800"
@@ -97,13 +89,16 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
                 </Link>
               );
             })}
-            <button onClick={handleSignOut} className="rounded-full border border-rose-100 bg-white/80 px-3 py-2 text-sm font-black text-rose-700 transition hover:bg-rose-50">
+            <button onClick={requestAdminDataRefresh} className="rounded-full border border-violet-200 bg-white/80 px-3 py-2 text-sm font-black text-purple-800 transition-colors hover:bg-violet-50">
+              Refresh
+            </button>
+            <button onClick={handleSignOut} className="rounded-full border border-rose-100 bg-white/80 px-3 py-2 text-sm font-black text-rose-700 transition-colors hover:bg-rose-50">
               Sign out
             </button>
           </div>
         </nav>
 
-        <header className="mb-6 rounded-3xl border border-violet-100 bg-white/75 p-6 shadow-soft backdrop-blur">
+        <header className="mb-6 rounded-3xl border border-violet-100 bg-white/75 p-6 shadow-soft">
           <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-purple-800">Admin control plane</p>
           <h1 className="mb-3 max-w-4xl text-4xl font-black tracking-normal text-slate-950 sm:text-5xl">{title}</h1>
           <p className="max-w-3xl text-base font-semibold leading-7 text-slate-600">

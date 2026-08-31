@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
+import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type MaintenanceStatus } from "@/lib/apiClient";
 
 const DEFAULT_STATUS: MaintenanceStatus = {
@@ -16,6 +17,7 @@ export default function MaintenancePage() {
   const [status, setStatus] = useState<MaintenanceStatus>(DEFAULT_STATUS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [targetActive, setTargetActive] = useState(false);
@@ -40,9 +42,10 @@ export default function MaintenancePage() {
       .finally(() => setLoading(false));
   }
 
+  useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => {
     load();
-  }, []);
+  }, [refreshTick]);
 
   const requiredText = useMemo(
     () => (targetActive ? status.required_confirmation_to_enable : status.required_confirmation_to_disable),
@@ -79,7 +82,7 @@ export default function MaintenancePage() {
               This disables the teacher-facing product and replaces it with a maintenance screen. Use it before major schema, billing, or deployment changes.
             </p>
           </div>
-          <button className="rounded-2xl border border-violet-200 bg-white px-5 py-3 text-sm font-black text-purple-800 shadow-soft transition hover:-translate-y-0.5" onClick={load}>
+          <button className="rounded-2xl border border-violet-200 bg-white px-5 py-3 text-sm font-black text-purple-800 shadow-soft transition-colors" onClick={load}>
             Refresh
           </button>
         </div>
@@ -116,10 +119,10 @@ export default function MaintenancePage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <button className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-black text-amber-900 shadow-soft transition hover:-translate-y-0.5 disabled:opacity-50" disabled={status.maintenance_active} onClick={() => openAction(true)}>
+          <button className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-black text-amber-900 shadow-soft transition-colors disabled:opacity-50" disabled={status.maintenance_active} onClick={() => openAction(true)}>
             Put teacher module in maintenance
           </button>
-          <button className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-800 shadow-soft transition hover:-translate-y-0.5 disabled:opacity-50" disabled={!status.maintenance_active} onClick={() => openAction(false)}>
+          <button className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-800 shadow-soft transition-colors disabled:opacity-50" disabled={!status.maintenance_active} onClick={() => openAction(false)}>
             Restore teacher module
           </button>
         </div>

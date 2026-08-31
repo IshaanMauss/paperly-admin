@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { clearAdminAccessToken, setAdminAccessToken } from "@/lib/adminToken";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
 
 type AdminUser = {
   id: string;
@@ -43,6 +43,7 @@ async function authRequest(path: string, options?: RequestInit) {
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const refreshInFlight = useRef<Promise<boolean> | null>(null);
 
   const applyAuth = useCallback((payload: { access_token?: string; admin?: AdminUser }) => {
     if (!payload.access_token || !payload.admin) throw new Error("Admin auth response was incomplete.");
@@ -51,17 +52,25 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    try {
-      const payload = await authRequest("/admin/auth/refresh", { method: "POST" });
-      applyAuth(payload);
-      return true;
-    } catch {
-      clearAdminAccessToken();
-      setAdmin(null);
-      return false;
-    } finally {
-      setReady(true);
-    }
+    if (refreshInFlight.current) return refreshInFlight.current;
+
+    const request = (async () => {
+      try {
+        const payload = await authRequest("/admin/auth/refresh", { method: "POST" });
+        applyAuth(payload);
+        return true;
+      } catch {
+        clearAdminAccessToken();
+        setAdmin(null);
+        return false;
+      } finally {
+        setReady(true);
+        refreshInFlight.current = null;
+      }
+    })();
+
+    refreshInFlight.current = request;
+    return request;
   }, [applyAuth]);
 
   useEffect(() => {

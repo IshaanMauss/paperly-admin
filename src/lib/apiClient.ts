@@ -1,5 +1,5 @@
 import { getAdminAccessToken } from "@/lib/adminToken";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
 
 export type TemplateSummary = {
   id: string;
@@ -91,6 +91,15 @@ export type AdminPaymentEventRow = {
   processed_at?: string | null;
   created_at: string;
 };
+export type AdminOverview = {
+  users_tracked: number;
+  active_trial_plans: number;
+  payment_events: number;
+  template_uses: number;
+  open_support_tickets: number;
+  generated_at?: string | null;
+  source?: string;
+};
 export type AdminSecurityEventRow = {
   id: string;
   teacher_id: string;
@@ -109,6 +118,33 @@ export type AdminSecurityEventRow = {
   occurred_at?: string | null;
   created_at?: string | null;
 };
+
+type AdminPageParams = {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  segment?: string;
+  role?: string;
+  plan?: string;
+  activity?: string;
+  status?: string;
+  ticket_type?: string;
+  gateway?: string;
+  event_type?: string;
+  severity?: string;
+  sort?: string;
+};
+
+function adminQuery(params?: AdminPageParams) {
+  const query = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "" || value === "all") return;
+    query.set(key, String(value));
+  });
+  const suffix = query.toString();
+  return suffix ? `?${suffix}` : "";
+}
+
 export type TemplateDraftResponse = { extraction: Record<string, unknown>; draft_template: Record<string, unknown>; draft_validation: Record<string, unknown> };
 
 export type PreviewSample = {
@@ -263,30 +299,22 @@ export const api = {
   updateMaintenanceStatus(payload: { maintenance_active: boolean; confirmation: string; title: string; message: string; reason?: string; updated_by?: string }) {
     return request<MaintenanceStatus>("/admin/maintenance", { method: "POST", body: JSON.stringify(payload) });
   },
-  listAdminTeachers() {
-    return request<AdminListResponse<AdminTeacherRow>>("/admin/teachers");
+  getAdminOverview() {
+    return request<AdminOverview>("/admin/overview");
   },
-  listAdminSupportTickets() {
-    return request<AdminListResponse<AdminSupportTicketRow>>("/admin/support-tickets");
+  listAdminTeachers(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminTeacherRow>>(`/admin/teachers${adminQuery(params)}`);
   },
-  listAdminSubscriptions() {
-    return request<AdminListResponse<AdminSubscriptionRow>>("/admin/billing/subscriptions");
+  listAdminSupportTickets(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminSupportTicketRow>>(`/admin/support-tickets${adminQuery(params)}`);
   },
-  listAdminPaymentEvents() {
-    return request<AdminListResponse<AdminPaymentEventRow>>("/admin/billing/payment-events");
+  listAdminSubscriptions(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminSubscriptionRow>>(`/admin/billing/subscriptions${adminQuery(params)}`);
   },
-  listAdminSecurityEvents() {
-    return request<AdminListResponse<AdminSecurityEventRow>>("/admin/security-events");
+  listAdminPaymentEvents(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminPaymentEventRow>>(`/admin/billing/payment-events${adminQuery(params)}`);
+  },
+  listAdminSecurityEvents(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminSecurityEventRow>>(`/admin/security-events${adminQuery(params)}`);
   },
 };
-
-
-
-
-
-
-
-
-
-
-

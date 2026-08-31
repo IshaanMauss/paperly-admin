@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, TemplateSummary } from "@/lib/apiClient";
 import { panel, primaryButton } from "@/components/ui";
 
@@ -49,9 +50,9 @@ const productionChecks: ProductionCheck[] = [
   {
     priority: "P1",
     title: "Server-side pagination/filtering",
-    status: "partial",
-    evidence: "Health uses backend limit=200. Users/billing/support endpoints are called from admin client, but full production pagination/filter contracts are not complete everywhere.",
-    next: "Add limit/offset/search/sort to large admin datasets and stop relying on full-list client filtering.",
+    status: "current",
+    evidence: "Completed 2026-08-21: Users, support tickets, subscriptions, payment events, and security events now use backend limit/offset/search/filter/sort contracts with paged admin UI views.",
+    next: "Keep this as the required pattern for every new large admin dataset; do not add client-only full-list filtering for scalable tables.",
   },
   {
     priority: "P0",
@@ -146,6 +147,7 @@ function priorityMeaning(priority: CheckPriority) {
 export default function HealthPage() {
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [status, setStatus] = useState("checking");
+  const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -166,9 +168,10 @@ export default function HealthPage() {
     }
   }, []);
 
+  useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => {
     void refreshHealth();
-  }, [refreshHealth]);
+  }, [refreshHealth, refreshTick]);
 
   const unsafe = templates.filter((t) => !t.safe_to_generate).length;
   const drafts = templates.filter((t) => t.status === "draft").length;

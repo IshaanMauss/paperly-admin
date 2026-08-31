@@ -25,6 +25,7 @@ export default function LoginPage() {
   const { ready, admin, signIn } = useAdminSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,7 +51,7 @@ export default function LoginPage() {
     <>
       <Background />
       <main className="grid min-h-screen place-items-center px-4 py-10">
-        <section className="w-full max-w-md rounded-3xl border border-violet-100 bg-white/90 p-7 shadow-soft backdrop-blur">
+        <section className="w-full max-w-md rounded-3xl border border-violet-100 bg-white/90 p-7 shadow-soft">
           <div className="mb-6 flex items-center gap-3">
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-purple-500 to-violet-700 font-black text-white shadow-lg shadow-violet-200">P</span>
             <div>
@@ -66,7 +67,17 @@ export default function LoginPage() {
             </label>
             <label className={label}>
               Password
-              <input className={input} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" type="password" required />
+              <div className="relative mt-1">
+                <input className={`${input} pr-20`} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" type={showPassword ? "text" : "password"} required />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1 text-xs font-extrabold text-purple-800 transition hover:bg-violet-50"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </label>
             <button className={primaryButton} disabled={submitting}>{submitting ? "Signing in..." : "Sign in"}</button>
           </form>

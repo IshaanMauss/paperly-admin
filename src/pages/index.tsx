@@ -1,9 +1,12 @@
-﻿import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { panel, secondaryButton } from "@/components/ui";
-import { api, AdminPaymentEventRow, AdminSubscriptionRow, AdminTeacherRow } from "@/lib/apiClient";
+import { onAdminDataRefresh } from "@/lib/adminRefresh";
+import { api, AdminOverview } from "@/lib/apiClient";
+
+const OVERVIEW_CACHE_KEY = "paperly_admin_overview_cache_v1";
 
 const operations = [
   { href: "/teachers", title: "User monitoring", text: "Track individual/tutor and institute users, active plans, template usage, generated-paper activity, and analytics events." },
@@ -15,31 +18,75 @@ const operations = [
   { href: "/users", title: "Admin users and roles", text: "Define owner, admin, reviewer, and uploader responsibilities for future RBAC." },
 ];
 
-export default function HomePage() {
-  const [teachers, setTeachers] = useState<AdminTeacherRow[]>([]);
-  const [subscriptions, setSubscriptions] = useState<AdminSubscriptionRow[]>([]);
-  const [events, setEvents] = useState<AdminPaymentEventRow[]>([]);
-  const [error, setError] = useState("");
+const emptyOverview: AdminOverview = {
+  users_tracked: 0,
+  active_trial_plans: 0,
+  payment_events: 0,
+  template_uses: 0,
+  open_support_tickets: 0,
+  generated_at: null,
+  source: "empty",
+};
 
-  useEffect(() => {
-    Promise.all([api.listAdminTeachers(), api.listAdminSubscriptions(), api.listAdminPaymentEvents()])
-      .then(([teacherRes, subscriptionRes, eventRes]) => {
-        setTeachers(teacherRes.items);
-        setSubscriptions(subscriptionRes.items);
-        setEvents(eventRes.items);
-        setError("");
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Backend not reachable"));
+function readCachedOverview() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(OVERVIEW_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as AdminOverview) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedOverview(value: AdminOverview) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(OVERVIEW_CACHE_KEY, JSON.stringify(value));
+  } catch {
+    // Cache is a speed hint only. The backend remains the source of truth.
+  }
+}
+
+function formatUpdatedAt(value?: string | null) {
+  if (!value) return "Not refreshed yet";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Updated recently";
+  return `Updated ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+export default function HomePage() {
+  const [overview, setOverview] = useState<AdminOverview>(() => readCachedOverview() || emptyOverview);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const refreshOverview = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await api.getAdminOverview();
+      setOverview(response);
+      writeCachedOverview(response);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Backend not reachable");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
+  useEffect(() => {
+    void refreshOverview();
+  }, [refreshOverview, refreshTick]);
 
   const stats = useMemo(
     () => [
-      [String(teachers.length), "users tracked"],
-      [String(subscriptions.filter((row) => row.status === "active" || row.status === "trial").length), "active/trial plans"],
-      [String(events.length), "payment events"],
-      [String(teachers.reduce((sum, row) => sum + row.total_template_uses, 0)), "template uses"],
+      [String(overview.users_tracked), "users tracked"],
+      [String(overview.active_trial_plans), "active/trial plans"],
+      [String(overview.payment_events), "payment events"],
+      [String(overview.template_uses), "template uses"],
     ],
-    [teachers, subscriptions, events]
+    [overview]
   );
 
   return (
@@ -60,6 +107,7 @@ export default function HomePage() {
             <Link href="/billing" className={secondaryButton}>Review billing</Link>
             <Link href="/backups" className={secondaryButton}>Backup data</Link>
           </div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{formatUpdatedAt(overview.generated_at)} · {overview.source || "aggregate"}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           {stats.map(([value, label]) => (
@@ -78,7 +126,7 @@ export default function HomePage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {operations.map((item) => (
-            <Link href={item.href} key={item.href} className="min-h-40 rounded-2xl border border-violet-100 bg-gradient-to-b from-white/90 to-violet-50/70 p-5 shadow-soft transition hover:-translate-y-1 hover:border-purple-300 hover:shadow-card">
+            <Link href={item.href} key={item.href} className="min-h-40 rounded-2xl border border-violet-100 bg-gradient-to-b from-white/90 to-violet-50/70 p-5 shadow-soft transition-colors hover:border-purple-300">
               <h3 className="mb-2 text-lg font-black text-slate-950">{item.title}</h3>
               <p className="text-sm font-semibold leading-6 text-slate-500">{item.text}</p>
             </Link>
@@ -88,7 +136,3 @@ export default function HomePage() {
     </AppShell>
   );
 }
-
-
-
-
