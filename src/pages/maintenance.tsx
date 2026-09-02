@@ -73,26 +73,26 @@ export default function MaintenancePage() {
 
   return (
     <AppShell title="Maintenance Control">
-      <section className={panel}>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <section className="mb-4 rounded-2xl border border-violet-100 bg-white/80 p-4 shadow-soft sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Teacher module safety switch</p>
-            <h2 className="mt-1 text-3xl font-black text-slate-950">Controlled maintenance mode</h2>
+            <h2 className="mt-1 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">Controlled maintenance mode</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
               This disables the teacher-facing product and replaces it with a maintenance screen. Use it before major schema, billing, or deployment changes.
             </p>
           </div>
-          <button className="rounded-2xl border border-violet-200 bg-white px-5 py-3 text-sm font-black text-purple-800 shadow-soft transition-colors" onClick={load}>
+          <button className="min-h-11 rounded-2xl border border-violet-200 bg-white px-5 py-3 text-sm font-black text-purple-800 shadow-soft transition-colors sm:self-start" onClick={load}>
             Refresh
           </button>
         </div>
 
         {error ? <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</div> : null}
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className={`rounded-[1.75rem] border p-6 shadow-sm ${status.maintenance_active ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className={`rounded-2xl border p-4 shadow-sm sm:rounded-[1.75rem] sm:p-6 ${status.maintenance_active ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Current status</p>
-            <h3 className="mt-2 text-3xl font-black text-slate-950">{loading ? "Loading" : status.maintenance_active ? "Maintenance active" : "Teacher module live"}</h3>
+            <h3 className="mt-2 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">{loading ? "Loading" : status.maintenance_active ? "Maintenance active" : "Teacher module live"}</h3>
             <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{status.message}</p>
             <div className="mt-5 grid gap-2 text-xs font-bold text-slate-500">
               <span>Source: {status.source || "unknown"}</span>
@@ -101,7 +101,7 @@ export default function MaintenancePage() {
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-violet-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:rounded-[1.75rem] sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Message shown to teachers</p>
             <label className="mt-4 block text-xs font-black uppercase tracking-wider text-slate-500">
               Title
@@ -129,12 +129,12 @@ export default function MaintenancePage() {
       </section>
 
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4">
-          <div className="w-full max-w-2xl rounded-[2rem] border border-violet-100 bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/60 p-0 sm:items-center sm:p-4">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-violet-100 bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Typed confirmation required</p>
             <h3 className="mt-2 text-2xl font-black text-slate-950">{targetActive ? "Enable maintenance mode" : "Disable maintenance mode"}</h3>
             <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">Type this exact phrase before the platform state changes:</p>
-            <pre className="mt-3 overflow-x-auto rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white">{requiredText}</pre>
+            <pre className="mt-3 whitespace-pre-wrap break-words rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black leading-5 text-white sm:text-sm">{requiredText}</pre>
             <input className="mt-4 w-full rounded-2xl border border-violet-100 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-violet-400" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</button>
@@ -146,4 +146,5 @@ export default function MaintenancePage() {
     </AppShell>
   );
 }
+
 
