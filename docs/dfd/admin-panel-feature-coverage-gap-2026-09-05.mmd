@@ -1,0 +1,31 @@
+flowchart TD
+  subgraph Built_2026_09_05_backend["Built 2026-09-05 (backend, paperly-mvp)"]
+    fp[Full Portion subtopic UI + billing]
+    cap[max_subtopics_per_topic plan gate]
+    checking["AI/QR Checking (/check-upload)"]
+    cleanup["POST /admin/worksheets/cleanup"]
+    rls[RLS enabled on 13 tables]
+  end
+
+  subgraph Admin_Panel_Coverage["paperly-admin-panel: current UI coverage"]
+    ov[Overview page]
+    teachers[Teachers page]
+    billingpages[Billing pages x2]
+    maint[Maintenance pages x2]
+    backups[Backups page]
+    security[Security page]
+    support[Support page]
+    missing["NO PAGE: Full Portion visibility"]
+    missing2["NO PAGE: subtopic-cap editing"]
+    missing3["NO PAGE: AI/QR Checking visibility"]
+    missing4["NO UI TRIGGER: worksheet cleanup (endpoint exists, unreachable from UI)"]
+    missing5["NO SURFACE: RLS / DB security advisories"]
+  end
+
+  fp -.confirmed absent from admin UI, 2026-09-05 audit.-> missing
+  cap -.confirmed absent from admin UI, 2026-09-05 audit.-> missing2
+  checking -.confirmed absent from admin UI, 2026-09-05 audit.-> missing3
+  cleanup -.route exists, zero callers found in this repo.-> missing4
+  rls -.no advisories surface exists here.-> missing5
+
+  note[This diagram documents a GAP, not a working flow.\nPlanned to be closed in the admin-panel pass that follows the mobile redesign.] -.-> Admin_Panel_Coverage
