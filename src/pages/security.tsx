@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { panel } from "@/components/ui";
+import { panel, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { AdminSecurityEventRow, api } from "@/lib/apiClient";
+import { AdminSecurityEventRow, api, type RlsTableRow } from "@/lib/apiClient";
 
 const PAGE_SIZE = 25;
 
@@ -32,6 +32,25 @@ export default function SecurityPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState("");
 
+  const [rlsTables, setRlsTables] = useState<RlsTableRow[]>([]);
+  const [rlsSource, setRlsSource] = useState<string | undefined>(undefined);
+  const [rlsLoading, setRlsLoading] = useState(true);
+  const [rlsError, setRlsError] = useState("");
+
+  async function loadRlsStatus() {
+    setRlsLoading(true);
+    setRlsError("");
+    try {
+      const response = await api.getRlsStatus();
+      setRlsTables(response.tables || []);
+      setRlsSource(response.source);
+    } catch (err) {
+      setRlsError(err instanceof Error ? err.message : "Could not load RLS status.");
+    } finally {
+      setRlsLoading(false);
+    }
+  }
+
   useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => {
     const timeout = window.setTimeout(() => setPage(0), 250);
@@ -55,6 +74,10 @@ export default function SecurityPage() {
   useEffect(() => {
     void loadEvents();
   }, [page, refreshTick, search, severity, sort, status]);
+
+  useEffect(() => {
+    void loadRlsStatus();
+  }, [refreshTick]);
 
   const highRiskCount = useMemo(
     () => events.filter((event) => ["high", "critical"].includes((event.severity || "").toLowerCase())).length,
@@ -177,6 +200,47 @@ export default function SecurityPage() {
           <button disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Previous</button>
           <button disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Next</button>
         </div>
+      </section>
+
+      <section className={panel}>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Database posture</p>
+            <h2 className="mt-2 text-xl font-black text-slate-950">Row Level Security status</h2>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
+              Every public table, direct from Postgres system catalogs. Tables with RLS disabled are listed first and flagged - a regression here is a real data-exposure risk.
+            </p>
+          </div>
+          {rlsLoading ? <span className="text-sm font-bold text-slate-500">Loading...</span> : null}
+        </div>
+        {rlsError ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{rlsError}</p> : null}
+        {!rlsLoading && !rlsError && rlsTables.length === 0 ? <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">No table introspection available (source: {rlsSource || "unknown"}).</p> : null}
+        {rlsTables.length > 0 ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className={table}>
+              <thead>
+                <tr>
+                  <th className={th}>Table</th>
+                  <th className={th}>Row Level Security</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rlsTables.map((row) => (
+                  <tr key={row.table_name}>
+                    <td className={td}>{row.table_name}</td>
+                    <td className={td}>
+                      {row.rls_enabled ? (
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase text-emerald-800">Enabled</span>
+                      ) : (
+                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black uppercase text-rose-800">Disabled</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

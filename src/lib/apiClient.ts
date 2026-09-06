@@ -100,6 +100,54 @@ export type AdminOverview = {
   generated_at?: string | null;
   source?: string;
 };
+export type FullPortionOverview = {
+  full_portion_worksheets: number;
+  topical_worksheets: number;
+  full_portion_with_required_subtopics: number;
+  average_required_subtopics: number;
+  source?: string;
+};
+
+export type SubtopicCapPlanRow = {
+  plan_code: string;
+  plan_label: string;
+  default_max_subtopics_per_topic: number | null;
+  effective_max_subtopics_per_topic: number | null;
+  is_overridden: boolean;
+};
+
+export type SubtopicCapSettings = {
+  plans: Record<string, SubtopicCapPlanRow>;
+  source?: string;
+};
+
+export type CheckingOverview = {
+  total_checks: number;
+  checks_last_7_days: number;
+  checks_last_30_days: number;
+  distinct_teachers: number;
+  source?: string;
+};
+
+export type RlsTableRow = {
+  table_name: string;
+  rls_enabled: boolean;
+};
+
+export type RlsStatus = {
+  tables: RlsTableRow[];
+  source?: string;
+};
+
+export type WorksheetCleanupResult = {
+  dry_run: boolean;
+  unexported_worksheets_deleted: number;
+  exported_worksheets_deleted: number;
+  files_removed_from_disk: number;
+  unexported_retention_days: number;
+  exported_retention_days: number;
+};
+
 export type AdminSecurityEventRow = {
   id: string;
   teacher_id: string;
@@ -316,5 +364,23 @@ export const api = {
   },
   listAdminSecurityEvents(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSecurityEventRow>>(`/admin/security-events${adminQuery(params)}`);
+  },
+  getFullPortionOverview() {
+    return request<FullPortionOverview>("/admin/full-portion/overview");
+  },
+  getSubtopicCapSettings() {
+    return request<SubtopicCapSettings>("/admin/full-portion/subtopic-cap-settings");
+  },
+  updateSubtopicCapSetting(payload: { plan_code: string; max_subtopics_per_topic: number | null; updated_by?: string }) {
+    return request<SubtopicCapSettings>("/admin/full-portion/subtopic-cap-settings", { method: "POST", body: JSON.stringify(payload) });
+  },
+  getCheckingOverview() {
+    return request<CheckingOverview>("/admin/checking/overview");
+  },
+  getRlsStatus() {
+    return request<RlsStatus>("/admin/security/rls-status");
+  },
+  runWorksheetCleanup(dryRun: boolean) {
+    return request<WorksheetCleanupResult>(`/admin/worksheets/cleanup?dry_run=${dryRun ? "true" : "false"}`, { method: "POST" });
   },
 };

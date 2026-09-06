@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { api, type MaintenanceStatus } from "@/lib/apiClient";
+import { api, type MaintenanceStatus, type WorksheetCleanupResult } from "@/lib/apiClient";
 
 const DEFAULT_STATUS: MaintenanceStatus = {
   maintenance_active: false,
@@ -26,6 +26,37 @@ export default function MaintenancePage() {
   const [message, setMessage] = useState(DEFAULT_STATUS.message);
   const [reason, setReason] = useState("");
   const [updatedBy, setUpdatedBy] = useState("admin");
+
+  const [cleanupDryRun, setCleanupDryRun] = useState(true);
+  const [cleanupRunning, setCleanupRunning] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<WorksheetCleanupResult | null>(null);
+  const [cleanupError, setCleanupError] = useState<string | null>(null);
+  const [cleanupConfirmOpen, setCleanupConfirmOpen] = useState(false);
+  const [cleanupConfirmation, setCleanupConfirmation] = useState("");
+  const CLEANUP_CONFIRMATION_PHRASE = "DELETE STALE WORKSHEETS";
+
+  function runCleanup(dryRun: boolean) {
+    setCleanupRunning(true);
+    setCleanupError(null);
+    api
+      .runWorksheetCleanup(dryRun)
+      .then((result) => {
+        setCleanupResult(result);
+        setCleanupConfirmOpen(false);
+        setCleanupConfirmation("");
+      })
+      .catch((err) => setCleanupError(err instanceof Error ? err.message : "Could not run worksheet cleanup."))
+      .finally(() => setCleanupRunning(false));
+  }
+
+  function requestCleanup() {
+    if (cleanupDryRun) {
+      runCleanup(true);
+      return;
+    }
+    setCleanupConfirmation("");
+    setCleanupConfirmOpen(true);
+  }
 
   function load() {
     setLoading(true);
@@ -127,6 +158,74 @@ export default function MaintenancePage() {
           </button>
         </div>
       </section>
+
+      <section className="mb-4 rounded-2xl border border-violet-100 bg-white/80 p-4 shadow-soft sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Data retention</p>
+            <h2 className="mt-1 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">Clean up old worksheets</h2>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
+              Deletes stale worksheet rows (and their PDF/PNG files on disk) past the retention window. Template usage stats and analytics events are stored separately and are never touched by this. Defaults to a dry run - nothing is deleted until you explicitly confirm.
+            </p>
+          </div>
+          <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-black text-purple-800 shadow-soft">
+            <input type="checkbox" checked={cleanupDryRun} onChange={(event) => setCleanupDryRun(event.target.checked)} />
+            Dry run (safe, no deletions)
+          </label>
+        </div>
+
+        {cleanupError ? <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{cleanupError}</div> : null}
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button
+            className={`rounded-2xl border px-5 py-3 text-sm font-black shadow-soft transition-colors disabled:opacity-50 ${cleanupDryRun ? "border-violet-200 bg-white text-purple-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}
+            disabled={cleanupRunning}
+            onClick={requestCleanup}
+          >
+            {cleanupRunning ? "Running" : cleanupDryRun ? "Preview cleanup (dry run)" : "Delete stale worksheets"}
+          </button>
+        </div>
+
+        {cleanupResult ? (
+          <div className="mt-5 grid gap-4 rounded-2xl border border-violet-100 bg-white p-4 shadow-sm sm:grid-cols-4 sm:rounded-[1.75rem] sm:p-6">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Mode</p>
+              <p className="mt-2 text-xl font-black text-slate-950">{cleanupResult.dry_run ? "Dry run" : "Executed"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Unexported deleted</p>
+              <p className="mt-2 text-xl font-black text-slate-950">{cleanupResult.unexported_worksheets_deleted}</p>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Exported deleted</p>
+              <p className="mt-2 text-xl font-black text-slate-950">{cleanupResult.exported_worksheets_deleted}</p>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Files removed</p>
+              <p className="mt-2 text-xl font-black text-slate-950">{cleanupResult.files_removed_from_disk}</p>
+            </div>
+            <p className="text-xs font-bold text-slate-500 sm:col-span-4">
+              Retention: {cleanupResult.unexported_retention_days} days (unexported), {cleanupResult.exported_retention_days} days (exported)
+            </p>
+          </div>
+        ) : null}
+      </section>
+
+      {cleanupConfirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/60 p-0 sm:items-center sm:p-4">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-violet-100 bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Typed confirmation required</p>
+            <h3 className="mt-2 text-2xl font-black text-slate-950">Permanently delete stale worksheets</h3>
+            <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">This deletes real worksheet rows and files. Type this exact phrase to continue:</p>
+            <pre className="mt-3 whitespace-pre-wrap break-words rounded-2xl bg-slate-950 px-4 py-3 text-xs font-black leading-5 text-white sm:text-sm">{CLEANUP_CONFIRMATION_PHRASE}</pre>
+            <input className="mt-4 w-full rounded-2xl border border-violet-100 px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-violet-400" value={cleanupConfirmation} onChange={(event) => setCleanupConfirmation(event.target.value)} />
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700" onClick={() => setCleanupConfirmOpen(false)} disabled={cleanupRunning}>Cancel</button>
+              <button className="rounded-2xl bg-rose-700 px-5 py-3 text-sm font-black text-white shadow-soft disabled:opacity-50" onClick={() => runCleanup(false)} disabled={cleanupRunning || cleanupConfirmation !== CLEANUP_CONFIRMATION_PHRASE}>{cleanupRunning ? "Deleting" : "Confirm deletion"}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {modalOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/60 p-0 sm:items-center sm:p-4">

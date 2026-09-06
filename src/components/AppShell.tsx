@@ -8,6 +8,8 @@ const navItems = [
   { href: "/", label: "Overview" },
   { href: "/teachers", label: "Users" },
   { href: "/billing", label: "Billing" },
+  { href: "/full-portion", label: "Full Portion" },
+  { href: "/checking", label: "AI Checking" },
   { href: "/maintenance", label: "Maintenance" },
   { href: "/support", label: "Support" },
   { href: "/backups", label: "Backups" },
@@ -30,7 +32,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <AquaPattern />
         <main className="grid min-h-screen place-items-center px-4">
           <section className="rounded-3xl border border-violet-100 bg-white/85 p-8 text-center shadow-soft">
-            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-purple-600 font-black text-white">P</div>
+            <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly" className="mx-auto mb-4 h-16 w-16 object-contain" />
             <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-800">Checking admin session</p>
             <h1 className="mt-2 text-2xl font-black text-slate-950">Opening control plane</h1>
           </section>
@@ -46,7 +48,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         <AquaPattern />
         <main className="grid min-h-screen place-items-center px-4">
           <section className="rounded-3xl border border-violet-100 bg-white/85 p-8 text-center shadow-soft">
-            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-purple-600 font-black text-white">P</div>
+            <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly" className="mx-auto mb-4 h-16 w-16 object-contain" />
             <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-800">Admin sign-in required</p>
             <h1 className="mt-2 text-2xl font-black text-slate-950">Redirecting securely</h1>
           </section>
@@ -66,7 +68,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       <main className="mx-auto max-w-7xl px-4 py-6 text-slate-700 sm:px-6 lg:px-8 lg:py-8">
         <nav className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <Link href="/" className="inline-flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 font-black text-white shadow-soft">P</span>
+            <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly" className="h-14 w-14 object-contain drop-shadow-sm" />
             <span>
               <span className="block text-lg font-extrabold text-slate-950">Paperly Admin Control</span>
               <span className="block text-sm text-slate-500">Signed in as {admin.name} · {admin.role}</span>
