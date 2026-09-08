@@ -188,6 +188,31 @@ export type AdminServerLogSummary = {
   source: string;
 };
 
+export type OrganizationTheme = {
+  mode: string;
+  background: string;
+  primary: string;
+  accent: string;
+};
+
+export type OrganizationRow = {
+  id: string;
+  organization_key: string;
+  name: string;
+  organization_type: string;
+  status: string;
+  theme: OrganizationTheme;
+  feature_flags: Record<string, boolean>;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type OrganizationsMeta = {
+  theme_presets: Record<string, OrganizationTheme>;
+  feature_flags: Record<string, { label: string; description: string }>;
+};
+
+
 type AdminPageParams = {
   limit?: number;
   offset?: number;
@@ -398,6 +423,15 @@ export const api = {
   },
   getAdminServerLogsSummary(params?: { search?: string; method?: string }) {
     return request<AdminServerLogSummary>(`/admin/server-logs/summary${adminQuery(params)}`);
+  },
+  getOrganizationsMeta() {
+    return request<OrganizationsMeta>('/admin/organizations/meta');
+  },
+  listOrganizations(params?: { search?: string; organization_type?: string; limit?: number; offset?: number }) {
+    return request<AdminListResponse<OrganizationRow>>(`/admin/organizations${adminQuery(params)}`);
+  },
+  updateOrganization(organizationId: string, payload: { branding?: { mode: string; background?: string; primary?: string; accent?: string }; feature_flags?: Record<string, boolean>; updated_by?: string }) {
+    return request<OrganizationRow>(`/admin/organizations/${organizationId}`, { method: 'PATCH', body: JSON.stringify(payload) });
   },
   getFullPortionOverview() {
     return request<FullPortionOverview>("/admin/full-portion/overview");

@@ -9,11 +9,13 @@ const navItems = [
   { href: "/teachers", label: "Users" },
   { href: "/billing", label: "Billing" },
   { href: "/full-portion", label: "Full Portion" },
+  { href: "/organizations", label: "Organizations" },
   { href: "/checking", label: "AI Checking" },
   { href: "/maintenance", label: "Maintenance" },
   { href: "/support", label: "Support" },
   { href: "/backups", label: "Backups" },
   { href: "/health", label: "Health" },
+  { href: "/logs", label: "Server Logs" },
   { href: "/security", label: "Security" },
   { href: "/users", label: "Admin Team" },
 ];
