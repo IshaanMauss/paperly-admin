@@ -167,6 +167,27 @@ export type AdminSecurityEventRow = {
   created_at?: string | null;
 };
 
+export type AdminServerLogRow = {
+  id: string;
+  actor: string;
+  outcome: "success" | "error";
+  method?: string | null;
+  path?: string | null;
+  status_code?: number | null;
+  duration_ms?: number | null;
+  ip?: string | null;
+  user_agent?: string | null;
+  error_detail?: string | null;
+  occurred_at?: string | null;
+};
+
+export type AdminServerLogSummary = {
+  scanned: number;
+  classes: Record<string, number>;
+  top_codes: { status_code: number; count: number }[];
+  source: string;
+};
+
 type AdminPageParams = {
   limit?: number;
   offset?: number;
@@ -181,6 +202,10 @@ type AdminPageParams = {
   event_type?: string;
   severity?: string;
   sort?: string;
+  outcome?: string;
+  method?: string;
+  status_code?: number;
+  status_class?: string;
 };
 
 function adminQuery(params?: AdminPageParams) {
@@ -364,6 +389,15 @@ export const api = {
   },
   listAdminSecurityEvents(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSecurityEventRow>>(`/admin/security-events${adminQuery(params)}`);
+  },
+  listAdminServerLogs(params?: AdminPageParams) {
+    return request<AdminListResponse<AdminServerLogRow>>(`/admin/server-logs${adminQuery(params)}`);
+  },
+  resetAdminServerLogs() {
+    return request<{ removed: number }>("/admin/server-logs", { method: "DELETE" });
+  },
+  getAdminServerLogsSummary(params?: { search?: string; method?: string }) {
+    return request<AdminServerLogSummary>(`/admin/server-logs/summary${adminQuery(params)}`);
   },
   getFullPortionOverview() {
     return request<FullPortionOverview>("/admin/full-portion/overview");
