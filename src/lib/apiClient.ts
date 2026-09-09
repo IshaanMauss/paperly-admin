@@ -212,6 +212,28 @@ export type OrganizationsMeta = {
   feature_flags: Record<string, { label: string; description: string }>;
 };
 
+export type OrganizationRequestRow = {
+  id: string;
+  source: string;
+  teacher_id: string | null;
+  institute_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  requested_features: string[];
+  notes: string | null;
+  estimated_monthly_rupees: number | null;
+  status: string;
+  organization_id: string | null;
+  activation_link: string | null;
+  activated_teacher_id: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  rejection_reason: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 
 type AdminPageParams = {
   limit?: number;
@@ -432,6 +454,18 @@ export const api = {
   },
   updateOrganization(organizationId: string, payload: { branding?: { mode: string; background?: string; primary?: string; accent?: string }; feature_flags?: Record<string, boolean>; updated_by?: string }) {
     return request<OrganizationRow>(`/admin/organizations/${organizationId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  },
+  listOrganizationRequests(params?: { status?: string; limit?: number; offset?: number }) {
+    return request<AdminListResponse<OrganizationRequestRow>>(`/admin/organization-requests${adminQuery(params)}`);
+  },
+  approveOrganizationRequest(requestId: string, payload?: { decided_by?: string }) {
+    return request<OrganizationRequestRow>(`/admin/organization-requests/${requestId}/approve`, { method: 'POST', body: JSON.stringify(payload || {}) });
+  },
+  rejectOrganizationRequest(requestId: string, payload?: { decided_by?: string; reason?: string }) {
+    return request<OrganizationRequestRow>(`/admin/organization-requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify(payload || {}) });
+  },
+  deliverOrganizationRequest(requestId: string) {
+    return request<OrganizationRequestRow>(`/admin/organization-requests/${requestId}/deliver`, { method: 'POST' });
   },
   getFullPortionOverview() {
     return request<FullPortionOverview>("/admin/full-portion/overview");
