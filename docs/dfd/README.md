@@ -1,5 +1,12 @@
 # Paperly Admin Panel DFDs
 
+<!-- paperly-aggregated-2026-09-10:start -->
+## Current Aggregated Update - 2026-09-10
+
+- **Fixed: severe template-loading slowness, which also affected this repo.** `health.tsx` calls `GET /templates` the same as the teacher module does. The root cause and fix live in `paperly-mvp` (`app/api/routes/templates.py`), so no code in this repo changed, but this panel benefits directly: `GET /templates` was re-running the full question-generation pipeline for *every* template on *every* call (confirmed 15-38s for 36 templates, now ~0.85-1.1s) to populate a `rendered_question_text` field that grepping this repo confirms is never read anywhere in it either. Full writeup, the pattern's name, and more examples of the same bug shape are in `paperly-teacher-module/docs/dfd/README.md` (2026-09-10 entry and the "Engineering note" section at the bottom) - worth reading once, since the still-open template-lifecycle write-route gap flagged below is exactly the kind of area this same pattern (expensive per-row work hidden in a shared endpoint) could recur in if those routes ever get a list-style admin UI.
+- **Note for the still-open Full Portion gap (flagged 2026-09-05, still unresolved):** the billing gate that a future admin Full Portion page would need to expose has changed shape in `paperly-mvp` + `paperly-teacher-module` this update - it is no longer `max_subtopics_per_topic` (subtopic choosing is now free/unlimited on every plan), it is a new `max_full_portion_topics` cap (how many topics can combine into one paper: Free/Trial = 1, Monthly/Quarterly = 4, Yearly/Demo = unlimited). Whoever picks up that gap next should build against the new field, not the old one.
+<!-- paperly-aggregated-2026-09-10:end -->
+
 <!-- paperly-aggregated-2026-09-06:start -->
 ## Current Aggregated Update - 2026-09-06
 
