@@ -38,6 +38,7 @@ export type AdminTeacherRow = {
   phone?: string | null;
   email_verified?: boolean;
   phone_verified?: boolean;
+  is_test_account?: boolean;
   account_role?: string | null;
   account_segment?: "individual" | "institute" | string | null;
   onboarding_completed?: boolean;
@@ -127,6 +128,45 @@ export type CheckingOverview = {
   checks_last_30_days: number;
   distinct_teachers: number;
   source?: string;
+};
+
+export type VariantHealthRisk = "exhausted" | "watch" | "healthy" | "unknown";
+
+export type VariantHealthRow = {
+  template_id: string;
+  template_code: string;
+  template_type: string;
+  topic: string;
+  subtopic?: string | null;
+  difficulty: string;
+  paper_code?: string | null;
+  popular_igcse: boolean;
+  capacity: number | null;
+  capacity_uncertain: boolean;
+  capacity_capped: boolean;
+  total_usage_count: number;
+  distinct_teachers_used: number;
+  mean_usage_per_teacher: number | null;
+  median_usage_per_teacher: number | null;
+  stdev_usage_per_teacher: number | null;
+  min_usage_per_teacher: number | null;
+  max_usage_per_teacher: number | null;
+  usage_ratio: number | null;
+  risk: VariantHealthRisk;
+  sibling_count_subtopic: number;
+  sibling_count_topic: number;
+  total_worksheets_included: number;
+  exported_worksheets_included: number;
+  never_exported_worksheets_included: number;
+  excluded_anonymous_worksheets: number;
+  excluded_test_worksheets: number;
+  excluded_test_usage: number;
+};
+
+export type VariantHealthOverview = {
+  rows: VariantHealthRow[];
+  summary: { exhausted: number; watch: number; healthy: number; unknown: number; total: number };
+  generated_at: string;
 };
 
 export type RlsTableRow = {
@@ -235,6 +275,35 @@ export type OrganizationRequestRow = {
 };
 
 
+export type AdminAuthAccountRow = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  permissions: string[];
+  active: boolean;
+  last_login_at?: string | null;
+};
+
+export type AdminAccountsMeta = {
+  roles: string[];
+  permission_keys: string[];
+};
+
+export type CreateAdminAccountPayload = {
+  email: string;
+  name: string;
+  role: string;
+  permissions: string[];
+};
+
+export type UpdateAdminAccountPayload = {
+  name?: string;
+  role?: string;
+  permissions?: string[];
+  active?: boolean;
+};
+
 type AdminPageParams = {
   limit?: number;
   offset?: number;
@@ -243,6 +312,7 @@ type AdminPageParams = {
   role?: string;
   plan?: string;
   activity?: string;
+  test_account?: string;
   status?: string;
   ticket_type?: string;
   gateway?: string;
@@ -369,6 +439,36 @@ async function formRequest<T>(path: string, formData: FormData): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export type PromoCode = {
+  id: string;
+  code: string;
+  label: string | null;
+  plan_code: string;
+  plan_label: string;
+  discount_percent: number;
+  max_redemptions: number | null;
+  redemption_count: number;
+  redemptions_remaining: number | null;
+  expires_at: string | null;
+  is_active: boolean;
+  is_expired: boolean;
+  is_exhausted: boolean;
+  is_redeemable: boolean;
+  created_by: string | null;
+  created_at: string | null;
+};
+
+export type PromoCodeListResponse = {
+  codes: PromoCode[];
+  plan_options: Record<string, string>;
+};
+
+export type PromoCodeRedemptionRow = {
+  teacher_id: string;
+  plan_code_granted: string;
+  redeemed_at: string | null;
+};
+
 export const api = {
   listTemplates(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
@@ -425,6 +525,18 @@ export const api = {
   listAdminTeachers(params?: AdminPageParams) {
     return request<AdminListResponse<AdminTeacherRow>>(`/admin/teachers${adminQuery(params)}`);
   },
+  updateTeacherTestFlag(teacherId: string, isTestAccount: boolean) {
+    return request<{ teacher_id: string; is_test_account: boolean }>(`/admin/teachers/${encodeURIComponent(teacherId)}/test-flag`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_test_account: isTestAccount }),
+    });
+  },
+  simulateTeacherBilling(teacherId: string, planCode: string) {
+    return request<Record<string, unknown>>(`/admin/teachers/${encodeURIComponent(teacherId)}/billing/simulate`, {
+      method: "POST",
+      body: JSON.stringify({ plan_code: planCode }),
+    });
+  },
   listAdminSupportTickets(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSupportTicketRow>>(`/admin/support-tickets${adminQuery(params)}`);
   },
@@ -479,10 +591,53 @@ export const api = {
   getCheckingOverview() {
     return request<CheckingOverview>("/admin/checking/overview");
   },
+  getVariantHealth() {
+    return request<VariantHealthOverview>("/admin/templates/variant-health");
+  },
+  getPromoCodes() {
+    return request<PromoCodeListResponse>("/admin/promo-codes");
+  },
+  getPromoCodeRedemptions(promoId: string) {
+    return request<{ redemptions: PromoCodeRedemptionRow[] }>(`/admin/promo-codes/${promoId}/redemptions`);
+  },
+  createPromoCode(payload: {
+    code: string;
+    plan_code: string;
+    label?: string | null;
+    discount_percent?: number;
+    max_redemptions?: number | null;
+    expires_at?: string | null;
+  }) {
+    return request<PromoCode>("/admin/promo-codes", { method: "POST", body: JSON.stringify(payload) });
+  },
+  setPromoCodeActive(promoId: string, isActive: boolean) {
+    return request<PromoCode>(`/admin/promo-codes/${promoId}/active`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: isActive }),
+    });
+  },
   getRlsStatus() {
     return request<RlsStatus>("/admin/security/rls-status");
   },
   runWorksheetCleanup(dryRun: boolean) {
     return request<WorksheetCleanupResult>(`/admin/worksheets/cleanup?dry_run=${dryRun ? "true" : "false"}`, { method: "POST" });
+  },
+  getAdminAccountsMeta() {
+    return request<AdminAccountsMeta>("/admin/auth/accounts/meta");
+  },
+  listAdminAccounts() {
+    return request<AdminListResponse<AdminAuthAccountRow>>("/admin/auth/accounts");
+  },
+  createAdminAccount(payload: CreateAdminAccountPayload) {
+    return request<{ admin: AdminAuthAccountRow; temporary_password: string }>("/admin/auth/accounts", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  updateAdminAccount(accountId: string, payload: UpdateAdminAccountPayload) {
+    return request<{ admin: AdminAuthAccountRow }>(`/admin/auth/accounts/${accountId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
   },
 };

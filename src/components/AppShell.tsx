@@ -11,6 +11,8 @@ const navItems = [
   { href: "/full-portion", label: "Full Portion" },
   { href: "/organizations", label: "Organizations" },
   { href: "/checking", label: "AI Checking" },
+  { href: "/variant-health", label: "Variant Health" },
+  { href: "/promo-codes", label: "Promo Codes" },
   { href: "/maintenance", label: "Maintenance" },
   { href: "/support", label: "Support" },
   { href: "/backups", label: "Backups" },
