@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { getAdminAccessToken } from "@/lib/adminToken";
+import { API_BASE_URL } from "@/lib/apiClient";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type PromoCode, type PromoCodeRedemptionRow } from "@/lib/apiClient";
@@ -132,7 +134,9 @@ function RedemptionsList({ promoId }: { promoId: string }) {
     <ul className="grid gap-1 text-[11px] font-semibold text-slate-600">
       {rows.map((r) => (
         <li key={`${r.teacher_id}-${r.redeemed_at}`}>
-          {r.teacher_id} — {r.redeemed_at ? new Date(r.redeemed_at).toLocaleString() : "unknown time"}
+          {r.teacher_name || r.teacher_email || r.teacher_id}
+          {r.teacher_name && r.teacher_email ? ` (${r.teacher_email})` : ""} —{" "}
+          {r.redeemed_at ? new Date(r.redeemed_at).toLocaleString() : "unknown time"}
         </li>
       ))}
     </ul>
@@ -184,7 +188,10 @@ function CodeRow({ code, onToggled }: { code: PromoCode; onToggled: (updated: Pr
             </div>
           ) : null}
         </td>
-        <td className={td}>{code.expires_at ? new Date(code.expires_at).toLocaleDateString() : "No expiry"}</td>
+        <td className={td}>
+          {code.expires_at ? new Date(code.expires_at).toLocaleDateString() : "No deadline"}
+          <p className="text-[11px] font-semibold text-slate-500">Deadline to redeem — not how long the plan lasts once granted</p>
+        </td>
         <td className={td}>
           <StatusBadge code={code} />
         </td>
@@ -205,6 +212,33 @@ export default function PromoCodesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  async function exportRedemptions() {
+    setExportBusy(true);
+    setExportError(null);
+    try {
+      const token = getAdminAccessToken();
+      const response = await fetch(`${API_BASE_URL}/admin/promo-codes/export`, {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `promo-redemptions-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Could not export redemptions.");
+    } finally {
+      setExportBusy(false);
+    }
+  }
 
   function load() {
     setLoading(true);
@@ -237,6 +271,16 @@ export default function PromoCodesPage() {
           it goes live immediately, no deploy needed. A redeemed code instantly changes that teacher&apos;s plan,
           the same mechanism the mock-billing tools already use. Every count below is live from the database.
         </p>
+        <p className="mt-2 max-w-3xl rounded-xl border border-violet-100 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
+          <strong className="font-black text-slate-900">Two different dates, don&apos;t mix them up:</strong> a code&apos;s own
+          expiry (below) is only the deadline to redeem it — once someone redeems, their plan runs for its normal full
+          length from that moment (a Yearly grant lasts 365 days from redemption, same as a real paid Yearly plan),
+          completely independent of the code&apos;s own expiry date, and it survives logout/login and device changes.
+        </p>
+        <button type="button" className={`${secondaryButton} mt-4`} disabled={exportBusy} onClick={() => void exportRedemptions()}>
+          {exportBusy ? "Exporting..." : "Export all redemptions (CSV)"}
+        </button>
+        {exportError ? <p className={errorNotice}>{exportError}</p> : null}
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}
 
@@ -263,7 +307,7 @@ export default function PromoCodesPage() {
                     <th className={th}>Code</th>
                     <th className={th}>Plan</th>
                     <th className={th}>Redemptions</th>
-                    <th className={th}>Expires</th>
+                    <th className={th}>Code redeemable until</th>
                     <th className={th}>Status</th>
                     <th className={th}>Action</th>
                   </tr>

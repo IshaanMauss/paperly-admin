@@ -1,5 +1,5 @@
 import { getAdminAccessToken } from "@/lib/adminToken";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
 
 export type TemplateSummary = {
   id: string;
@@ -465,6 +465,8 @@ export type PromoCodeListResponse = {
 
 export type PromoCodeRedemptionRow = {
   teacher_id: string;
+  teacher_name: string | null;
+  teacher_email: string | null;
   plan_code_granted: string;
   redeemed_at: string | null;
 };
