@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
+import { useAdminSession } from "@/lib/adminAuth";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminTeacherRow, api } from "@/lib/apiClient";
 
 type UserSegment = "all" | "individual" | "institute";
 type SortMode = "newest" | "oldest" | "most_active" | "paid_first" | "profile_complete";
 type ActivityFilter = "all" | "active" | "inactive" | "paid" | "incomplete";
+type TestAccountFilter = "all" | "test" | "real";
 
 const PAGE_SIZE = 25;
 
@@ -48,6 +50,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 export default function UsersPage() {
+  const { hasPermission } = useAdminSession();
+  const canFlagTestAccounts = hasPermission("users.write");
   const [rows, setRows] = useState<AdminTeacherRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -59,13 +63,16 @@ export default function UsersPage() {
   const [planFilter, setPlanFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
+  const [testAccountFilter, setTestAccountFilter] = useState<TestAccountFilter>("all");
   const [page, setPage] = useState(0);
+  const [flagBusyId, setFlagBusyId] = useState<string | null>(null);
+  const [flagError, setFlagError] = useState<string | null>(null);
 
   useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => {
     const timer = window.setTimeout(() => setPage(0), 250);
     return () => window.clearTimeout(timer);
-  }, [activityFilter, planFilter, roleFilter, search, segment, sortMode]);
+  }, [activityFilter, planFilter, roleFilter, search, segment, sortMode, testAccountFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +86,7 @@ export default function UsersPage() {
         role: roleFilter,
         plan: planFilter,
         activity: activityFilter,
+        test_account: testAccountFilter,
         sort: sortMode,
       })
       .then((response) => {
@@ -97,7 +105,22 @@ export default function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [activityFilter, page, planFilter, refreshTick, roleFilter, search, segment, sortMode]);
+  }, [activityFilter, page, planFilter, refreshTick, roleFilter, search, segment, sortMode, testAccountFilter]);
+
+  const toggleTestFlag = async (row: AdminTeacherRow) => {
+    if (!canFlagTestAccounts) return;
+    const next = !row.is_test_account;
+    setFlagBusyId(row.teacher_id);
+    setFlagError(null);
+    try {
+      await api.updateTeacherTestFlag(row.teacher_id, next);
+      setRows((current) => current.map((item) => (item.teacher_id === row.teacher_id ? { ...item, is_test_account: next } : item)));
+    } catch (err) {
+      setFlagError(err instanceof Error ? err.message : "Could not update the test-account flag.");
+    } finally {
+      setFlagBusyId(null);
+    }
+  };
 
   const planOptions = useMemo(() => {
     const plans = new Set(["free", "trial", "teacher_monthly", "teacher_yearly", "institute", "unknown", ...rows.map((row) => row.plan_code || "unknown")]);
@@ -154,35 +177,35 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 rounded-[1.75rem] border border-violet-100 bg-white/90 p-4 shadow-soft lg:grid-cols-[1fr_180px_220px_190px_230px_auto]">
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+        <div className="mt-5 grid grid-cols-2 gap-3 rounded-[1.75rem] border border-violet-100 bg-white/90 p-4 shadow-soft sm:grid-cols-3 xl:grid-cols-4">
+          <label className="col-span-2 min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500 sm:col-span-3 xl:col-span-2">
             Search users
             <input
-              className="mt-1 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400"
+              className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search name, email, phone, school, or user id..."
             />
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          <label className="min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Plan
-            <select className="mt-1 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={planFilter} onChange={(event) => { setPage(0); setPlanFilter(event.target.value); }}>
+            <select className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={planFilter} onChange={(event) => { setPage(0); setPlanFilter(event.target.value); }}>
               {planOptions.map((plan) => (
                 <option key={plan} value={plan}>{plan === "all" ? "All plans" : plan}</option>
               ))}
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          <label className="min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Role
-            <select className="mt-1 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={roleFilter} onChange={(event) => { setPage(0); setRoleFilter(event.target.value); }}>
+            <select className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={roleFilter} onChange={(event) => { setPage(0); setRoleFilter(event.target.value); }}>
               {roleOptions.map((role) => (
                 <option key={role} value={role}>{role === "all" ? "All roles" : role}</option>
               ))}
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          <label className="min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Status
-            <select className="mt-1 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={activityFilter} onChange={(event) => { setPage(0); setActivityFilter(event.target.value as ActivityFilter); }}>
+            <select className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={activityFilter} onChange={(event) => { setPage(0); setActivityFilter(event.target.value as ActivityFilter); }}>
               <option value="all">All activity</option>
               <option value="active">Active users</option>
               <option value="inactive">No activity yet</option>
@@ -190,9 +213,9 @@ export default function UsersPage() {
               <option value="incomplete">Profile below 80%</option>
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          <label className="min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Sort
-            <select className="mt-1 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={sortMode} onChange={(event) => { setPage(0); setSortMode(event.target.value as SortMode); }}>
+            <select className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={sortMode} onChange={(event) => { setPage(0); setSortMode(event.target.value as SortMode); }}>
               <option value="newest">New users / recent activity first</option>
               <option value="oldest">Oldest users first</option>
               <option value="most_active">Most active users first</option>
@@ -200,10 +223,31 @@ export default function UsersPage() {
               <option value="profile_complete">Most complete profiles first</option>
             </select>
           </label>
-          <button className="self-end rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 text-sm font-black text-purple-800 transition hover:bg-violet-100" onClick={() => { setSearch(""); setSegment("all"); setPlanFilter("all"); setRoleFilter("all"); setActivityFilter("all"); setSortMode("newest"); setPage(0); }}>
-            Reset
+          <label className="min-w-0 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+            Account type
+            <select className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={testAccountFilter} onChange={(event) => { setPage(0); setTestAccountFilter(event.target.value as TestAccountFilter); }}>
+              <option value="all">Real + test accounts</option>
+              <option value="real">Real accounts only</option>
+              <option value="test">Test accounts only</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className="col-span-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 text-sm font-black text-purple-800 transition hover:bg-violet-100 sm:col-span-1 sm:self-end xl:col-span-1"
+            onClick={() => { setSearch(""); setSegment("all"); setPlanFilter("all"); setRoleFilter("all"); setActivityFilter("all"); setTestAccountFilter("all"); setSortMode("newest"); setPage(0); }}
+          >
+            Reset filters
           </button>
         </div>
+
+        {flagError && (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{flagError}</div>
+        )}
+        {!canFlagTestAccounts && (
+          <p className="mt-4 text-xs font-bold text-slate-400">
+            Flagging test accounts needs the "users.write" permission - ask an owner to grant it if you need to mark accounts here.
+          </p>
+        )}
 
         <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-violet-100 bg-white/85 p-4 text-sm font-bold text-slate-600 shadow-soft sm:flex-row sm:items-center sm:justify-between">
           <span>{total === 0 ? "No users to show" : `Showing ${pageStart}-${pageEnd} of ${total}`}</span>
@@ -234,6 +278,7 @@ export default function UsersPage() {
                   <th className="px-4 py-3">Contact</th>
                   <th className="px-4 py-3">Usage</th>
                   <th className="px-4 py-3">Last activity</th>
+                  <th className="px-4 py-3">Test account</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-violet-50">
@@ -242,6 +287,9 @@ export default function UsersPage() {
                     <td className="px-4 py-3">
                       <p className="font-black text-slate-900">{row.name || "Unknown user"}</p>
                       <p className="mt-1 font-mono text-xs text-slate-500">{row.teacher_id}</p>
+                      {row.is_test_account && (
+                        <span className="mt-1 inline-block w-fit rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Test account</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
@@ -263,6 +311,18 @@ export default function UsersPage() {
                       {row.onboarding_goal ? <p className="mt-1 text-xs text-slate-500">Goal: {row.onboarding_goal}</p> : null}
                     </td>
                     <td className="px-4 py-3">{formatDateTime(row.last_activity_at)}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        disabled={!canFlagTestAccounts || flagBusyId === row.teacher_id}
+                        onClick={() => toggleTestFlag(row)}
+                        className={`rounded-xl px-3 py-2 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                          row.is_test_account ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "border border-violet-200 bg-white text-purple-800 hover:bg-violet-50"
+                        }`}
+                      >
+                        {flagBusyId === row.teacher_id ? "Saving..." : row.is_test_account ? "Unflag test" : "Flag as test"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
