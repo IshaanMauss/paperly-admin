@@ -62,7 +62,7 @@ npm run dev
 The app expects:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8003/api
 ```
 
 ## Backend Routes Used

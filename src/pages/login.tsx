@@ -53,7 +53,7 @@ export default function LoginPage() {
       <main className="grid min-h-screen place-items-center px-4 py-10">
         <section className="w-full max-w-md rounded-3xl border border-violet-100 bg-white/90 p-7 shadow-soft">
           <div className="mb-6 flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-purple-500 to-violet-700 font-black text-white shadow-lg shadow-violet-200">P</span>
+            <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly" className="h-16 w-16 object-contain drop-shadow-sm" />
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-800">Paperly Admin</p>
               <h1 className="text-2xl font-black text-slate-950">Sign in to control plane</h1>
