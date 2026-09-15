@@ -747,4 +747,22 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  resetUserQuota(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; counters_reset: number }>(`/admin/users/${encodeURIComponent(teacherId)}/quota/reset`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  unstickUserGeneration(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; requests_cleared: number }>(`/admin/users/${encodeURIComponent(teacherId)}/generation/unstick`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  verifyUserEmail(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; email_verified: boolean }>(`/admin/users/${encodeURIComponent(teacherId)}/verify-email`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
 };

@@ -137,6 +137,21 @@ export default function UserThreeSixtyPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
+  const [quotaReason, setQuotaReason] = useState("");
+  const [quotaBusy, setQuotaBusy] = useState(false);
+  const [quotaError, setQuotaError] = useState<string | null>(null);
+  const [quotaSuccess, setQuotaSuccess] = useState<string | null>(null);
+
+  const [unstickReason, setUnstickReason] = useState("");
+  const [unstickBusy, setUnstickBusy] = useState(false);
+  const [unstickError, setUnstickError] = useState<string | null>(null);
+  const [unstickSuccess, setUnstickSuccess] = useState<string | null>(null);
+
+  const [verifyReason, setVerifyReason] = useState("");
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [verifySuccess, setVerifySuccess] = useState<string | null>(null);
+
   useEffect(() => {
     api.getPromoCodes().then((response) => setPlanOptions(response.plan_options)).catch(() => undefined);
   }, []);
@@ -207,6 +222,69 @@ export default function UserThreeSixtyPage() {
       setSessionError(err instanceof Error ? err.message : "Could not reset this user's session.");
     } finally {
       setSessionBusy(false);
+    }
+  }
+
+  async function submitResetQuota() {
+    if (!teacherIdParam || quotaReason.trim().length < 8) {
+      setQuotaError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setQuotaBusy(true);
+    setQuotaError(null);
+    setQuotaSuccess(null);
+    try {
+      const result = await api.resetUserQuota(teacherIdParam, { reason: quotaReason.trim() });
+      setQuotaSuccess(`Reset ${result.counters_reset} quota counter(s) for this user.`);
+      setQuotaReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setQuotaError(err instanceof Error ? err.message : "Could not reset quota.");
+    } finally {
+      setQuotaBusy(false);
+    }
+  }
+
+  async function submitUnstickGeneration() {
+    if (!teacherIdParam || unstickReason.trim().length < 8) {
+      setUnstickError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setUnstickBusy(true);
+    setUnstickError(null);
+    setUnstickSuccess(null);
+    try {
+      const result = await api.unstickUserGeneration(teacherIdParam, { reason: unstickReason.trim() });
+      setUnstickSuccess(result.requests_cleared > 0 ? `Cleared ${result.requests_cleared} stuck request(s) - they can retry now.` : "No stuck requests found for this user.");
+      setUnstickReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setUnstickError(err instanceof Error ? err.message : "Could not clear stuck requests.");
+    } finally {
+      setUnstickBusy(false);
+    }
+  }
+
+  async function submitVerifyEmail() {
+    if (!teacherIdParam || verifyReason.trim().length < 8) {
+      setVerifyError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setVerifyBusy(true);
+    setVerifyError(null);
+    setVerifySuccess(null);
+    try {
+      await api.verifyUserEmail(teacherIdParam, { reason: verifyReason.trim() });
+      setVerifySuccess("Email marked verified - they can sign in now.");
+      setVerifyReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : "Could not verify this user's email.");
+    } finally {
+      setVerifyBusy(false);
     }
   }
 
@@ -526,6 +604,63 @@ export default function UserThreeSixtyPage() {
                     placeholder="Reason (required) - e.g. stuck in a login refresh loop, confirmed a real session/token bug"
                     value={sessionReason}
                     onChange={(event) => setSessionReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Reset this user's generation quota"
+                  description="Zeroes every quota counter for this user - use when they're wrongly shown as out of papers for the period."
+                  busy={quotaBusy}
+                  error={quotaError}
+                  success={quotaSuccess}
+                  submitLabel="Reset quota"
+                  confirmMessage="Reset every generation quota counter for this user right now?"
+                  onSubmit={submitResetQuota}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. quota shows exhausted but usage history doesn't support it"
+                    value={quotaReason}
+                    onChange={(event) => setQuotaReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Unstick a stuck paper generation"
+                  description="Clears any generation/export request stuck mid-flight and releases any quota it reserved, so a retry can start clean."
+                  busy={unstickBusy}
+                  error={unstickError}
+                  success={unstickSuccess}
+                  submitLabel="Unstick generation"
+                  confirmMessage="Clear any stuck in-progress generation request for this user right now?"
+                  onSubmit={submitUnstickGeneration}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. generation has been spinning with no result"
+                    value={unstickReason}
+                    onChange={(event) => setUnstickReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Manually verify this user's email"
+                  description="For onboarding stuck on a dead/expired OTP - marks their email verified directly so they can sign in without a working code."
+                  busy={verifyBusy}
+                  error={verifyError}
+                  success={verifySuccess}
+                  submitLabel="Verify email"
+                  confirmMessage="Mark this user's email as verified right now?"
+                  onSubmit={submitVerifyEmail}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. OTP kept expiring before they could complete onboarding"
+                    value={verifyReason}
+                    onChange={(event) => setVerifyReason(event.target.value)}
                   />
                 </ActionCard>
 
