@@ -7,6 +7,7 @@ import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 const navItems = [
   { href: "/", label: "Overview" },
   { href: "/teachers", label: "Users" },
+  { href: "/user-360", label: "User 360" },
   { href: "/billing", label: "Billing" },
   { href: "/full-portion", label: "Full Portion" },
   { href: "/organizations", label: "Organizations" },

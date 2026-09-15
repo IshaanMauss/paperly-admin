@@ -471,6 +471,75 @@ export type PromoCodeRedemptionRow = {
   redeemed_at: string | null;
 };
 
+export type UserResolveHit = {
+  teacher_id: string;
+  name: string;
+  email: string;
+  is_test_account: boolean;
+};
+
+export type UserThreeSixtyTimelineItem = {
+  kind: "account" | "payment" | "promo" | "support" | "usage" | "security" | "activity" | "request";
+  status: "success" | "warning" | "error";
+  at: string | null;
+  title: string;
+  detail: string | null;
+};
+
+export type UserThreeSixty = {
+  profile: {
+    teacher_id: string;
+    name: string;
+    email: string;
+    school: string | null;
+    phone: string | null;
+    email_verified: boolean;
+    phone_verified: boolean;
+    is_test_account: boolean;
+    created_at: string | null;
+    last_login_at: string | null;
+  };
+  subscription: {
+    plan_code: string;
+    status: string;
+    gateway: string;
+    current_period_start: string | null;
+    current_period_end: string | null;
+  } | null;
+  auth: {
+    email_verified_at: string | null;
+    failed_login_count: number;
+    locked_until: string | null;
+    token_version: number;
+  } | null;
+  active_sessions: {
+    created_at: string | null;
+    last_seen_at: string | null;
+    expires_at: string | null;
+    revoked_at: string | null;
+    ip_address: string | null;
+    user_agent: string | null;
+  }[];
+  counts: {
+    payments: number;
+    promo_redemptions: number;
+    support_tickets: number;
+    open_support_tickets: number;
+    worksheets_generated: number;
+    failed_payments_30d: number;
+    request_errors_recorded: number;
+  };
+  red_flags: string[];
+  promo_redemptions: {
+    id: string;
+    code: string;
+    label: string | null;
+    plan_code_granted: string;
+    redeemed_at: string | null;
+  }[];
+  timeline: UserThreeSixtyTimelineItem[];
+};
+
 export const api = {
   listTemplates(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
@@ -641,5 +710,11 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     });
+  },
+  resolveUsers(query: string) {
+    return request<{ items: UserResolveHit[] }>(`/admin/users/resolve?query=${encodeURIComponent(query)}`);
+  },
+  getUserThreeSixty(teacherId: string) {
+    return request<UserThreeSixty>(`/admin/users/${encodeURIComponent(teacherId)}/three-sixty`);
   },
 };

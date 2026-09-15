@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { useAdminSession } from "@/lib/adminAuth";
@@ -267,7 +268,7 @@ export default function UsersPage() {
         )}
         {rows.length > 0 && (
           <div className="mt-6 overflow-hidden rounded-2xl border border-violet-100 bg-white">
-            <table className="w-full min-w-[1040px] text-left text-sm">
+            <table className="w-full min-w-[1180px] text-left text-sm">
               <thead className="bg-violet-50 text-xs uppercase tracking-[0.12em] text-slate-500">
                 <tr>
                   <th className="px-4 py-3">User</th>
@@ -279,13 +280,16 @@ export default function UsersPage() {
                   <th className="px-4 py-3">Usage</th>
                   <th className="px-4 py-3">Last activity</th>
                   <th className="px-4 py-3">Test account</th>
+                  <th className="px-4 py-3">User 360</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-violet-50">
                 {rows.map((row) => (
                   <tr key={row.teacher_id} className="font-semibold text-slate-700">
                     <td className="px-4 py-3">
-                      <p className="font-black text-slate-900">{row.name || "Unknown user"}</p>
+                      <Link href={`/user-360?teacher_id=${encodeURIComponent(row.teacher_id)}`} className="font-black text-slate-900 underline decoration-violet-300 decoration-2 underline-offset-2 hover:text-purple-800">
+                        {row.name || "Unknown user"}
+                      </Link>
                       <p className="mt-1 font-mono text-xs text-slate-500">{row.teacher_id}</p>
                       {row.is_test_account && (
                         <span className="mt-1 inline-block w-fit rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Test account</span>
@@ -322,6 +326,14 @@ export default function UsersPage() {
                       >
                         {flagBusyId === row.teacher_id ? "Saving..." : row.is_test_account ? "Unflag test" : "Flag as test"}
                       </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/user-360?teacher_id=${encodeURIComponent(row.teacher_id)}`}
+                        className="inline-block rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-black text-purple-800 transition hover:bg-violet-50"
+                      >
+                        View full history
+                      </Link>
                     </td>
                   </tr>
                 ))}
