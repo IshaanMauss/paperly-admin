@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { getAdminAccessToken } from "@/lib/adminToken";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
-import { onAdminDataRefresh } from "@/lib/adminRefresh";
+import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type PromoCode, type PromoCodeRedemptionRow } from "@/lib/apiClient";
 
 // Admin-issued coupon/promo code tab, built 2026-09-15 per Toyaj's CEO ask:
@@ -294,7 +294,7 @@ export default function PromoCodesPage() {
 
         <div className="mt-6 border-t border-violet-100 pt-5">
           <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">Create a code</p>
-          {!loading ? <CreateCodeForm planOptions={planOptions} onCreated={load} /> : null}
+          {!loading ? <CreateCodeForm planOptions={planOptions} onCreated={() => { load(); requestAdminDataRefresh(); }} /> : null}
         </div>
 
         <div className="mt-6 border-t border-violet-100 pt-4">
@@ -317,7 +317,7 @@ export default function PromoCodesPage() {
                     <CodeRow
                       key={c.id}
                       code={c}
-                      onToggled={(updated) => setCodes((prev) => (prev ? prev.map((row) => (row.id === updated.id ? updated : row)) : prev))}
+                      onToggled={(updated) => { setCodes((prev) => (prev ? prev.map((row) => (row.id === updated.id ? updated : row)) : prev)); requestAdminDataRefresh(); }}
                     />
                   ))}
                 </tbody>

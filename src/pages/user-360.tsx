@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
+import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 
 function formatDateTime(value?: string | null) {
   if (!value) return "Never";
@@ -21,6 +23,7 @@ const KIND_LABELS: Record<UserThreeSixtyTimelineItem["kind"], string> = {
   security: "Security",
   activity: "Activity",
   request: "API request",
+  admin_action: "Admin action",
 };
 
 const STATUS_STYLES: Record<UserThreeSixtyTimelineItem["status"], string> = {
@@ -39,6 +42,7 @@ const KIND_FILTERS: Array<{ key: "all" | UserThreeSixtyTimelineItem["kind"]; lab
   { key: "request", label: "API requests" },
   { key: "account", label: "Account" },
   { key: "activity", label: "Other activity" },
+  { key: "admin_action", label: "Admin actions taken" },
 ];
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "danger" | "warning" | "default" }) {
@@ -56,6 +60,48 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "da
   );
 }
 
+function ActionCard({
+  title,
+  description,
+  busy,
+  error,
+  success,
+  onSubmit,
+  children,
+  submitLabel,
+  confirmMessage,
+}: {
+  title: string;
+  description: string;
+  busy: boolean;
+  error: string | null;
+  success: string | null;
+  onSubmit: () => void;
+  children: ReactNode;
+  submitLabel: string;
+  confirmMessage: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
+      <p className="text-sm font-black text-slate-900">{title}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
+      <div className="mt-3 space-y-2">{children}</div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          if (window.confirm(confirmMessage)) onSubmit();
+        }}
+        className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {busy ? "Working..." : submitLabel}
+      </button>
+      {error && <p className="mt-2 text-xs font-bold text-rose-700">{error}</p>}
+      {success && <p className="mt-2 text-xs font-bold text-emerald-700">{success}</p>}
+    </div>
+  );
+}
+
 export default function UserThreeSixtyPage() {
   const router = useRouter();
   const teacherIdParam = typeof router.query.teacher_id === "string" ? router.query.teacher_id : "";
@@ -68,6 +114,122 @@ export default function UserThreeSixtyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kindFilter, setKindFilter] = useState<"all" | UserThreeSixtyTimelineItem["kind"]>("all");
+
+  const [planOptions, setPlanOptions] = useState<Record<string, string>>({});
+  const [grantPlan, setGrantPlan] = useState("");
+  const [grantReason, setGrantReason] = useState("");
+  const [grantBusy, setGrantBusy] = useState(false);
+  const [grantError, setGrantError] = useState<string | null>(null);
+  const [grantSuccess, setGrantSuccess] = useState<string | null>(null);
+
+  const [promoCode, setPromoCode] = useState("");
+  const [promoReason, setPromoReason] = useState("");
+  const [promoBusy, setPromoBusy] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
+
+  const [sessionReason, setSessionReason] = useState("");
+  const [sessionBusy, setSessionBusy] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [sessionSuccess, setSessionSuccess] = useState<string | null>(null);
+
+  const [exportBusyId, setExportBusyId] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getPromoCodes().then((response) => setPlanOptions(response.plan_options)).catch(() => undefined);
+  }, []);
+
+  function reload() {
+    if (!teacherIdParam) return;
+    api.getUserThreeSixty(teacherIdParam).then((response) => setData(response)).catch(() => undefined);
+  }
+
+  async function submitGrantPlan() {
+    if (!teacherIdParam || !grantPlan || grantReason.trim().length < 8) {
+      setGrantError("Pick a plan and write a reason of at least 8 characters.");
+      return;
+    }
+    setGrantBusy(true);
+    setGrantError(null);
+    setGrantSuccess(null);
+    try {
+      await api.grantUserPlan(teacherIdParam, { plan_code: grantPlan, reason: grantReason.trim() });
+      setGrantSuccess(`Granted ${grantPlan} to this user.`);
+      setGrantReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setGrantError(err instanceof Error ? err.message : "Could not grant this plan.");
+    } finally {
+      setGrantBusy(false);
+    }
+  }
+
+  async function submitForceRedeem() {
+    if (!teacherIdParam || !promoCode.trim() || promoReason.trim().length < 8) {
+      setPromoError("Enter the code and write a reason of at least 8 characters.");
+      return;
+    }
+    setPromoBusy(true);
+    setPromoError(null);
+    setPromoSuccess(null);
+    try {
+      const result = await api.forceRedeemPromoForUser(teacherIdParam, { code: promoCode.trim(), reason: promoReason.trim() });
+      setPromoSuccess(`Redeemed "${promoCode.trim().toUpperCase()}" - now on ${result.promo.plan_label}.`);
+      setPromoCode("");
+      setPromoReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setPromoError(err instanceof Error ? err.message : "Redemption failed - this error is the real diagnosis, it's the same check a real redemption runs.");
+    } finally {
+      setPromoBusy(false);
+    }
+  }
+
+  async function submitSessionReset() {
+    if (!teacherIdParam || sessionReason.trim().length < 8) {
+      setSessionError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setSessionBusy(true);
+    setSessionError(null);
+    setSessionSuccess(null);
+    try {
+      const result = await api.resetUserSession(teacherIdParam, { reason: sessionReason.trim() });
+      setSessionSuccess(result.lockout_cleared ? "Every session revoked and lockout cleared - they can sign in fresh now." : "Every session revoked - they'll need to sign in again.");
+      setSessionReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setSessionError(err instanceof Error ? err.message : "Could not reset this user's session.");
+    } finally {
+      setSessionBusy(false);
+    }
+  }
+
+  async function submitRegenerateExport(worksheetId: string) {
+    const reason = window.prompt("Why are you regenerating this export? (shown in this user's timeline)");
+    if (!reason || reason.trim().length < 8) {
+      setExportError("A reason of at least 8 characters is required.");
+      return;
+    }
+    setExportBusyId(worksheetId);
+    setExportError(null);
+    setExportSuccess(null);
+    try {
+      await api.regenerateWorksheetExport(worksheetId, { reason: reason.trim() });
+      setExportSuccess("Export regenerated successfully.");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Regeneration failed - see the error, it's the real bug to fix.");
+    } finally {
+      setExportBusyId(null);
+    }
+  }
 
   useEffect(() => {
     if (!searchInput.trim() || searchInput.trim().length < 2) {
@@ -284,6 +446,121 @@ export default function UserThreeSixtyPage() {
                 )}
               </div>
             )}
+
+            <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Fix this account</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">
+                Every action below is logged into this user's own timeline with your admin email and the reason you
+                give - and every other tab (Users, Billing, Promo Codes) reflects the change the moment you reopen it,
+                because they all read the same database tables this page does. Only use these once User 360 has shown
+                you the real problem is on our side, not the user's bank or a dead promo code.
+              </p>
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                <ActionCard
+                  title="Grant / fix this user's plan"
+                  description="Owner-only. Use when payment or webhook evidence shows they should already be on a different plan."
+                  busy={grantBusy}
+                  error={grantError}
+                  success={grantSuccess}
+                  submitLabel="Grant plan"
+                  confirmMessage={`Grant "${grantPlan || "(pick a plan)"}" to this user right now?`}
+                  onSubmit={submitGrantPlan}
+                >
+                  <select
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    value={grantPlan}
+                    onChange={(event) => setGrantPlan(event.target.value)}
+                  >
+                    <option value="">Choose a plan...</option>
+                    {Object.entries(planOptions).map(([code, label]) => (
+                      <option key={code} value={code}>{label}</option>
+                    ))}
+                  </select>
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. gateway confirms payment, webhook never applied it"
+                    value={grantReason}
+                    onChange={(event) => setGrantReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Force-redeem a promo code for this user"
+                  description="Runs the exact same redemption check a real redemption uses. If it fails again, the error is the real bug."
+                  busy={promoBusy}
+                  error={promoError}
+                  success={promoSuccess}
+                  submitLabel="Force redeem"
+                  confirmMessage={`Redeem "${promoCode || "(no code entered)"}" for this user right now?`}
+                  onSubmit={submitForceRedeem}
+                >
+                  <input
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold uppercase text-slate-900"
+                    placeholder="PROMO CODE"
+                    value={promoCode}
+                    onChange={(event) => setPromoCode(event.target.value)}
+                  />
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. code is active/not expired/not exhausted but redemption failed for this user"
+                    value={promoReason}
+                    onChange={(event) => setPromoReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Reset this user's session"
+                  description="Force-logs-out every device, invalidates every access token, and clears any lockout so they can sign in fresh."
+                  busy={sessionBusy}
+                  error={sessionError}
+                  success={sessionSuccess}
+                  submitLabel="Reset session"
+                  confirmMessage="Force-logout every device and clear any lockout for this user right now?"
+                  onSubmit={submitSessionReset}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. stuck in a login refresh loop, confirmed a real session/token bug"
+                    value={sessionReason}
+                    onChange={(event) => setSessionReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
+                  <p className="text-sm font-black text-slate-900">Regenerate a failed PDF/export</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    Re-renders the PDF/answer-key/preview from this paper's already-stored data - nothing about the
+                    content changes. If it fails again, the error shown is the real bug to go fix.
+                  </p>
+                  <div className="mt-3 max-h-40 space-y-2 overflow-y-auto">
+                    {data.worksheets.length === 0 && <p className="text-xs font-bold text-slate-400">No papers generated by this user yet.</p>}
+                    {data.worksheets.map((ws) => (
+                      <div key={ws.worksheet_id} className="flex items-center justify-between gap-2 rounded-xl border border-violet-50 bg-white px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-black text-slate-800">{ws.title}</p>
+                          <p className="text-[11px] font-bold text-slate-400">
+                            {formatDateTime(ws.created_at)} - {ws.pdf_ready ? "Export ready" : "Export not ready"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={exportBusyId === ws.worksheet_id}
+                          onClick={() => submitRegenerateExport(ws.worksheet_id)}
+                          className="flex-shrink-0 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-black text-purple-800 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {exportBusyId === ws.worksheet_id ? "Working..." : "Regenerate"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {exportError && <p className="mt-2 text-xs font-bold text-rose-700">{exportError}</p>}
+                  {exportSuccess && <p className="mt-2 text-xs font-bold text-emerald-700">{exportSuccess}</p>}
+                </div>
+              </div>
+            </div>
 
             <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">

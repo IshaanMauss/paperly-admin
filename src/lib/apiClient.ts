@@ -479,7 +479,7 @@ export type UserResolveHit = {
 };
 
 export type UserThreeSixtyTimelineItem = {
-  kind: "account" | "payment" | "promo" | "support" | "usage" | "security" | "activity" | "request";
+  kind: "account" | "payment" | "promo" | "support" | "usage" | "security" | "activity" | "request" | "admin_action";
   status: "success" | "warning" | "error";
   at: string | null;
   title: string;
@@ -487,6 +487,12 @@ export type UserThreeSixtyTimelineItem = {
 };
 
 export type UserThreeSixty = {
+  worksheets: {
+    worksheet_id: string;
+    title: string;
+    created_at: string | null;
+    pdf_ready: boolean;
+  }[];
   profile: {
     teacher_id: string;
     name: string;
@@ -716,5 +722,29 @@ export const api = {
   },
   getUserThreeSixty(teacherId: string) {
     return request<UserThreeSixty>(`/admin/users/${encodeURIComponent(teacherId)}/three-sixty`);
+  },
+  grantUserPlan(teacherId: string, payload: { plan_code: string; reason: string }) {
+    return request<{ status: string; plan_code: string }>(`/admin/users/${encodeURIComponent(teacherId)}/grant-plan`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  forceRedeemPromoForUser(teacherId: string, payload: { code: string; reason: string }) {
+    return request<{ billing_status: unknown; promo: PromoCode }>(`/admin/users/${encodeURIComponent(teacherId)}/promo/force-redeem`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  resetUserSession(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; sessions_revoked: boolean; lockout_cleared: boolean }>(`/admin/users/${encodeURIComponent(teacherId)}/session/reset`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  regenerateWorksheetExport(worksheetId: string, payload: { reason: string }) {
+    return request<{ worksheet_id: string; worksheet_pdf_path: string | null; answer_key_pdf_path: string | null }>(`/admin/worksheets/${encodeURIComponent(worksheetId)}/regenerate-export`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 };

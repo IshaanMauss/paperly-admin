@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { useAdminSession } from "@/lib/adminAuth";
-import { onAdminDataRefresh } from "@/lib/adminRefresh";
+import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminTeacherRow, api } from "@/lib/apiClient";
 
 type UserSegment = "all" | "individual" | "institute";
@@ -116,6 +116,7 @@ export default function UsersPage() {
     try {
       await api.updateTeacherTestFlag(row.teacher_id, next);
       setRows((current) => current.map((item) => (item.teacher_id === row.teacher_id ? { ...item, is_test_account: next } : item)));
+      requestAdminDataRefresh();
     } catch (err) {
       setFlagError(err instanceof Error ? err.message : "Could not update the test-account flag.");
     } finally {
