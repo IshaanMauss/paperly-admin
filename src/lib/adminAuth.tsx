@@ -24,6 +24,24 @@ type AuthState = {
 
 const AdminAuthContext = createContext<AuthState | null>(null);
 
+// Same rule as apiClient.ts's adminApiErrorMessage(): a non-OK auth response
+// body can be a raw traceback or an HTML error page (e.g. a proxy's 502/504
+// interstitial) rather than JSON - login is exactly the page where staff are
+// most likely to hit a backend that's briefly unreachable, so this matters
+// here even more than on the rest of the panel.
+function authErrorMessage(text: string, fallback: string): string {
+  if (!text) return fallback;
+  try {
+    const parsed = JSON.parse(text) as { detail?: unknown; message?: unknown };
+    const detail = parsed.detail ?? parsed.message;
+    if (typeof detail === "string") return detail;
+  } catch {
+    const looksLikeMarkup = /<\s*(!doctype|html|head|body|script)\b/i.test(text);
+    if (!looksLikeMarkup && text.length <= 300) return text;
+  }
+  return fallback;
+}
+
 async function authRequest(path: string, options?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -35,7 +53,7 @@ async function authRequest(path: string, options?: RequestInit) {
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with status ${response.status}`);
+    throw new Error(authErrorMessage(text, `Request failed with status ${response.status}`));
   }
   return response.json() as Promise<{ access_token?: string; admin?: AdminUser }>;
 }

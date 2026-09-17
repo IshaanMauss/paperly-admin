@@ -193,6 +193,14 @@ function AccountRow({
 
   async function toggleActive() {
     if (isSelf) return; // backend blocks this too; mirrored here so the button is never even clickable
+    // A misclick here instantly locks out a teammate mid-launch-week with no
+    // undo in the UI (has to be manually re-toggled by another admin) - every
+    // other destructive admin action in this panel (see user-360.tsx) confirms
+    // first, this one didn't.
+    const question = account.active
+      ? `Deactivate ${account.name || account.email}? They will be signed out and unable to log back in until reactivated.`
+      : `Reactivate ${account.name || account.email}?`;
+    if (!window.confirm(question)) return;
     setBusy(true);
     setError(null);
     try {

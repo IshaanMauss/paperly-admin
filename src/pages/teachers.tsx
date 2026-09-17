@@ -268,7 +268,7 @@ export default function UsersPage() {
           </div>
         )}
         {rows.length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-violet-100 bg-white">
+          <div className="mt-6 overflow-x-auto rounded-2xl border border-violet-100 bg-white">
             <table className="w-full min-w-[1180px] text-left text-sm">
               <thead className="bg-violet-50 text-xs uppercase tracking-[0.12em] text-slate-500">
                 <tr>

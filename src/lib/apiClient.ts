@@ -404,6 +404,38 @@ export type Worksheet = {
   answer_key_image_path?: string | null;
 };
 
+// A non-OK response body is sometimes a FastAPI JSON {detail}, but can also
+// be a raw Python traceback, or an HTML error page from a proxy in front of
+// the backend (a 502/504/ngrok-style interstitial) - none of those should
+// ever be shown verbatim to admin staff (info disclosure, and just
+// confusing). Mirrors apiErrorMessage() in the teacher app's apiClient.ts.
+function adminApiErrorMessage(text: string, fallback: string): string {
+  if (!text) return fallback;
+  try {
+    const parsed = JSON.parse(text) as { detail?: unknown; message?: unknown };
+    const detail = parsed.detail ?? parsed.message;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      const joined = detail
+        .map((item) => {
+          if (item && typeof item === "object") {
+            const entry = item as { loc?: unknown[]; msg?: string };
+            const field = Array.isArray(entry.loc) ? entry.loc.join(".") : "request";
+            return entry.msg ? `${field}: ${entry.msg}` : "";
+          }
+          return typeof item === "string" ? item : "";
+        })
+        .filter(Boolean)
+        .join("; ");
+      if (joined) return joined;
+    }
+  } catch {
+    const looksLikeMarkup = /<\s*(!doctype|html|head|body|script)\b/i.test(text);
+    if (!looksLikeMarkup && text.length <= 300) return text;
+  }
+  return fallback;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAdminAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -417,7 +449,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with status ${response.status}`);
+    throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
   }
   return response.json() as Promise<T>;
 }
