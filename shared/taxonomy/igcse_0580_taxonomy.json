@@ -70,7 +70,8 @@
         { "value": "surface area", "label": "Surface Area" },
         { "value": "volume", "label": "Volume" },
         { "value": "arc length and sector area", "label": "Arc Length and Sector Area" },
-        { "value": "composite shapes", "label": "Composite Shapes" }
+        { "value": "composite shapes", "label": "Composite Shapes" },
+        { "value": "compound measures", "label": "Compound Measures" }
       ]
     },
     {
