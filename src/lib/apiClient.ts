@@ -77,6 +77,11 @@ export type AdminSupportTicketRow = {
   // signed-out "Ask us anything" widget, whose ticket carries a synthetic
   // "guest:<token>" teacher_id since there's no account to attach it to.
   requester_type?: "customer" | "guest";
+  // Added 2026-09-28: previously there was nothing to resolve/reply into -
+  // only GET /support-tickets existed. See api.resolveSupportTicket.
+  admin_reply?: string | null;
+  resolved_at?: string | null;
+  resolved_by?: string | null;
 };
 export type AdminSubscriptionRow = {
   id: string;
@@ -223,6 +228,11 @@ export type AdminServerLogRow = {
   user_agent?: string | null;
   error_detail?: string | null;
   occurred_at?: string | null;
+  // Added 2026-09-28: per-row acknowledge, alongside the existing
+  // all-or-nothing DELETE /server-logs reset.
+  acknowledged?: boolean;
+  acknowledged_by?: string | null;
+  acknowledged_at?: string | null;
 };
 
 export type AdminServerLogSummary = {
@@ -539,6 +549,10 @@ export type UserThreeSixty = {
     email_verified: boolean;
     phone_verified: boolean;
     is_test_account: boolean;
+    is_suspended?: boolean;
+    suspended_at?: string | null;
+    suspended_by?: string | null;
+    suspended_reason?: string | null;
     created_at: string | null;
     last_login_at: string | null;
   };
@@ -654,6 +668,12 @@ export const api = {
   listAdminSupportTickets(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSupportTicketRow>>(`/admin/support-tickets${adminQuery(params)}`);
   },
+  resolveSupportTicket(ticketId: string, adminReply: string, status: "resolved" | "open" = "resolved") {
+    return request<AdminSupportTicketRow>(`/admin/support-tickets/${encodeURIComponent(ticketId)}/resolve`, {
+      method: "PATCH",
+      body: JSON.stringify({ admin_reply: adminReply, status }),
+    });
+  },
   listAdminSubscriptions(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSubscriptionRow>>(`/admin/billing/subscriptions${adminQuery(params)}`);
   },
@@ -668,6 +688,12 @@ export const api = {
   },
   resetAdminServerLogs() {
     return request<{ removed: number }>("/admin/server-logs", { method: "DELETE" });
+  },
+  acknowledgeAdminServerLog(logId: string) {
+    return request<{ id: string; acknowledged: boolean }>(`/admin/server-logs/${encodeURIComponent(logId)}/acknowledge`, { method: "POST" });
+  },
+  deleteAdminServerLog(logId: string) {
+    return request<{ id: string; removed: boolean }>(`/admin/server-logs/${encodeURIComponent(logId)}`, { method: "DELETE" });
   },
   getAdminServerLogsSummary(params?: { search?: string; method?: string }) {
     return request<AdminServerLogSummary>(`/admin/server-logs/summary${adminQuery(params)}`);
@@ -704,6 +730,11 @@ export const api = {
   },
   getCheckingOverview() {
     return request<CheckingOverview>("/admin/checking/overview");
+  },
+  listCheckingSubmissions(params?: AdminPageParams) {
+    return request<AdminListResponse<{ id: string; teacher_id: string; event_type: string; payload: Record<string, unknown>; occurred_at: string }>>(
+      `/admin/checking/submissions${adminQuery(params)}`
+    );
   },
   getVariantHealth() {
     return request<VariantHealthOverview>("/admin/templates/variant-health");
@@ -801,5 +832,40 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  // Added 2026-09-28: previously there was no way to suspend/ban, export-on-
+  // behalf, or delete a teacher's account from the admin panel at all.
+  suspendTeacherAccount(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; is_suspended: boolean; suspended_at: string }>(`/admin/teachers/${encodeURIComponent(teacherId)}/suspend`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  unsuspendTeacherAccount(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; is_suspended: boolean }>(`/admin/teachers/${encodeURIComponent(teacherId)}/unsuspend`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  exportTeacherDataOnBehalf(teacherId: string) {
+    return request<Record<string, unknown>>(`/admin/teachers/${encodeURIComponent(teacherId)}/export`);
+  },
+  deleteTeacherAccountOnBehalf(teacherId: string, payload: { reason: string; confirm_teacher_id: string }) {
+    return request<Record<string, unknown>>(`/admin/teachers/${encodeURIComponent(teacherId)}/delete`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  cancelTeacherBilling(teacherId: string, payload: { reason: string }) {
+    return request<Record<string, unknown>>(`/admin/teachers/${encodeURIComponent(teacherId)}/billing/cancel`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  restoreBackup(backup: Record<string, unknown>, dryRun: boolean, confirmation?: string) {
+    return request<{ dry_run: boolean; tables: Record<string, { in_backup: number; would_insert: number; inserted: number; skipped_rows: number; note?: string }> }>(
+      "/admin/backups/restore",
+      { method: "POST", body: JSON.stringify({ backup, dry_run: dryRun, confirmation }) }
+    );
   },
 };

@@ -133,6 +133,26 @@ export default function UserThreeSixtyPage() {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionSuccess, setSessionSuccess] = useState<string | null>(null);
 
+  // Added 2026-09-28: suspend/unsuspend, export-on-behalf, delete, and
+  // billing-cancel - previously none of these existed for admin at all.
+  const [suspendReason, setSuspendReason] = useState("");
+  const [suspendBusy, setSuspendBusy] = useState(false);
+  const [suspendError, setSuspendError] = useState<string | null>(null);
+  const [suspendSuccess, setSuspendSuccess] = useState<string | null>(null);
+
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportOnBehalfError, setExportOnBehalfError] = useState<string | null>(null);
+
+  const [billingCancelReason, setBillingCancelReason] = useState("");
+  const [billingCancelBusy, setBillingCancelBusy] = useState(false);
+  const [billingCancelError, setBillingCancelError] = useState<string | null>(null);
+  const [billingCancelSuccess, setBillingCancelSuccess] = useState<string | null>(null);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const [exportBusyId, setExportBusyId] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
@@ -285,6 +305,112 @@ export default function UserThreeSixtyPage() {
       setVerifyError(err instanceof Error ? err.message : "Could not verify this user's email.");
     } finally {
       setVerifyBusy(false);
+    }
+  }
+
+  async function submitSuspend() {
+    if (!teacherIdParam || suspendReason.trim().length < 8) {
+      setSuspendError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setSuspendBusy(true);
+    setSuspendError(null);
+    setSuspendSuccess(null);
+    try {
+      await api.suspendTeacherAccount(teacherIdParam, { reason: suspendReason.trim() });
+      setSuspendSuccess("Account suspended - every session was force-logged-out and sign-in is now blocked.");
+      setSuspendReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setSuspendError(err instanceof Error ? err.message : "Could not suspend this account.");
+    } finally {
+      setSuspendBusy(false);
+    }
+  }
+
+  async function submitUnsuspend() {
+    if (!teacherIdParam || suspendReason.trim().length < 8) {
+      setSuspendError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setSuspendBusy(true);
+    setSuspendError(null);
+    setSuspendSuccess(null);
+    try {
+      await api.unsuspendTeacherAccount(teacherIdParam, { reason: suspendReason.trim() });
+      setSuspendSuccess("Account unsuspended - they can sign in again.");
+      setSuspendReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setSuspendError(err instanceof Error ? err.message : "Could not unsuspend this account.");
+    } finally {
+      setSuspendBusy(false);
+    }
+  }
+
+  async function submitExportOnBehalf() {
+    if (!teacherIdParam) return;
+    setExportBusy(true);
+    setExportOnBehalfError(null);
+    try {
+      const result = await api.exportTeacherDataOnBehalf(teacherIdParam);
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${teacherIdParam}-export.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportOnBehalfError(err instanceof Error ? err.message : "Could not export this user's data.");
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
+  async function submitCancelBilling() {
+    if (!teacherIdParam || billingCancelReason.trim().length < 8) {
+      setBillingCancelError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setBillingCancelBusy(true);
+    setBillingCancelError(null);
+    setBillingCancelSuccess(null);
+    try {
+      await api.cancelTeacherBilling(teacherIdParam, { reason: billingCancelReason.trim() });
+      setBillingCancelSuccess("Subscription cancelled.");
+      setBillingCancelReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setBillingCancelError(err instanceof Error ? err.message : "Could not cancel this user's subscription.");
+    } finally {
+      setBillingCancelBusy(false);
+    }
+  }
+
+  async function submitDeleteAccount() {
+    if (!teacherIdParam) return;
+    if (deleteConfirmId !== teacherIdParam) {
+      setDeleteError("Type the exact teacher_id shown above to confirm.");
+      return;
+    }
+    if (deleteReason.trim().length < 8) {
+      setDeleteError("Write a reason of at least 8 characters.");
+      return;
+    }
+    if (!window.confirm("This permanently deletes this account and its data. This cannot be undone. Continue?")) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.deleteTeacherAccountOnBehalf(teacherIdParam, { reason: deleteReason.trim(), confirm_teacher_id: deleteConfirmId });
+      requestAdminDataRefresh();
+      window.location.href = "/teachers";
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Could not delete this account.");
+      setDeleteBusy(false);
     }
   }
 
@@ -663,6 +789,114 @@ export default function UserThreeSixtyPage() {
                     onChange={(event) => setVerifyReason(event.target.value)}
                   />
                 </ActionCard>
+
+                {data.profile.is_suspended ? (
+                  <ActionCard
+                    title="Unsuspend this account"
+                    description={`Currently suspended${data.profile.suspended_by ? ` by ${data.profile.suspended_by}` : ""}${data.profile.suspended_at ? ` on ${formatDateTime(data.profile.suspended_at)}` : ""}. Reason on file: "${data.profile.suspended_reason || "-"}"`}
+                    busy={suspendBusy}
+                    error={suspendError}
+                    success={suspendSuccess}
+                    submitLabel="Unsuspend account"
+                    confirmMessage="Unsuspend this account and let them sign in again?"
+                    onSubmit={submitUnsuspend}
+                  >
+                    <textarea
+                      className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                      rows={2}
+                      placeholder="Reason (required) - e.g. dispute resolved, appeal accepted"
+                      value={suspendReason}
+                      onChange={(event) => setSuspendReason(event.target.value)}
+                    />
+                  </ActionCard>
+                ) : (
+                  <ActionCard
+                    title="Suspend this account"
+                    description="Blocks sign-in immediately (password and Google) and force-logs-out every existing session. Reversible - unsuspend from here any time."
+                    busy={suspendBusy}
+                    error={suspendError}
+                    success={suspendSuccess}
+                    submitLabel="Suspend account"
+                    confirmMessage="Suspend this account right now? They will be signed out and unable to sign in until unsuspended."
+                    onSubmit={submitSuspend}
+                  >
+                    <textarea
+                      className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                      rows={2}
+                      placeholder="Reason (required) - e.g. abuse report confirmed, policy violation"
+                      value={suspendReason}
+                      onChange={(event) => setSuspendReason(event.target.value)}
+                    />
+                  </ActionCard>
+                )}
+
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
+                  <p className="text-sm font-black text-slate-900">Export this user's data</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    Same export the user's own self-service "Download my data" produces - downloaded as a JSON file, for a
+                    support request or deletion prep where the user can't sign in themselves.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={exportBusy}
+                    onClick={submitExportOnBehalf}
+                    className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {exportBusy ? "Exporting..." : "Download data export"}
+                  </button>
+                  {exportOnBehalfError && <p className="mt-2 text-xs font-bold text-rose-700">{exportOnBehalfError}</p>}
+                </div>
+
+                {data.subscription ? (
+                  <ActionCard
+                    title="Cancel this user's subscription"
+                    description="Cancels their real subscription (same effect as their own self-service cancel). Does not issue a payment-gateway refund."
+                    busy={billingCancelBusy}
+                    error={billingCancelError}
+                    success={billingCancelSuccess}
+                    submitLabel="Cancel subscription"
+                    confirmMessage="Cancel this user's subscription right now?"
+                    onSubmit={submitCancelBilling}
+                  >
+                    <textarea
+                      className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                      rows={2}
+                      placeholder="Reason (required) - e.g. billing dispute, requested cancellation"
+                      value={billingCancelReason}
+                      onChange={(event) => setBillingCancelReason(event.target.value)}
+                    />
+                  </ActionCard>
+                ) : null}
+
+                <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
+                  <p className="text-sm font-black text-rose-900">Delete this account permanently</p>
+                  <p className="mt-1 text-xs font-semibold text-rose-700">
+                    Irreversible. Deletes this teacher's profile, subscription, worksheets, tickets, and history. Type the
+                    exact teacher_id ({teacherIdParam}) below to confirm.
+                  </p>
+                  <input
+                    className="mt-3 w-full min-w-0 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    placeholder={`Type "${teacherIdParam}" to confirm`}
+                    value={deleteConfirmId}
+                    onChange={(event) => setDeleteConfirmId(event.target.value)}
+                  />
+                  <textarea
+                    className="mt-2 w-full min-w-0 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required)"
+                    value={deleteReason}
+                    onChange={(event) => setDeleteReason(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    disabled={deleteBusy || deleteConfirmId !== teacherIdParam}
+                    onClick={submitDeleteAccount}
+                    className="mt-3 rounded-xl bg-rose-700 px-4 py-2 text-xs font-black text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deleteBusy ? "Deleting..." : "Permanently delete account"}
+                  </button>
+                  {deleteError && <p className="mt-2 text-xs font-bold text-rose-700">{deleteError}</p>}
+                </div>
 
                 <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
                   <p className="text-sm font-black text-slate-900">Regenerate a failed PDF/export</p>

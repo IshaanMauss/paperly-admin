@@ -55,32 +55,72 @@ function TroubleshootPanel({ row }: { row: AdminServerLogRow }) {
   );
 }
 
-function LogRow({ row }: { row: AdminServerLogRow }) {
+function LogRow({ row, onChanged }: { row: AdminServerLogRow; onChanged: (id: string, patch: Partial<AdminServerLogRow> | null) => void }) {
   const [open, setOpen] = useState(false);
   const [troubleshootOpen, setTroubleshootOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [rowError, setRowError] = useState<string | null>(null);
   const isProblem = row.outcome === "error" || (row.status_code ?? 0) >= 400;
+
+  async function acknowledge() {
+    setBusy(true);
+    setRowError(null);
+    try {
+      await api.acknowledgeAdminServerLog(row.id);
+      onChanged(row.id, { acknowledged: true, acknowledged_at: new Date().toISOString() });
+    } catch (err) {
+      setRowError(err instanceof Error ? err.message : "Could not acknowledge.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteRow() {
+    setBusy(true);
+    setRowError(null);
+    try {
+      await api.deleteAdminServerLog(row.id);
+      onChanged(row.id, null);
+    } catch (err) {
+      setRowError(err instanceof Error ? err.message : "Could not delete.");
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
+    <div className={`rounded-2xl border p-4 text-sm font-semibold text-slate-700 ${row.acknowledged ? "border-emerald-100 bg-emerald-50/40" : "border-slate-100 bg-slate-50"}`}>
       <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-xs font-black ${statusColor(row.status_code)}`}>{row.status_code ?? "-"}</span>
           <span className="font-mono text-xs uppercase text-slate-500">{row.method}</span>
           <span className="font-mono text-xs text-slate-800">{row.path}</span>
+          {row.acknowledged ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">Acknowledged</span> : null}
         </div>
         <span className="text-xs text-slate-500">{row.occurred_at ? new Date(row.occurred_at).toLocaleString() : "-"}</span>
       </button>
       <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs text-slate-500">Actor: {row.actor} {row.duration_ms != null ? `| ${row.duration_ms}ms` : ""}</span>
-        {isProblem ? (
-          <button
-            type="button"
-            onClick={() => setTroubleshootOpen((value) => !value)}
-            className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-[11px] font-black text-violet-800 transition hover:bg-violet-100"
-          >
-            {troubleshootOpen ? "Hide troubleshoot" : "Troubleshoot"}
+        <div className="flex flex-wrap items-center gap-2">
+          {isProblem ? (
+            <button
+              type="button"
+              onClick={() => setTroubleshootOpen((value) => !value)}
+              className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-[11px] font-black text-violet-800 transition hover:bg-violet-100"
+            >
+              {troubleshootOpen ? "Hide troubleshoot" : "Troubleshoot"}
+            </button>
+          ) : null}
+          {!row.acknowledged && (
+            <button type="button" disabled={busy} onClick={acknowledge} className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50">
+              Acknowledge
+            </button>
+          )}
+          <button type="button" disabled={busy} onClick={deleteRow} className="rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-[11px] font-black text-rose-800 transition hover:bg-rose-100 disabled:opacity-50">
+            Delete
           </button>
-        ) : null}
+        </div>
       </div>
+      {rowError && <p className="mt-1 text-xs font-bold text-rose-600">{rowError}</p>}
       {troubleshootOpen ? <TroubleshootPanel row={row} /> : null}
       {open ? (
         <div className="mt-3 grid gap-2 rounded-xl border border-slate-200 bg-white p-3 text-xs">
@@ -113,6 +153,15 @@ export default function ServerLogsPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [resetArmed, setResetArmed] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  function handleLogChanged(id: string, patch: Partial<AdminServerLogRow> | null) {
+    if (patch === null) {
+      setRows((prev) => prev.filter((row) => row.id !== id));
+      setTotal((value) => Math.max(0, value - 1));
+      return;
+    }
+    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
 
   useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => setPage(0), [tab, search, method, sort, statusClass, statusCode]);
@@ -304,7 +353,7 @@ export default function ServerLogsPage() {
             {rows.length === 0 ? <p className="mt-3 text-sm font-semibold text-slate-500">Nothing logged here yet.</p> : null}
             <div className="mt-4 space-y-3">
               {rows.map((row) => (
-                <LogRow key={row.id} row={row} />
+                <LogRow key={row.id} row={row} onChanged={handleLogChanged} />
               ))}
             </div>
             <div className="mt-4 flex items-center justify-between gap-3 text-sm font-black">

@@ -15,10 +15,38 @@ export default function SupportAdminPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [ticketType, setTicketType] = useState("all");
+  const [requesterType, setRequesterType] = useState("all");
   const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // Added 2026-09-28: reply/resolve UI - previously a ticket could only ever
+  // be viewed here, never actioned.
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [resolveError, setResolveError] = useState<Record<string, string>>({});
+
+  function setReplyDraft(ticketId: string, value: string) {
+    setReplyDrafts((prev) => ({ ...prev, [ticketId]: value }));
+  }
+
+  async function resolveTicket(ticketId: string, nextStatus: "resolved" | "open") {
+    const reply = (replyDrafts[ticketId] || "").trim();
+    if (!reply) {
+      setResolveError((prev) => ({ ...prev, [ticketId]: "Write a reply before resolving." }));
+      return;
+    }
+    setResolving(ticketId);
+    setResolveError((prev) => ({ ...prev, [ticketId]: "" }));
+    try {
+      const updated = await api.resolveSupportTicket(ticketId, reply, nextStatus);
+      setRows((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...updated } : row)));
+    } catch (err) {
+      setResolveError((prev) => ({ ...prev, [ticketId]: err instanceof Error ? err.message : "Could not resolve ticket." }));
+    } finally {
+      setResolving(null);
+    }
+  }
 
   useEffect(() => onAdminDataRefresh(() => setRefreshTick((value) => value + 1)), []);
   useEffect(() => {
@@ -30,7 +58,7 @@ export default function SupportAdminPage() {
     let cancelled = false;
     setLoading(true);
     api
-      .listAdminSupportTickets({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, search: search.trim(), status, ticket_type: ticketType, sort })
+      .listAdminSupportTickets({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, search: search.trim(), status, ticket_type: ticketType, requester_type: requesterType, sort })
       .then((response) => {
         if (cancelled) return;
         setRows(response.items || []);
@@ -48,7 +76,7 @@ export default function SupportAdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [page, refreshTick, search, sort, status, ticketType]);
+  }, [page, refreshTick, requesterType, search, sort, status, ticketType]);
 
   const start = total ? page * PAGE_SIZE + 1 : 0;
   const end = Math.min(page * PAGE_SIZE + rows.length, total);
@@ -56,6 +84,7 @@ export default function SupportAdminPage() {
     setSearch("");
     setStatus("all");
     setTicketType("all");
+    setRequesterType("all");
     setSort("newest");
     setPage(0);
   };
@@ -74,10 +103,18 @@ export default function SupportAdminPage() {
           <div className="rounded-2xl bg-violet-50 px-5 py-3 text-sm font-black text-slate-700">Source: {source || "backend"}</div>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-5">
+        <div className="mt-6 grid gap-3 md:grid-cols-6">
           <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="teacher id or message..." className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
+          </label>
+          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+            Requester
+            <select value={requesterType} onChange={(event) => { setRequesterType(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+              <option value="all">Customer + guest</option>
+              <option value="customer">Customer only (signed in)</option>
+              <option value="guest">Guest only (not signed in)</option>
+            </select>
           </label>
           <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
             Status
@@ -124,12 +161,58 @@ export default function SupportAdminPage() {
               {rows.map((row) => (
                 <article key={row.id} className="rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.12em]">
+                    {row.requester_type === "guest" ? (
+                      <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">Guest (not signed in)</span>
+                    ) : (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">Customer</span>
+                    )}
                     <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-800">{row.ticket_type || row.type || "feedback"}</span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{row.status}</span>
                     <span className="text-slate-400">{new Date(row.created_at).toLocaleString()}</span>
                   </div>
                   <p className="mt-3 font-mono text-xs font-semibold text-slate-500">{row.teacher_id}</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{row.message}</p>
+                  {row.admin_reply && (
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
+                        Admin reply {row.resolved_by ? `- ${row.resolved_by}` : ""} {row.resolved_at ? `- ${new Date(row.resolved_at).toLocaleString()}` : ""}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold leading-6 text-emerald-900">{row.admin_reply}</p>
+                    </div>
+                  )}
+                  <div className="mt-3 border-t border-violet-100 pt-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+                      {row.status === "resolved" ? "Update reply / re-open" : "Reply and resolve"}
+                      <textarea
+                        value={replyDrafts[row.id] ?? row.admin_reply ?? ""}
+                        onChange={(event) => setReplyDraft(row.id, event.target.value)}
+                        rows={2}
+                        placeholder="Write a reply to this teacher..."
+                        className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500"
+                      />
+                    </label>
+                    {resolveError[row.id] && <p className="mt-1 text-xs font-bold text-rose-600">{resolveError[row.id]}</p>}
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        disabled={resolving === row.id}
+                        onClick={() => resolveTicket(row.id, "resolved")}
+                        className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white disabled:opacity-50"
+                      >
+                        {resolving === row.id ? "Saving..." : "Reply & mark resolved"}
+                      </button>
+                      {row.status === "resolved" && (
+                        <button
+                          type="button"
+                          disabled={resolving === row.id}
+                          onClick={() => resolveTicket(row.id, "open")}
+                          className="rounded-xl border border-violet-200 px-4 py-2 text-xs font-black text-purple-900 disabled:opacity-50"
+                        >
+                          Re-open
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
