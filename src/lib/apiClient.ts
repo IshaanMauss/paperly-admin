@@ -1,5 +1,5 @@
 import { getAdminAccessToken } from "@/lib/adminToken";
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8003/api";
 
 export type TemplateSummary = {
   id: string;
@@ -466,7 +466,7 @@ async function formRequest<T>(path: string, formData: FormData): Promise<T> {
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with status ${response.status}`);
+    throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
   }
   return response.json() as Promise<T>;
 }
