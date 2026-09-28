@@ -73,6 +73,10 @@ export type AdminSupportTicketRow = {
   message: string;
   status: string;
   created_at: string;
+  // "customer" = a signed-in teacher's ticket (real teacher_id). "guest" = the
+  // signed-out "Ask us anything" widget, whose ticket carries a synthetic
+  // "guest:<token>" teacher_id since there's no account to attach it to.
+  requester_type?: "customer" | "guest";
 };
 export type AdminSubscriptionRow = {
   id: string;
@@ -315,6 +319,7 @@ type AdminPageParams = {
   test_account?: string;
   status?: string;
   ticket_type?: string;
+  requester_type?: string;
   gateway?: string;
   event_type?: string;
   severity?: string;
@@ -325,7 +330,7 @@ type AdminPageParams = {
   status_class?: string;
 };
 
-function adminQuery(params?: AdminPageParams) {
+export function adminQuery(params?: AdminPageParams) {
   const query = new URLSearchParams();
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value === undefined || value === null || value === "" || value === "all") return;
@@ -409,7 +414,7 @@ export type Worksheet = {
 // the backend (a 502/504/ngrok-style interstitial) - none of those should
 // ever be shown verbatim to admin staff (info disclosure, and just
 // confusing). Mirrors apiErrorMessage() in the teacher app's apiClient.ts.
-function adminApiErrorMessage(text: string, fallback: string): string {
+export function adminApiErrorMessage(text: string, fallback: string): string {
   if (!text) return fallback;
   try {
     const parsed = JSON.parse(text) as { detail?: unknown; message?: unknown };

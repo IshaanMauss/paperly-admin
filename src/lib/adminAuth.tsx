@@ -29,7 +29,7 @@ const AdminAuthContext = createContext<AuthState | null>(null);
 // interstitial) rather than JSON - login is exactly the page where staff are
 // most likely to hit a backend that's briefly unreachable, so this matters
 // here even more than on the rest of the panel.
-function authErrorMessage(text: string, fallback: string): string {
+export function authErrorMessage(text: string, fallback: string): string {
   if (!text) return fallback;
   try {
     const parsed = JSON.parse(text) as { detail?: unknown; message?: unknown };
