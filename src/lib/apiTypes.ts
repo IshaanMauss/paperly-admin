@@ -157,6 +157,7 @@ export type VariantHealthRow = {
   capacity: number | null;
   capacity_uncertain: boolean;
   capacity_capped: boolean;
+  capacity_exact?: boolean;
   total_usage_count: number;
   distinct_teachers_used: number;
   mean_usage_per_teacher: number | null;

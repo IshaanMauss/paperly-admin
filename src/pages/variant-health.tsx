@@ -47,7 +47,9 @@ function formatCapacity(row: VariantHealthRow) {
   if (row.capacity == null) return "—";
   const prefix = row.capacity_uncertain ? "at least " : "";
   const suffix = row.capacity_capped ? "+" : "";
-  return `${prefix}${row.capacity.toLocaleString()}${suffix}`;
+  // exact = a stored exact distinct-question count that still matches the template; otherwise a raw upper bound.
+  const bound = row.capacity_exact === false ? " (upper bound)" : "";
+  return `${prefix}${row.capacity.toLocaleString()}${suffix}${bound}`;
 }
 
 // Fixed status-color order, reused from the RiskBadge theme above so the
@@ -276,8 +278,9 @@ export default function VariantHealthPage() {
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Every number on this page is computed live from the real database on each load — nothing here is
           sampled, cached, or estimated from a subset. Two numbers are explicitly approximations and are labeled
-          as such rather than presented as exact: capacity is a raw upper-bound (the product of each variable's
-          independent value range, ignoring how many combinations `constraints` actually reject — shown as
+          as such rather than presented as exact: capacity is the exact number of distinct questions when one is
+          stored for the template, and otherwise a raw upper-bound labelled "(upper bound)" (the product of each
+          variable's independent value range, ignoring how many combinations `constraints` reject — shown as
           "at least N" whenever a variable's range couldn't be sized), and "Exports" counts whole worksheets that
           included this template and were opened/downloaded at least once, not individual question variants.
           Usage and export counts themselves are exact SQL aggregates. Treat "Exhausted" as a signal to widen the
