@@ -50,7 +50,7 @@ export default function CheckingPage() {
         <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Checking usage</p>
         <h2 className="mt-2 text-2xl font-black text-slate-950">How teachers are using AI/QR checking</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          A student's paper is uploaded, its printed QR code is matched back to the Paperly worksheet, and workings are extracted and marked. Every completed check logs a
+          A student's paper is uploaded, its printed QR code is matched back to the Paperly-NT worksheet, and workings are extracted and marked. Every completed check logs a
           {" "}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800">paper_checked</code>
           {" "}

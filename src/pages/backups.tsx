@@ -4,7 +4,7 @@ import { getAdminAccessToken } from "@/lib/adminToken";
 import { api } from "@/lib/apiClient";
 import { errorNotice, notice, panel, primaryButton, secondaryButton } from "@/components/ui";
 
-const RESTORE_CONFIRMATION = "RESTORE PAPERLY DATABASE FROM BACKUP";
+const RESTORE_CONFIRMATION = "RESTORE PAPERLY-NT DATABASE FROM BACKUP";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8003/api";
 
@@ -106,7 +106,7 @@ export default function BackupsPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `paperly_backup_${new Date().toISOString().slice(0, 10)}.${format}`;
+      link.download = `paperly-nt_backup_${new Date().toISOString().slice(0, 10)}.${format}`;
       link.click();
       URL.revokeObjectURL(url);
       setMessage(`${format.toUpperCase()} backup exported.`);

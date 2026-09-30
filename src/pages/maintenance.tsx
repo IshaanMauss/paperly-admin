@@ -7,10 +7,10 @@ import { api, type MaintenanceStatus, type WorksheetCleanupResult } from "@/lib/
 
 const DEFAULT_STATUS: MaintenanceStatus = {
   maintenance_active: false,
-  title: "Paperly is under maintenance",
-  message: "We are improving Paperly. Please come back shortly.",
-  required_confirmation_to_enable: "PUT PAPERLY TEACHER MODULE IN MAINTENANCE",
-  required_confirmation_to_disable: "RESTORE PAPERLY TEACHER MODULE",
+  title: "Paperly-NT is under maintenance",
+  message: "We are improving Paperly-NT. Please come back shortly.",
+  required_confirmation_to_enable: "PUT PAPERLY-NT TEACHER MODULE IN MAINTENANCE",
+  required_confirmation_to_disable: "RESTORE PAPERLY-NT TEACHER MODULE",
 };
 
 export default function MaintenancePage() {

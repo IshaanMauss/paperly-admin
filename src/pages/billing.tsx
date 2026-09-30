@@ -117,7 +117,6 @@ export default function BillingAdminPage() {
               <option value="all">All status</option>
               <option value="trial">Trial</option>
               <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </label>

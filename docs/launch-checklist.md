@@ -42,7 +42,7 @@ Current/partial items reflected in `/health`:
 
 Remaining launch risk is completing admin RBAC traceability, safe custom-plan controls, and ZTNA. Without those, the panel should not be exposed publicly.
 
-**2026-09-17 re-verification (Toyaj asked for a thorough pass across teacher-module, backend, and this panel):**
+**2026-09-17 re-verification (thorough pass across teacher-module, backend, and this panel):**
 - Razorpay webhook verification: DONE, not a risk. `POST /billing/razorpay/webhook` verifies `X-Razorpay-Signature` (HMAC over the raw body against `RAZORPAY_WEBHOOK_SECRET`) before parsing anything, and `/billing/razorpay/verify` separately verifies `order_id|payment_id` server-side before granting any plan. This checklist line was stale.
 - Route-level rate limits: DONE, not a risk. `backend/app/core/rate_limit.py` applies a blanket `120/minute` per-IP default to every route (so nothing is silently unlimited), with tighter explicit limits on admin login/OTP/generation/export.
 - Production-only CORS origins: the code-side guard is solid (wildcard origins are rejected outright; `CORS_ORIGINS` must be set explicitly). Still genuinely pending: this admin panel has no production `NEXT_PUBLIC_API_BASE_URL` or deployed origin configured anywhere in the repo yet, and its own origin is not yet in the backend's `CORS_ORIGINS` - because it hasn't been deployed. Add it the same day this panel gets a real hosting URL, in the same change that requests ZTNA below.
@@ -152,3 +152,12 @@ Status: Current with explicit deferred infra items.
 - Fixed crushed search box on the Users filter bar; hardened shared inputs.
 
 Going forward this file should be updated same-day as work lands, not batched across weeks.
+
+### 2026-09-30 - Paperly-NT rename, token check, apiClient split, real test and build run
+- **Purpose of this panel (decided):** this panel oversees the product: scalability, variant health, support, billing, security, backups, maintenance. `paperly-mvp/dashboard` stays as the backoffice with the real backend link and the template ingestion, review and approval work. Both stay as they are; no merge.
+- **Rename finished:** every user-facing "Paperly" in this repo now reads "Paperly-NT" (login and header branding, alt text, the maintenance and backup confirmation phrases, backup download filename, checking page text). No API paths, env vars or package names changed.
+- **Deploy note:** the confirmation phrases `PUT PAPERLY-NT TEACHER MODULE IN MAINTENANCE`, `RESTORE PAPERLY-NT TEACHER MODULE` and `RESTORE PAPERLY-NT DATABASE FROM BACKUP` must match the backend text in `paperly-mvp/backend/app/api/routes/admin.py`. Push this repo and the backend rename in the same release or the maintenance and restore confirmations stop matching.
+- **Billing filter:** the "Inactive" status option is removed; statuses are trial, active and cancelled only.
+- **Admin token:** checked in code. The access token lives in memory only (`src/lib/adminToken.ts`); nothing sensitive is in browser storage. The one remaining `sessionStorage` use was a cache of the overview numbers on the home page; it is now an in-memory variable too, so this panel writes nothing to browser storage at all. The earlier note about a `sessionStorage` token gap was stale.
+- **`apiClient.ts` split:** 871 lines became 395 (`apiClient.ts`: base URL, query helper, error helper, request helpers, the `api` object) plus 524 (`apiTypes.ts`: every response and payload type). `apiClient.ts` re-exports all types, so no page imports changed. Checked by script that all 51 top-level blocks appear exactly once, unchanged (only `AdminPageParams` gained `export`).
+- **Verified for real:** ran in a Linux copy of the repo with a clean install: `tsc --noEmit` clean, `vitest run` 47 of 47 passing, `next build` succeeds for all 19 routes.
