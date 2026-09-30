@@ -6,7 +6,6 @@ import { panel, secondaryButton } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, AdminOverview } from "@/lib/apiClient";
 
-const OVERVIEW_CACHE_KEY = "paperly_admin_overview_cache_v1";
 
 const operations = [
   { href: "/teachers", title: "User monitoring", text: "Track individual/tutor and institute users, active plans, template usage, generated-paper activity, and analytics events." },
@@ -28,23 +27,17 @@ const emptyOverview: AdminOverview = {
   source: "empty",
 };
 
+// Kept in memory only, like the admin token: nothing from the overview is written
+// to browser storage. It is a speed hint for moving between pages; the backend
+// remains the source of truth.
+let cachedOverview: AdminOverview | null = null;
+
 function readCachedOverview() {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.sessionStorage.getItem(OVERVIEW_CACHE_KEY);
-    return raw ? (JSON.parse(raw) as AdminOverview) : null;
-  } catch {
-    return null;
-  }
+  return cachedOverview;
 }
 
 function writeCachedOverview(value: AdminOverview) {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(OVERVIEW_CACHE_KEY, JSON.stringify(value));
-  } catch {
-    // Cache is a speed hint only. The backend remains the source of truth.
-  }
+  cachedOverview = value;
 }
 
 function formatUpdatedAt(value?: string | null) {
