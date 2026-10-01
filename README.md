@@ -65,6 +65,10 @@ The app expects:
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8003/api
 ```
 
+To use the Railway backend instead (2026-10-01), set `NEXT_PUBLIC_API_BASE_URL=https://paperly-mvp-production.up.railway.app/api` in `.env.local`. For login to work there, Railway needs `ADMIN_BOOTSTRAP_EMAIL`/`ADMIN_BOOTSTRAP_PASSWORD`/`ADMIN_BOOTSTRAP_NAME`, this panel's address in `CORS_ORIGINS`, and `ZTNA_GATEWAY_SECRET` left empty until a gateway is set up (otherwise the browser's preflight gets a 403). `ALLOW_ADMIN_TOKEN_FALLBACK` must be false in production.
+
+To use the Railway backend instead (2026-10-01), set `NEXT_PUBLIC_API_BASE_URL=https://paperly-mvp-production.up.railway.app/api` in `.env.local`. For login to work there, Railway needs `ADMIN_BOOTSTRAP_EMAIL`/`ADMIN_BOOTSTRAP_PASSWORD`/`ADMIN_BOOTSTRAP_NAME`, this panel's address in `CORS_ORIGINS`, and `ZTNA_GATEWAY_SECRET` left empty until a gateway is set up (otherwise the browser's preflight gets a 403). `ALLOW_ADMIN_TOKEN_FALLBACK` must be false in production.
+
 ## Backend Routes Used
 
 - `GET /api/admin/teachers`
