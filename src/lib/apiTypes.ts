@@ -553,3 +553,68 @@ export type PlanOfferListResponse = {
   offers: PlanOffer[];
   options: { plans: Record<string, string>; audience: Record<string, string>; styles: string[] };
 };
+
+// Admin-editable plans (2026-10-02). See backend app/services/plan_config_service.py.
+export type PlanRowValue = { label: string; value: string; included: boolean; info?: string };
+export type PlanFieldKind = "int" | "bool" | "enum" | "text" | "lines" | "rows";
+export type PlanField = {
+  key: string;
+  group: string;
+  label: string;
+  kind: PlanFieldKind;
+  help: string;
+  enforced: boolean;
+  editable: boolean;
+  snapshot: boolean;
+  plans: string[];
+  min?: number;
+  max?: number;
+  nullable?: boolean;
+  unit?: string;
+  options?: string[];
+  max_len?: number;
+  max_items?: number;
+};
+export type PlanFieldValue = number | boolean | string | string[] | PlanRowValue[] | null;
+export type PlanValues = Record<string, PlanFieldValue>;
+export type PlanConfigSparse = { plans: Record<string, PlanValues> };
+export type PlanConfigChange = {
+  plan_code: string;
+  plan_label: string;
+  key: string;
+  label: string;
+  group: string;
+  before: PlanFieldValue;
+  after: PlanFieldValue;
+  grandfathered: boolean;
+};
+export type PlanConfigVersionMeta = {
+  id: string;
+  status: "draft" | "published" | "archived";
+  version: number | null;
+  note?: string | null;
+  created_by?: string | null;
+  published_by?: string | null;
+  rolled_back_from?: number | null;
+  created_at?: string | null;
+  published_at?: string | null;
+  change_summary: PlanConfigChange[];
+};
+export type PlanConfigState = {
+  schema: { groups: { key: string; label: string; help: string }[]; fields: PlanField[]; plan_codes: string[]; paid_plan_codes: string[] };
+  defaults: Record<string, PlanValues>;
+  published: { version: number | null; config: PlanConfigSparse; plans: Record<string, PlanValues> };
+  draft: (PlanConfigVersionMeta & { config: PlanConfigSparse }) | null;
+  working_plans: Record<string, PlanValues>;
+  history: PlanConfigVersionMeta[];
+  subscribers: Record<string, number>;
+};
+export type PlanConfigPreview = {
+  has_draft: boolean;
+  changes: PlanConfigChange[];
+  warnings: string[];
+  price_changed?: boolean;
+  plans: Record<string, PlanValues>;
+  subscribers?: Record<string, number>;
+  note?: string | null;
+};

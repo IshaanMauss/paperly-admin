@@ -51,6 +51,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
     heading: "Revenue",
     items: [
       { href: "/billing", label: "Billing", icon: "card" },
+      { href: "/plans", label: "Plans & Features", icon: "layers" },
       { href: "/offers", label: "Offers", icon: "spark" },
       { href: "/promo-codes", label: "Promo Codes", icon: "tag" },
     ],

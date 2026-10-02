@@ -1,5 +1,9 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type {
+  PlanConfigState,
+  PlanConfigSparse,
+  PlanConfigPreview,
+  PlanConfigChange,
   TemplateSummary,
   TemplateListResponse,
   AdminListResponse,
@@ -67,6 +71,10 @@ export function adminApiErrorMessage(text: string, fallback: string): string {
     const parsed = JSON.parse(text) as { detail?: unknown; message?: unknown };
     const detail = parsed.detail ?? parsed.message;
     if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object" && Array.isArray((detail as { errors?: unknown }).errors)) {
+      const lines = ((detail as { errors: unknown[] }).errors).filter((item): item is string => typeof item === "string");
+      if (lines.length) return lines.join(" ");
+    }
     if (Array.isArray(detail)) {
       const joined = detail
         .map((item) => {
@@ -326,6 +334,30 @@ export const api = {
     return request<PlanOffer>(`/admin/offers/${offerId}/active`, {
       method: "PATCH",
       body: JSON.stringify({ is_active: isActive }),
+    });
+  },
+  getPlanConfig() {
+    return request<PlanConfigState>("/admin/plan-config");
+  },
+  savePlanConfigDraft(config: PlanConfigSparse, note?: string) {
+    return request<PlanConfigPreview>("/admin/plan-config/draft", { method: "PUT", body: JSON.stringify({ config, note: note || null }) });
+  },
+  discardPlanConfigDraft() {
+    return request<{ discarded: boolean }>("/admin/plan-config/draft", { method: "DELETE" });
+  },
+  previewPlanConfig() {
+    return request<PlanConfigPreview>("/admin/plan-config/preview");
+  },
+  publishPlanConfig(confirmation: string, priceConfirmation?: string) {
+    return request<{ version: number; changes: PlanConfigChange[]; subscribers_locked_in: number }>("/admin/plan-config/publish", {
+      method: "POST",
+      body: JSON.stringify({ confirmation, price_confirmation: priceConfirmation || null }),
+    });
+  },
+  rollbackPlanConfig(version: number, confirmation: string, priceConfirmation?: string) {
+    return request<{ version: number; changes: PlanConfigChange[]; subscribers_locked_in: number }>("/admin/plan-config/rollback", {
+      method: "POST",
+      body: JSON.stringify({ version, confirmation, price_confirmation: priceConfirmation || null }),
     });
   },
   getRlsStatus() {
