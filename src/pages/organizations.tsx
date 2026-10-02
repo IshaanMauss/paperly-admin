@@ -94,10 +94,10 @@ function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestR
     <div className={`${panel} space-y-3 p-5`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-black text-slate-950">{row.institute_name}</p>
+          <p className="text-sm font-extrabold text-slate-950">{row.institute_name}</p>
           <p className="text-xs text-slate-500">{SOURCE_LABEL[row.source] || row.source}{row.teacher_id ? ` · teacher_id: ${row.teacher_id}` : ""}</p>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-black capitalize ${REQUEST_STATUS_THEME[row.status] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
+        <span className={`rounded-full border px-3 py-1 text-xs font-extrabold capitalize ${REQUEST_STATUS_THEME[row.status] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
           {row.status}
         </span>
       </div>
@@ -117,15 +117,15 @@ function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestR
         </div>
       ) : null}
 
-      {row.notes ? <p className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">{row.notes}</p> : null}
+      {row.notes ? <p className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">{row.notes}</p> : null}
 
       {row.rejection_reason ? (
-        <p className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Rejected: {row.rejection_reason}</p>
+        <p className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Rejected: {row.rejection_reason}</p>
       ) : null}
 
       {row.activation_link ? (
-        <div className="rounded-2xl border border-sky-100 bg-sky-50 p-3">
-          <p className="text-[11px] font-black uppercase tracking-wide text-sky-700">Activation link — send this to the customer</p>
+        <div className="rounded-xl border border-sky-100 bg-sky-50 p-3">
+          <p className="text-[11px] font-extrabold uppercase tracking-wide text-sky-700">Activation link — send this to the customer</p>
           <p className="mt-1 break-all font-mono text-xs text-sky-900">{row.activation_link}</p>
           <div className="mt-2 flex items-center gap-2">
             <button type="button" className={secondaryButton} onClick={copyLink}>{copied ? "Copied" : "Copy link"}</button>
@@ -208,7 +208,7 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
     <div className={`${panel} space-y-5 p-5`}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-black text-slate-950">{org.name}</p>
+          <p className="text-sm font-extrabold text-slate-950">{org.name}</p>
           <p className="text-xs text-slate-500">{org.organization_key} &middot; {org.organization_type}</p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
@@ -219,7 +219,7 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Theme</p>
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">Theme</p>
         <div className="flex flex-wrap gap-2">
           {presetKeys.map((key) => (
             <button
@@ -270,10 +270,10 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Features</p>
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">Features</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {Object.entries(meta.feature_flags).map(([key, info]) => (
-            <label key={key} className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white p-3 text-xs">
+            <label key={key} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-xs">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -360,15 +360,15 @@ export default function OrganizationsPage() {
     <AppShell title="Organizations">
       <div className="space-y-5">
         <div className={`${panel} p-5`}>
-          <p className="text-xs font-black uppercase tracking-wide text-slate-500">White-label</p>
-          <h1 className="mt-1 text-xl font-black text-slate-950">Organizations</h1>
+          <p className="text-xs font-extrabold uppercase tracking-wide text-slate-500">White-label</p>
+          <h1 className="mt-1 text-xl font-extrabold text-slate-950">Organizations</h1>
           <p className="mt-1 text-sm text-slate-600">
             Custom/institute workspaces start as a request — from the public pricing page or from an existing
             teacher inside the app — and become a themed, feature-gated organization once you approve it here.
           </p>
-          <div className="mt-4 inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-            <button type="button" onClick={() => setTab("requests")} className={`rounded-xl px-4 py-2 text-sm font-black transition ${tab === "requests" ? "bg-white text-violet-800 shadow-soft" : "text-slate-500"}`}>Requests</button>
-            <button type="button" onClick={() => setTab("organizations")} className={`rounded-xl px-4 py-2 text-sm font-black transition ${tab === "organizations" ? "bg-white text-violet-800 shadow-soft" : "text-slate-500"}`}>Organizations</button>
+          <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+            <button type="button" onClick={() => setTab("requests")} className={`rounded-xl px-4 py-2 text-sm font-extrabold transition ${tab === "requests" ? "bg-white text-violet-800 shadow-soft" : "text-slate-500"}`}>Requests</button>
+            <button type="button" onClick={() => setTab("organizations")} className={`rounded-xl px-4 py-2 text-sm font-extrabold transition ${tab === "organizations" ? "bg-white text-violet-800 shadow-soft" : "text-slate-500"}`}>Organizations</button>
           </div>
         </div>
 
@@ -380,7 +380,7 @@ export default function OrganizationsPage() {
                   key={s}
                   type="button"
                   onClick={() => setRequestStatusFilter(s)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-black capitalize transition ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-extrabold capitalize transition ${
                     requestStatusFilter === s ? "border-violet-400 bg-violet-50 text-violet-800" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                   }`}
                 >

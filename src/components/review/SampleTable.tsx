@@ -31,7 +31,7 @@ function partAnswers(sample: PreviewSample) {
 export function SampleTable({ samples }: { samples: PreviewSample[] }) {
   if (!samples.length) return <div className="text-slate-500">No samples generated yet.</div>;
   return (
-    <div className="overflow-hidden rounded-2xl border border-violet-100">
+    <div className="overflow-hidden rounded-xl border border-violet-200">
       <div className="max-h-[34rem] overflow-auto">
         <table className={`${table} min-w-[920px]`}>
           <thead className="sticky top-0 z-10 bg-violet-50/95 backdrop-blur">

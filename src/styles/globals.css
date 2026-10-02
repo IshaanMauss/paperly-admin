@@ -1,4 +1,5 @@
-﻿@tailwind base;
+﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -8,7 +9,26 @@
   }
 
   body {
-    @apply bg-[#f4efff] text-slate-700 font-sans antialiased;
+    @apply bg-[#f6f7fb] text-slate-700 font-sans antialiased;
+  }
+
+  ::selection {
+    background: #cbd0fd;
+  }
+
+  :focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+  }
+
+  /* Quiet scrollbars so wide tables and the sidebar do not feel heavy. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #c9cee0 transparent;
+  }
+
+  table tbody tr:hover td {
+    background-color: #f6f7fb;
   }
 
   button, input, select, textarea {
@@ -16,3 +36,53 @@
   }
 }
 
+
+/* Time-limited offer card. The look is chosen by one modifier class (offer-card--shiny,
+   --starry or --plain), so no card is hard-coded. Same CSS lives in the teacher module. */
+.offer-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  color: #fff;
+  isolation: isolate;
+}
+.offer-card--plain {
+  background: #1e293b;
+  border: 1px solid #fbbf24;
+}
+.offer-card--shiny {
+  background: linear-gradient(110deg, #78350f 0%, #b45309 35%, #fbbf24 50%, #b45309 65%, #78350f 100%);
+  background-size: 250% 100%;
+  animation: offer-shine 4s linear infinite;
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.35);
+}
+.offer-card--starry {
+  background: radial-gradient(circle at 20% 0%, #312e81 0%, #0f172a 70%);
+  box-shadow: 0 0 22px rgba(129, 140, 248, 0.35);
+}
+.offer-card--starry::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(2px 2px at 12% 28%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 38% 70%, #fde68a 50%, transparent 51%),
+    radial-gradient(2px 2px at 63% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 82% 62%, #c7d2fe 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 92% 18%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 52% 88%, #fde68a 50%, transparent 51%);
+  animation: offer-twinkle 2.8s ease-in-out infinite alternate;
+}
+@keyframes offer-shine {
+  0% { background-position: 250% 0; }
+  100% { background-position: -150% 0; }
+}
+@keyframes offer-twinkle {
+  0% { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .offer-card--shiny, .offer-card--starry::before { animation: none; }
+}

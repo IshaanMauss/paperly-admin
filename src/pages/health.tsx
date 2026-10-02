@@ -191,9 +191,9 @@ export default function HealthPage() {
       <section className={panel}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-950">Backend reachability</h2>
-            <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-black ${statusClass}`}>{status}</p>
-            {error ? <p className="mt-3 max-w-3xl rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700">{error}</p> : null}
+            <h2 className="text-2xl font-extrabold text-slate-950">Backend reachability</h2>
+            <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-extrabold ${statusClass}`}>{status}</p>
+            {error ? <p className="mt-3 max-w-3xl rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700">{error}</p> : null}
             <p className="mt-3 text-sm font-semibold text-slate-500">Health check reads up to {TEMPLATE_HEALTH_LIMIT} templates, matching the backend API limit.</p>
           </div>
           <button className={primaryButton} onClick={refreshHealth} disabled={loading}>{loading ? "Refreshing..." : "Refresh checks"}</button>
@@ -204,7 +204,7 @@ export default function HealthPage() {
         {[["Approved", approved], ["Drafts", drafts], ["Safe off", unsafe], ["Missing paper tag", missingPaper]].map(([label, value]) => (
           <div key={label} className={panel}>
             <p className="text-sm font-bold text-slate-500">{label}</p>
-            <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+            <p className="mt-2 text-3xl font-extrabold text-slate-950">{value}</p>
           </div>
         ))}
       </section>
@@ -212,8 +212,8 @@ export default function HealthPage() {
       <section className="grid gap-4 md:grid-cols-3">
         {[["Current", currentChecks, "bg-emerald-50 text-emerald-800"], ["Partial", partialChecks, "bg-amber-50 text-amber-800"], ["Pending", pendingChecks, "bg-slate-100 text-slate-700"]].map(([label, value, classes]) => (
           <div key={label} className={`${panel} ${classes}`}>
-            <p className="text-sm font-black uppercase tracking-[0.16em]">{label}</p>
-            <p className="mt-2 text-3xl font-black">{value}</p>
+            <p className="text-sm font-extrabold uppercase tracking-[0.16em]">{label}</p>
+            <p className="mt-2 text-3xl font-extrabold">{value}</p>
           </div>
         ))}
       </section>
@@ -221,33 +221,33 @@ export default function HealthPage() {
       <section className={panel}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-xl font-black text-slate-950">Production readiness by priority</h2>
+            <h2 className="text-xl font-extrabold text-slate-950">Production readiness by priority</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-500">Grouped as P0/P1/P2 so launch blockers stay separate from scale and polish work. These are status notes, not proof that production is ready.</p>
           </div>
         </div>
         <div className="mt-5 grid gap-5">
           {checksByPriority.map(({ priority, items }) => (
-            <div key={priority} className={`rounded-[1.75rem] border p-4 ${priorityStyle(priority)}`}>
+            <div key={priority} className={`rounded-xl border p-4 ${priorityStyle(priority)}`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-black text-slate-950">{priority} work</h3>
+                  <h3 className="text-lg font-extrabold text-slate-950">{priority} work</h3>
                   <p className="mt-1 text-sm font-semibold text-slate-600">{priorityMeaning(priority)}</p>
                 </div>
-                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-700">{items.length} checks</span>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] text-slate-700">{items.length} checks</span>
               </div>
               <div className="mt-4 grid gap-3 xl:grid-cols-2">
                 {items.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-4 text-sm font-bold text-slate-500">No checks in this bucket yet.</div>
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-sm font-bold text-slate-500">No checks in this bucket yet.</div>
                 ) : null}
                 {items.map((item) => (
-                  <div key={item.title} className={`rounded-2xl border p-4 ${checkStyle(item.status)}`}>
+                  <div key={item.title} className={`rounded-xl border p-4 ${checkStyle(item.status)}`}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-700">{item.priority}</span>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${statusBadge(item.status)}`}>{item.status}</span>
-                      <h4 className="text-base font-black text-slate-950">{item.title}</h4>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] text-slate-700">{item.priority}</span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${statusBadge(item.status)}`}>{item.status}</span>
+                      <h4 className="text-base font-extrabold text-slate-950">{item.title}</h4>
                     </div>
                     <p className="mt-3 text-sm font-semibold text-slate-700">{item.evidence}</p>
-                    <p className="mt-2 text-sm font-black text-slate-950">Next: {item.next}</p>
+                    <p className="mt-2 text-sm font-extrabold text-slate-950">Next: {item.next}</p>
                   </div>
                 ))}
               </div>

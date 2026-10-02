@@ -31,6 +31,8 @@ import type {
   WorksheetGeneratePayload,
   TopicalPaperGeneratePayload,
   Worksheet,
+  PlanOffer,
+  PlanOfferListResponse,
   PromoCode,
   PromoCodeListResponse,
   PromoCodeRedemptionRow,
@@ -281,6 +283,27 @@ export const api = {
   },
   setPromoCodeActive(promoId: string, isActive: boolean) {
     return request<PromoCode>(`/admin/promo-codes/${promoId}/active`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: isActive }),
+    });
+  },
+  getOffers() {
+    return request<PlanOfferListResponse>("/admin/offers");
+  },
+  createOffer(payload: {
+    label: string;
+    plan_code: string;
+    discount_percent: number;
+    duration_hours: number;
+    audience_plans: string[];
+    style: string;
+    starts_at?: string | null;
+    ends_at?: string | null;
+  }) {
+    return request<PlanOffer>("/admin/offers", { method: "POST", body: JSON.stringify(payload) });
+  },
+  setOfferActive(offerId: string, isActive: boolean) {
+    return request<PlanOffer>(`/admin/offers/${offerId}/active`, {
       method: "PATCH",
       body: JSON.stringify({ is_active: isActive }),
     });

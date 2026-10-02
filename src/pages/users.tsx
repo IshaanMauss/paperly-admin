@@ -25,7 +25,7 @@ function RoleBadge({ role }: { role: string }) {
   const isOwner = role === "owner";
   return (
     <span
-      className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-black capitalize ${
+      className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-extrabold capitalize ${
         isOwner ? "border-amber-300 bg-amber-50 text-amber-800" : "border-violet-200 bg-violet-50 text-violet-800"
       }`}
     >
@@ -49,7 +49,7 @@ function PermissionChecklist({
     return <p className="text-xs font-semibold text-slate-500">Owner is always fully unrestricted - individual permissions don&apos;t apply.</p>;
   }
   return (
-    <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded-xl border border-violet-100 bg-violet-50/40 p-3 sm:grid-cols-2">
+    <div className="grid max-h-56 grid-cols-1 gap-1.5 overflow-y-auto rounded-xl border border-violet-200 bg-violet-50/40 p-3 sm:grid-cols-2">
       {permissionKeys.map((key) => (
         <label key={key} className="flex items-center gap-2 text-xs font-bold text-slate-700">
           <input
@@ -110,8 +110,8 @@ function CreateAccountForm({
   }
 
   return (
-    <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-soft">
-      <h3 className="text-lg font-black text-slate-950">Register a new staff account</h3>
+    <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
+      <h3 className="text-lg font-extrabold text-slate-950">Register a new staff account</h3>
       <p className="mt-1 text-xs font-semibold text-slate-500">
         A one-time temporary password is generated and shown once after you submit this - share it with them out of band. They change it on first login.
       </p>
@@ -218,7 +218,7 @@ function AccountRow({
   return (
     <tr>
       <td className={td}>
-        <p className="text-sm font-bold text-slate-800">{account.name}{isSelf ? <span className="ml-1 text-[10px] font-black text-purple-700">(you)</span> : null}</p>
+        <p className="text-sm font-bold text-slate-800">{account.name}{isSelf ? <span className="ml-1 text-[10px] font-extrabold text-purple-700">(you)</span> : null}</p>
         <p className="text-xs text-slate-500">{account.email}</p>
       </td>
       <td className={td}>
@@ -246,7 +246,7 @@ function AccountRow({
       </td>
       <td className={td}>
         <span
-          className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-black ${
+          className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${
             account.active ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-100 text-slate-500"
           }`}
         >
@@ -283,7 +283,7 @@ function AccountRow({
           <button
             type="button"
             className={`rounded-xl border px-3 py-1.5 text-xs font-extrabold transition-colors ${
-              account.active ? "border-rose-200 bg-white/85 text-rose-700 hover:bg-rose-50" : "border-emerald-200 bg-white/85 text-emerald-700 hover:bg-emerald-50"
+              account.active ? "border-rose-200 bg-white text-rose-700 hover:bg-rose-50" : "border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
             }`}
             disabled={busy || isSelf}
             title={isSelf ? "You cannot deactivate your own account." : undefined}
@@ -351,8 +351,8 @@ export default function AdminUsersPage() {
   return (
     <AppShell title="Admin Team">
       <section className={panel}>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Staff accounts</p>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Who can access this panel, and what they can do</h2>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Staff accounts</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Who can access this panel, and what they can do</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Only a Super Admin (role: owner) can register or edit other accounts by default. Every permission checkbox below maps to a real, enforced check in the
           backend - ticking one actually grants that access immediately, nothing here is cosmetic.
@@ -360,9 +360,9 @@ export default function AdminUsersPage() {
         {tempPasswordBanner ? (
           <div className={`${notice} mt-4 flex items-start justify-between gap-4`}>
             <div>
-              <p className="font-black text-slate-900">Account created for {tempPasswordBanner.email}</p>
+              <p className="font-extrabold text-slate-900">Account created for {tempPasswordBanner.email}</p>
               <p className="mt-1 text-sm">
-                Temporary password: <span className="rounded bg-white px-2 py-0.5 font-mono font-black">{tempPasswordBanner.password}</span>
+                Temporary password: <span className="rounded bg-white px-2 py-0.5 font-mono font-extrabold">{tempPasswordBanner.password}</span>
               </p>
               <p className="mt-1 text-xs font-semibold text-slate-500">
                 This is shown once and is not stored anywhere - copy it now and share it with them out of band. They should change it on first login.
@@ -422,7 +422,7 @@ export default function AdminUsersPage() {
                         <p className="text-[11px] font-mono text-slate-600">{account.role === "owner" ? "All access" : account.permissions.join(", ") || "Role default"}</p>
                       </td>
                       <td className={td}>
-                        <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-black ${account.active ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                        <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${account.active ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
                           {account.active ? "Active" : "Deactivated"}
                         </span>
                       </td>
@@ -436,10 +436,10 @@ export default function AdminUsersPage() {
       ) : null}
 
       <section className={panel}>
-        <h3 className="text-lg font-black text-slate-950">Role reference</h3>
+        <h3 className="text-lg font-extrabold text-slate-950">Role reference</h3>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {(meta?.roles || ["owner", "admin", "reviewer", "uploader", "viewer"]).map((role) => (
-            <div key={role} className="rounded-2xl border border-violet-100 bg-white p-4 shadow-soft">
+            <div key={role} className="rounded-xl border border-violet-200 bg-white p-4 shadow-soft">
               <RoleBadge role={role} />
               <p className="mt-2 text-xs font-semibold leading-5 text-slate-600">{ROLE_DESCRIPTIONS[role] || "Custom role."}</p>
             </div>

@@ -123,7 +123,7 @@ export default function BackupsPage() {
       {error ? <section className={errorNotice}>Backup export failed. Backend route needed: POST /api/admin/backups/export. Details: {error}</section> : null}
 
       <section className={panel}>
-        <h2 className="text-2xl font-black text-slate-950">Backup control</h2>
+        <h2 className="text-2xl font-extrabold text-slate-950">Backup control</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Excel is for human inspection with business-readable tabs. JSON is for restore-ready backups. Production should schedule this daily and store copies outside the database.
         </p>
@@ -134,7 +134,7 @@ export default function BackupsPage() {
       </section>
 
       <section className={panel}>
-        <h2 className="text-2xl font-black text-slate-950">Restore from a JSON backup</h2>
+        <h2 className="text-2xl font-extrabold text-slate-950">Restore from a JSON backup</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Added 2026-09-28 - previously export existed with no restore path at all. Deliberately conservative: this only
           re-inserts rows that are missing (matched by primary key) and never overwrites a row that already exists. Always
@@ -164,7 +164,7 @@ export default function BackupsPage() {
               </thead>
               <tbody>
                 {Object.entries(restorePreview).map(([table, summary]) => (
-                  <tr key={table} className="border-t border-violet-100">
+                  <tr key={table} className="border-t border-violet-200">
                     <td className="py-1.5 pr-4">{table}</td>
                     <td className="py-1.5 pr-4">{summary.in_backup}</td>
                     <td className="py-1.5 pr-4">{summary.would_insert || summary.inserted}</td>
@@ -173,8 +173,8 @@ export default function BackupsPage() {
                 ))}
               </tbody>
             </table>
-            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-              <p className="text-sm font-black text-rose-900">Apply this restore for real</p>
+            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50/60 p-4">
+              <p className="text-sm font-extrabold text-rose-900">Apply this restore for real</p>
               <p className="mt-1 text-xs font-semibold text-rose-700">Type the confirmation phrase exactly to enable the button.</p>
               <input
                 className="mt-2 w-full max-w-md rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
@@ -186,7 +186,7 @@ export default function BackupsPage() {
                 type="button"
                 disabled={restoreBusy || restoreConfirmText !== RESTORE_CONFIRMATION}
                 onClick={() => void applyRestore()}
-                className="mt-3 rounded-xl bg-rose-700 px-4 py-2 text-xs font-black text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-3 rounded-xl bg-rose-700 px-4 py-2 text-xs font-extrabold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {restoreBusy ? "Restoring..." : "Apply restore"}
               </button>
@@ -198,12 +198,12 @@ export default function BackupsPage() {
       </section>
 
       <section className={panel}>
-        <h2 className="text-xl font-black text-slate-950">Business-readable Excel tabs</h2>
+        <h2 className="text-xl font-extrabold text-slate-950">Business-readable Excel tabs</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           These names are for business review. The JSON export keeps database table names because that is safer for restore.
         </p>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {excelTabs.map((item) => <div key={item} className="rounded-2xl border border-violet-100 bg-white p-4 font-bold text-slate-700">{item}</div>)}
+          {excelTabs.map((item) => <div key={item} className="rounded-xl border border-violet-200 bg-white p-4 font-bold text-slate-700">{item}</div>)}
         </div>
       </section>
     </AppShell>

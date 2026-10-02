@@ -98,25 +98,25 @@ export default function SecurityPage() {
       <section className={panel}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Production security model</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Frontend is never trusted for paid access.</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Production security model</p>
+            <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Frontend is never trusted for paid access.</h2>
             <p className="mt-3 max-w-4xl text-sm font-semibold leading-6 text-slate-600">
               Server-side paged risk logs. Browser buttons can be patched, so real security must live in backend checks, signed sessions, rate limits, audit logs, and admin actions.
             </p>
           </div>
-          <button type="button" onClick={loadEvents} className="rounded-2xl bg-purple-700 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-purple-800">
+          <button type="button" onClick={loadEvents} className="rounded-xl bg-purple-700 px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-purple-800">
             Refresh events
           </button>
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-5">
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="user, email, event, reason..." className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="user, email, event, reason..." className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Severity
-            <select value={severity} onChange={(event) => { setSeverity(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+            <select value={severity} onChange={(event) => { setSeverity(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
               <option value="all">All severity</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -124,9 +124,9 @@ export default function SecurityPage() {
               <option value="critical">Critical</option>
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Status
-            <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+            <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
               <option value="all">All status</option>
               <option value="detected">Detected</option>
               <option value="active">Active</option>
@@ -135,31 +135,31 @@ export default function SecurityPage() {
               <option value="false_positive">False positive</option>
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Sort
-            <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(0); }} className="mt-2 w-full rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+            <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
             </select>
           </label>
-          <button type="button" onClick={reset} className="rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-black text-purple-900 md:self-end">Reset filters</button>
+          <button type="button" onClick={reset} className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-extrabold text-purple-900 md:self-end">Reset filters</button>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <article className={panel}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Security Events</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{total}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Security Events</p>
+          <p className="mt-2 text-3xl font-extrabold text-slate-950">{total}</p>
           <p className="mt-1 text-sm font-bold text-slate-500">Matching server-side risk logs</p>
         </article>
         <article className={panel}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">High Risk On Page</p>
-          <p className="mt-2 text-3xl font-black text-rose-700">{highRiskCount}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">High Risk On Page</p>
+          <p className="mt-2 text-3xl font-extrabold text-rose-700">{highRiskCount}</p>
           <p className="mt-1 text-sm font-bold text-slate-500">Needs owner review first</p>
         </article>
         <article className={panel}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Page</p>
-          <p className="mt-2 text-xl font-black text-slate-950">{total ? `${start}-${end}` : "0"}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Page</p>
+          <p className="mt-2 text-xl font-extrabold text-slate-950">{total ? `${start}-${end}` : "0"}</p>
           <p className="mt-1 text-sm font-bold text-slate-500">Only current rows are loaded</p>
         </article>
       </section>
@@ -167,23 +167,23 @@ export default function SecurityPage() {
       <section className={panel}>
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Live monitoring</p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">Recent security events</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Live monitoring</p>
+            <h2 className="mt-2 text-xl font-extrabold text-slate-950">Recent security events</h2>
           </div>
           {loading ? <span className="text-sm font-bold text-slate-500">Loading...</span> : null}
         </div>
-        {error ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</p> : null}
-        {!loading && !error && events.length === 0 ? <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">No matching security events.</p> : null}
+        {error ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</p> : null}
+        {!loading && !error && events.length === 0 ? <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">No matching security events.</p> : null}
         <div className="mt-4 grid gap-3">
           {events.map((event) => (
-            <article key={event.id} className="rounded-2xl border border-purple-100 bg-white/80 p-4 shadow-sm">
+            <article key={event.id} className="rounded-xl border border-purple-100 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-black capitalize text-slate-950">{eventLabel(event.event_type)}</p>
+                  <p className="text-sm font-extrabold capitalize text-slate-950">{eventLabel(event.event_type)}</p>
                   <p className="mt-1 text-sm font-semibold text-slate-600">{event.reason}</p>
                   {event.status_meaning ? <p className="mt-1 text-xs font-bold text-purple-700">{event.status_meaning}</p> : null}
                 </div>
-                <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-900">{event.severity}</span>
+                <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-extrabold uppercase text-amber-900">{event.severity}</span>
               </div>
               <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 sm:grid-cols-3">
                 <span>User: {event.user_name || "Unknown user"}</span>
@@ -196,7 +196,7 @@ export default function SecurityPage() {
             </article>
           ))}
         </div>
-        <div className="mt-4 flex items-center justify-between gap-3 text-sm font-black">
+        <div className="mt-4 flex items-center justify-between gap-3 text-sm font-extrabold">
           <button disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Previous</button>
           <button disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-violet-200 px-4 py-2 disabled:opacity-40">Next</button>
         </div>
@@ -205,16 +205,16 @@ export default function SecurityPage() {
       <section className={panel}>
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Database posture</p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">Row Level Security status</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Database posture</p>
+            <h2 className="mt-2 text-xl font-extrabold text-slate-950">Row Level Security status</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
               Every public table, direct from Postgres system catalogs. Tables with RLS disabled are listed first and flagged - a regression here is a real data-exposure risk.
             </p>
           </div>
           {rlsLoading ? <span className="text-sm font-bold text-slate-500">Loading...</span> : null}
         </div>
-        {rlsError ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{rlsError}</p> : null}
-        {!rlsLoading && !rlsError && rlsTables.length === 0 ? <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">No table introspection available (source: {rlsSource || "unknown"}).</p> : null}
+        {rlsError ? <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{rlsError}</p> : null}
+        {!rlsLoading && !rlsError && rlsTables.length === 0 ? <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">No table introspection available (source: {rlsSource || "unknown"}).</p> : null}
         {rlsTables.length > 0 ? (
           <div className="mt-4 overflow-x-auto">
             <table className={table}>
@@ -230,9 +230,9 @@ export default function SecurityPage() {
                     <td className={td}>{row.table_name}</td>
                     <td className={td}>
                       {row.rls_enabled ? (
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase text-emerald-800">Enabled</span>
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold uppercase text-emerald-800">Enabled</span>
                       ) : (
-                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black uppercase text-rose-800">Disabled</span>
+                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-extrabold uppercase text-rose-800">Disabled</span>
                       )}
                     </td>
                   </tr>
@@ -246,7 +246,7 @@ export default function SecurityPage() {
       <section className="grid gap-4 lg:grid-cols-2">
         {protections.map(([title, body]) => (
           <article key={title} className={panel}>
-            <h3 className="text-xl font-black text-slate-950">{title}</h3>
+            <h3 className="text-xl font-extrabold text-slate-950">{title}</h3>
             <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{body}</p>
           </article>
         ))}

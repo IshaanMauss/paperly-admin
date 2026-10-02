@@ -5,12 +5,7 @@ import { errorNotice, input, label, primaryButton } from "@/components/ui";
 
 function Background() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#f4efff]">
-      <div className="absolute inset-x-0 top-[36%] h-[30%] bg-violet-200/45" />
-      <div className="absolute inset-x-0 bottom-0 h-[36%] bg-violet-300/35" />
-      <div className="absolute left-[22%] top-[-10%] h-[130%] w-[30rem] -skew-x-[24deg] bg-white/45" />
-      <div className="absolute right-[-12%] top-[-10%] h-[120%] w-[26rem] skew-x-[24deg] bg-violet-300/20" />
-    </div>
+    <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_50%_-10%,#e6e8ff_0%,#f6f7fb_60%)]" />
   );
 }
 
@@ -51,12 +46,12 @@ export default function LoginPage() {
     <>
       <Background />
       <main className="grid min-h-screen place-items-center px-4 py-10">
-        <section className="w-full max-w-md rounded-3xl border border-violet-100 bg-white/90 p-7 shadow-soft">
+        <section className="w-full max-w-md rounded-xl border border-violet-200 bg-white p-7 shadow-card">
           <div className="mb-6 flex items-center gap-3">
             <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly-NT" className="h-16 w-16 object-contain drop-shadow-sm" />
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-purple-800">Paperly-NT Admin</p>
-              <h1 className="text-2xl font-black text-slate-950">Sign in to control plane</h1>
+              <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-purple-800">Paperly-NT Admin</p>
+              <h1 className="text-2xl font-extrabold text-slate-950">Sign in to control plane</h1>
             </div>
           </div>
           {error ? <div className={errorNotice}>{error}</div> : null}

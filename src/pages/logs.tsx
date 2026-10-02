@@ -46,11 +46,11 @@ function TroubleshootPanel({ row }: { row: AdminServerLogRow }) {
   return (
     <div className={`mt-3 rounded-xl border p-3 text-xs ${URGENCY_THEME[result.urgency]}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-black">{result.title}</span>
-        <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">{result.urgency} urgency</span>
+        <span className="font-extrabold">{result.title}</span>
+        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide">{result.urgency} urgency</span>
       </div>
-      <div className="mt-2"><span className="font-black">Likely cause:</span> {result.likelyCause}</div>
-      <div className="mt-1"><span className="font-black">Suggested fix:</span> {result.suggestedFix}</div>
+      <div className="mt-2"><span className="font-extrabold">Likely cause:</span> {result.likelyCause}</div>
+      <div className="mt-1"><span className="font-extrabold">Suggested fix:</span> {result.suggestedFix}</div>
     </div>
   );
 }
@@ -88,13 +88,13 @@ function LogRow({ row, onChanged }: { row: AdminServerLogRow; onChanged: (id: st
   }
 
   return (
-    <div className={`rounded-2xl border p-4 text-sm font-semibold text-slate-700 ${row.acknowledged ? "border-emerald-100 bg-emerald-50/40" : "border-slate-100 bg-slate-50"}`}>
+    <div className={`rounded-xl border p-4 text-sm font-semibold text-slate-700 ${row.acknowledged ? "border-emerald-100 bg-emerald-50/40" : "border-slate-100 bg-slate-50"}`}>
       <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-xs font-black ${statusColor(row.status_code)}`}>{row.status_code ?? "-"}</span>
+          <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusColor(row.status_code)}`}>{row.status_code ?? "-"}</span>
           <span className="font-mono text-xs uppercase text-slate-500">{row.method}</span>
           <span className="font-mono text-xs text-slate-800">{row.path}</span>
-          {row.acknowledged ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">Acknowledged</span> : null}
+          {row.acknowledged ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">Acknowledged</span> : null}
         </div>
         <span className="text-xs text-slate-500">{row.occurred_at ? new Date(row.occurred_at).toLocaleString() : "-"}</span>
       </button>
@@ -105,17 +105,17 @@ function LogRow({ row, onChanged }: { row: AdminServerLogRow; onChanged: (id: st
             <button
               type="button"
               onClick={() => setTroubleshootOpen((value) => !value)}
-              className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-[11px] font-black text-violet-800 transition hover:bg-violet-100"
+              className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-[11px] font-extrabold text-violet-800 transition hover:bg-violet-100"
             >
               {troubleshootOpen ? "Hide troubleshoot" : "Troubleshoot"}
             </button>
           ) : null}
           {!row.acknowledged && (
-            <button type="button" disabled={busy} onClick={acknowledge} className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={acknowledge} className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50">
               Acknowledge
             </button>
           )}
-          <button type="button" disabled={busy} onClick={deleteRow} className="rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-[11px] font-black text-rose-800 transition hover:bg-rose-100 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={deleteRow} className="rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-[11px] font-extrabold text-rose-800 transition hover:bg-rose-100 disabled:opacity-50">
             Delete
           </button>
         </div>
@@ -124,11 +124,11 @@ function LogRow({ row, onChanged }: { row: AdminServerLogRow; onChanged: (id: st
       {troubleshootOpen ? <TroubleshootPanel row={row} /> : null}
       {open ? (
         <div className="mt-3 grid gap-2 rounded-xl border border-slate-200 bg-white p-3 text-xs">
-          <div><span className="font-black text-slate-600">IP:</span> {row.ip || "-"}</div>
-          <div><span className="font-black text-slate-600">Device / user agent:</span> {row.user_agent || "-"}</div>
+          <div><span className="font-extrabold text-slate-600">IP:</span> {row.ip || "-"}</div>
+          <div><span className="font-extrabold text-slate-600">Device / user agent:</span> {row.user_agent || "-"}</div>
           {row.error_detail ? (
             <div className="rounded-lg bg-rose-50 p-2 text-rose-800">
-              <span className="font-black">Error detail:</span> {row.error_detail}
+              <span className="font-extrabold">Error detail:</span> {row.error_detail}
             </div>
           ) : null}
         </div>
@@ -237,8 +237,8 @@ export default function ServerLogsPage() {
       <section className={panel}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Operations</p>
-            <h2 className="mt-1 text-3xl font-black text-slate-950">What's happening on the server</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Operations</p>
+            <h2 className="mt-1 text-3xl font-extrabold text-slate-950">What's happening on the server</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
               Every request is recorded here as it happens, so problems stay visible after a terminal closes. Does not
               capture response bodies (large exports stream directly), only status, timing, actor, and any error text.
@@ -253,28 +253,28 @@ export default function ServerLogsPage() {
           <button
             type="button"
             onClick={() => setTab("problems")}
-            className={`rounded-full border px-4 py-2 text-sm font-black transition-colors ${tab === "problems" ? "border-rose-300 bg-rose-50 text-rose-800" : "border-transparent text-slate-600 hover:border-rose-200"}`}
+            className={`rounded-full border px-4 py-2 text-sm font-extrabold transition-colors ${tab === "problems" ? "border-rose-300 bg-rose-50 text-rose-800" : "border-transparent text-slate-600 hover:border-rose-200"}`}
           >
             Problems
           </button>
           <button
             type="button"
             onClick={() => setTab("responses")}
-            className={`rounded-full border px-4 py-2 text-sm font-black transition-colors ${tab === "responses" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-transparent text-slate-600 hover:border-emerald-200"}`}
+            className={`rounded-full border px-4 py-2 text-sm font-extrabold transition-colors ${tab === "responses" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-transparent text-slate-600 hover:border-emerald-200"}`}
           >
             Good responses (200)
           </button>
         </div>
 
         {summary ? (
-          <div className="mt-5 rounded-2xl border border-slate-100 bg-white/60 p-4">
+          <div className="mt-5 rounded-xl border border-slate-100 bg-white/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Status breakdown - last {summary.scanned} requests</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">Status breakdown - last {summary.scanned} requests</p>
               {(statusClass !== "all" || statusCode !== "all") && (
                 <button
                   type="button"
                   onClick={() => { setStatusClass("all"); setStatusCode("all"); }}
-                  className="text-[11px] font-black text-violet-700 underline"
+                  className="text-[11px] font-extrabold text-violet-700 underline"
                 >
                   Clear code filter
                 </button>
@@ -292,7 +292,7 @@ export default function ServerLogsPage() {
                     onClick={() => { setStatusCode("all"); setStatusClass(active ? "all" : cls); }}
                     className={`rounded-xl border px-3 py-2 text-left transition ${active ? `${theme.active} ring-2 ${theme.ring}` : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
                   >
-                    <div className="text-lg font-black leading-none">{count}</div>
+                    <div className="text-lg font-extrabold leading-none">{count}</div>
                     <div className="text-[11px] font-bold uppercase tracking-wide">{cls} {theme.label}</div>
                   </button>
                 );
@@ -300,13 +300,13 @@ export default function ServerLogsPage() {
             </div>
             {summary.top_codes.length ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Exact codes:</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400">Exact codes:</span>
                 {summary.top_codes.map((entry) => (
                   <button
                     key={entry.status_code}
                     type="button"
                     onClick={() => { setStatusClass("all"); setStatusCode(statusCode === entry.status_code ? "all" : entry.status_code); }}
-                    className={`rounded-full px-2.5 py-1 text-xs font-black transition ${statusCode === entry.status_code ? "ring-2 ring-violet-300" : ""} ${statusColor(entry.status_code)}`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-extrabold transition ${statusCode === entry.status_code ? "ring-2 ring-violet-300" : ""} ${statusColor(entry.status_code)}`}
                   >
                     {entry.status_code} x{entry.count}
                   </button>
@@ -317,11 +317,11 @@ export default function ServerLogsPage() {
         ) : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
             <input value={search} onChange={(event) => setSearch(event.target.value)} className={`${input} mt-2 normal-case tracking-normal`} placeholder="path, actor..." />
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Method
             <select value={method} onChange={(event) => setMethod(event.target.value)} className={`${input} mt-2 normal-case tracking-normal`}>
               <option value="all">All methods</option>
@@ -332,7 +332,7 @@ export default function ServerLogsPage() {
               <option value="DELETE">DELETE</option>
             </select>
           </label>
-          <label className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Sort
             <select value={sort} onChange={(event) => setSort(event.target.value)} className={`${input} mt-2 normal-case tracking-normal`}>
               <option value="newest">Newest</option>
@@ -341,14 +341,14 @@ export default function ServerLogsPage() {
           </label>
         </div>
 
-        {loading && <div className="mt-6 rounded-2xl border border-violet-100 bg-white p-5 text-sm font-bold text-slate-600">Loading logs...</div>}
-        {error && <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-bold text-rose-700">{error}</div>}
+        {loading && <div className="mt-6 rounded-xl border border-violet-200 bg-white p-5 text-sm font-bold text-slate-600">Loading logs...</div>}
+        {error && <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-bold text-rose-700">{error}</div>}
 
         {!loading && !error && (
           <div className="mt-6">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-black text-slate-900">{tab === "problems" ? "Problems" : "Good responses"}</h3>
-              <span className="text-xs font-black text-slate-500">{pagerText(total, page, rows.length)}</span>
+              <h3 className="text-lg font-extrabold text-slate-900">{tab === "problems" ? "Problems" : "Good responses"}</h3>
+              <span className="text-xs font-extrabold text-slate-500">{pagerText(total, page, rows.length)}</span>
             </div>
             {rows.length === 0 ? <p className="mt-3 text-sm font-semibold text-slate-500">Nothing logged here yet.</p> : null}
             <div className="mt-4 space-y-3">
@@ -356,7 +356,7 @@ export default function ServerLogsPage() {
                 <LogRow key={row.id} row={row} onChanged={handleLogChanged} />
               ))}
             </div>
-            <div className="mt-4 flex items-center justify-between gap-3 text-sm font-black">
+            <div className="mt-4 flex items-center justify-between gap-3 text-sm font-extrabold">
               <button disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))} className={`${secondaryButton} disabled:opacity-40`}>Previous</button>
               <button disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage((value) => value + 1)} className={`${primaryButton} disabled:opacity-40`}>Next</button>
             </div>

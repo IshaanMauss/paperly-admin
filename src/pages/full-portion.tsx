@@ -66,27 +66,27 @@ export default function FullPortionPage() {
   return (
     <AppShell title="Full Portion Papers">
       <section className={panel}>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Full Portion vs Topical</p>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">How teachers are using Full Portion papers</h2>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Full Portion vs Topical</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">How teachers are using Full Portion papers</h2>
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}
         {!loading && overview ? (
           <div className="mt-6 grid gap-4 md:grid-cols-4">
-            <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Full Portion papers</p>
-              <p className="mt-2 text-3xl font-black text-slate-950">{overview.full_portion_worksheets}</p>
+            <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Full Portion papers</p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.full_portion_worksheets}</p>
             </article>
-            <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Topical papers</p>
-              <p className="mt-2 text-3xl font-black text-slate-950">{overview.topical_worksheets}</p>
+            <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Topical papers</p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.topical_worksheets}</p>
             </article>
-            <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">With required subtopics</p>
-              <p className="mt-2 text-3xl font-black text-slate-950">{overview.full_portion_with_required_subtopics}</p>
+            <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">With required subtopics</p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.full_portion_with_required_subtopics}</p>
             </article>
-            <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Avg. required subtopics</p>
-              <p className="mt-2 text-3xl font-black text-slate-950">{overview.average_required_subtopics}</p>
+            <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Avg. required subtopics</p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.average_required_subtopics}</p>
             </article>
           </div>
         ) : null}
@@ -95,13 +95,13 @@ export default function FullPortionPage() {
       <section className={panel}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Billing gate</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Max subtopics per topic, by plan</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Billing gate</p>
+            <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Max subtopics per topic, by plan</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
               These caps gate the Full Portion "must include" subtopic selector. Leave a plan blank for unlimited. Overrides here take effect immediately in generation - no deploy needed.
             </p>
           </div>
-          {!canWrite ? <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase text-amber-900">Read-only: requires billing.write</span> : null}
+          {!canWrite ? <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-extrabold uppercase text-amber-900">Read-only: requires billing.write</span> : null}
         </div>
 
         <div className="mt-6 overflow-x-auto">
@@ -119,13 +119,13 @@ export default function FullPortionPage() {
               {plans.map((plan) => (
                 <tr key={plan.plan_code}>
                   <td className={td}>
-                    <p className="font-black text-slate-950">{plan.plan_label}</p>
+                    <p className="font-extrabold text-slate-950">{plan.plan_label}</p>
                     <p className="text-xs font-bold text-slate-500">{plan.plan_code}</p>
                   </td>
                   <td className={td}>{plan.default_max_subtopics_per_topic === null ? "Unlimited" : plan.default_max_subtopics_per_topic}</td>
                   <td className={td}>{plan.effective_max_subtopics_per_topic === null ? "Unlimited" : plan.effective_max_subtopics_per_topic}</td>
                   <td className={td}>
-                    {plan.is_overridden ? <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-black uppercase text-purple-800">Overridden</span> : <span className="text-xs font-bold text-slate-400">Default</span>}
+                    {plan.is_overridden ? <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-extrabold uppercase text-purple-800">Overridden</span> : <span className="text-xs font-bold text-slate-400">Default</span>}
                   </td>
                   <td className={td}>
                     <div className="flex items-center gap-2">

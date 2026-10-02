@@ -17,24 +17,24 @@ import { api, type PromoCode, type PromoCodeRedemptionRow } from "@/lib/apiClien
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+    <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-2 text-3xl font-extrabold text-slate-950">{value}</p>
     </article>
   );
 }
 
 function StatusBadge({ code }: { code: PromoCode }) {
   if (!code.is_active) {
-    return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-600">Off</span>;
+    return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-600">Off</span>;
   }
   if (code.is_expired) {
-    return <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-black text-amber-800">Expired</span>;
+    return <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-800">Expired</span>;
   }
   if (code.is_exhausted) {
-    return <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-black text-rose-800">Fully redeemed</span>;
+    return <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-extrabold text-rose-800">Fully redeemed</span>;
   }
-  return <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-800">Active</span>;
+  return <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold text-emerald-800">Active</span>;
 }
 
 function CreateCodeForm({ planOptions, onCreated }: { planOptions: Record<string, string>; onCreated: () => void }) {
@@ -165,7 +165,7 @@ function CodeRow({ code, onToggled }: { code: PromoCode; onToggled: (updated: Pr
     <>
       <tr>
         <td className={td}>
-          <p className="font-mono text-sm font-black text-slate-950">{code.code}</p>
+          <p className="font-mono text-sm font-extrabold text-slate-950">{code.code}</p>
           {code.label ? <p className="text-[11px] font-semibold text-slate-500">{code.label}</p> : null}
         </td>
         <td className={td}>
@@ -173,7 +173,7 @@ function CodeRow({ code, onToggled }: { code: PromoCode; onToggled: (updated: Pr
           <p className="text-[11px] font-semibold text-slate-500">{code.discount_percent}% off</p>
         </td>
         <td className={td}>
-          <p className="text-sm font-black text-slate-950">
+          <p className="text-sm font-extrabold text-slate-950">
             {code.redemption_count} / {code.max_redemptions ?? "∞"}
           </p>
           <p className="text-[11px] font-semibold text-slate-500">
@@ -264,15 +264,15 @@ export default function PromoCodesPage() {
   return (
     <AppShell title="Promo Codes">
       <section className={panel}>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Coupon codes</p>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Issue and track plan-upgrade codes</h2>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Coupon codes</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Issue and track plan-upgrade codes</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Create a code, pick the plan it grants, cap how many people can redeem it, and set an optional expiry —
           it goes live immediately, no deploy needed. A redeemed code instantly changes that teacher&apos;s plan,
           the same mechanism the mock-billing tools already use. Every count below is live from the database.
         </p>
-        <p className="mt-2 max-w-3xl rounded-xl border border-violet-100 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
-          <strong className="font-black text-slate-900">Two different dates, don&apos;t mix them up:</strong> a code&apos;s own
+        <p className="mt-2 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
+          <strong className="font-extrabold text-slate-900">Two different dates, don&apos;t mix them up:</strong> a code&apos;s own
           expiry (below) is only the deadline to redeem it — once someone redeems, their plan runs for its normal full
           length from that moment (a Yearly grant lasts 365 days from redemption, same as a real paid Yearly plan),
           completely independent of the code&apos;s own expiry date, and it survives logout/login and device changes.
@@ -292,12 +292,12 @@ export default function PromoCodesPage() {
           </div>
         ) : null}
 
-        <div className="mt-6 border-t border-violet-100 pt-5">
-          <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">Create a code</p>
+        <div className="mt-6 border-t border-violet-200 pt-5">
+          <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Create a code</p>
           {!loading ? <CreateCodeForm planOptions={planOptions} onCreated={() => { load(); requestAdminDataRefresh(); }} /> : null}
         </div>
 
-        <div className="mt-6 border-t border-violet-100 pt-4">
+        <div className="mt-6 border-t border-violet-200 pt-4">
           {!loading && codes && codes.length === 0 ? <p className={notice}>No promo codes yet — create one above.</p> : null}
           {!loading && codes && codes.length > 0 ? (
             <div className="overflow-x-auto">

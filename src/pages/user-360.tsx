@@ -51,11 +51,11 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "da
       ? "border-rose-200 bg-rose-50 text-rose-800"
       : tone === "warning"
       ? "border-amber-200 bg-amber-50 text-amber-800"
-      : "border-violet-100 bg-violet-50/60 text-slate-800";
+      : "border-violet-200 bg-violet-50/60 text-slate-800";
   return (
-    <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] opacity-70">{label}</p>
-      <p className="mt-1 text-2xl font-black">{value}</p>
+    <div className={`rounded-xl border px-4 py-3 ${toneClass}`}>
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] opacity-70">{label}</p>
+      <p className="mt-1 text-2xl font-extrabold">{value}</p>
     </div>
   );
 }
@@ -82,8 +82,8 @@ function ActionCard({
   confirmMessage: string;
 }) {
   return (
-    <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
-      <p className="text-sm font-black text-slate-900">{title}</p>
+    <div className="rounded-xl border border-violet-200 bg-violet-50/30 p-4">
+      <p className="text-sm font-extrabold text-slate-900">{title}</p>
       <p className="mt-1 text-xs font-semibold text-slate-500">{description}</p>
       <div className="mt-3 space-y-2">{children}</div>
       <button
@@ -92,7 +92,7 @@ function ActionCard({
         onClick={() => {
           if (window.confirm(confirmMessage)) onSubmit();
         }}
-        className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-extrabold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {busy ? "Working..." : submitLabel}
       </button>
@@ -490,8 +490,8 @@ export default function UserThreeSixtyPage() {
   return (
     <AppShell title="User 360">
       <section className={panel}>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-700">Customer operations</p>
-        <h2 className="mt-1 text-3xl font-black text-slate-950">User 360</h2>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Customer operations</p>
+        <h2 className="mt-1 text-3xl font-extrabold text-slate-950">User 360</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Every real, database-backed event for one user in one place - profile, subscription, every payment attempt,
           every promo redemption, every support ticket, every login/session record, and every failed API request their
@@ -500,17 +500,17 @@ export default function UserThreeSixtyPage() {
         </p>
 
         <div className="relative mt-5 max-w-xl">
-          <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          <label className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
             Find a user by name, email, or user id
             <input
-              className="mt-1 w-full min-w-0 rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400"
+              className="mt-1 w-full min-w-0 rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="e.g. Satyam, satyam@example.com, or a user id..."
             />
           </label>
           {searchInput.trim().length >= 2 && (
-            <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-card">
+            <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-violet-200 bg-white shadow-card">
               {searchBusy && <div className="px-4 py-3 text-xs font-bold text-slate-400">Searching...</div>}
               {!searchBusy && suggestions.length === 0 && (
                 <div className="px-4 py-3 text-xs font-bold text-slate-400">No matching users.</div>
@@ -523,9 +523,9 @@ export default function UserThreeSixtyPage() {
                     onClick={() => openUser(hit.teacher_id)}
                     className="block w-full border-b border-violet-50 px-4 py-3 text-left transition last:border-b-0 hover:bg-violet-50"
                   >
-                    <p className="text-sm font-black text-slate-900">
+                    <p className="text-sm font-extrabold text-slate-900">
                       {hit.name || "Unknown user"}
-                      {hit.is_test_account && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">Test</span>}
+                      {hit.is_test_account && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold uppercase text-amber-800">Test</span>}
                     </p>
                     <p className="font-mono text-xs text-slate-500">{hit.email} - {hit.teacher_id}</p>
                   </button>
@@ -535,7 +535,7 @@ export default function UserThreeSixtyPage() {
         </div>
 
         {!teacherIdParam && (
-          <div className="mt-8 rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-sm font-bold text-slate-600">
+          <div className="mt-8 rounded-xl border border-dashed border-violet-200 bg-violet-50/40 p-6 text-sm font-bold text-slate-600">
             Search for a user above, or click "View full history" on any row in the Users tab, to open their full
             timeline here.
           </div>
@@ -543,18 +543,18 @@ export default function UserThreeSixtyPage() {
 
         {teacherIdParam && loading && <p className="mt-8 text-sm font-bold text-slate-500">Loading this user's full history...</p>}
         {teacherIdParam && error && (
-          <div className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</div>
+          <div className="mt-8 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</div>
         )}
 
         {data && !loading && (
           <div className="mt-8 space-y-6">
-            <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
+            <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-950">
+                  <h3 className="text-2xl font-extrabold text-slate-950">
                     {data.profile.name || "Unknown user"}
                     {data.profile.is_test_account && (
-                      <span className="ml-3 rounded-full bg-amber-100 px-2 py-1 align-middle text-[11px] font-black uppercase tracking-wide text-amber-800">Test account</span>
+                      <span className="ml-3 rounded-full bg-amber-100 px-2 py-1 align-middle text-[11px] font-extrabold uppercase tracking-wide text-amber-800">Test account</span>
                     )}
                   </h3>
                   <p className="mt-1 font-mono text-xs text-slate-500">{data.profile.teacher_id}</p>
@@ -571,8 +571,8 @@ export default function UserThreeSixtyPage() {
               </div>
 
               {data.red_flags.length > 0 ? (
-                <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-rose-800">Red flags found in the actual data</p>
+                <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-rose-800">Red flags found in the actual data</p>
                   <ul className="mt-2 space-y-1 text-sm font-bold text-rose-800">
                     {data.red_flags.map((flag) => (
                       <li key={flag}>- {flag}</li>
@@ -580,7 +580,7 @@ export default function UserThreeSixtyPage() {
                   </ul>
                 </div>
               ) : (
-                <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">
+                <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-800">
                   No red flags in the backend data for this account - no failed payments in the last 30 days, no open
                   tickets, no lockouts, no recorded request failures.
                 </div>
@@ -606,6 +606,28 @@ export default function UserThreeSixtyPage() {
               />
               <Stat label="Promo codes redeemed" value={String(data.counts.promo_redemptions)} />
               <Stat label="Papers generated" value={String(data.counts.worksheets_generated)} />
+              {data.usage_summary?.usage
+                ? ([
+                    ["papers_today", "Papers today"],
+                    ["papers_month", "Papers this month"],
+                    ["topical_today", "Topical today"],
+                    ["full_portion_today", "Full Portion today"],
+                    ["full_portion_month", "Full Portion this month"],
+                    ["ai_checks", "AI checks"],
+                  ] as const).map(([key, label]) => {
+                    const entry = data.usage_summary?.usage?.[key];
+                    if (!entry) return null;
+                    const full = entry.limit !== null && entry.used >= entry.limit;
+                    return (
+                      <Stat
+                        key={key}
+                        label={label}
+                        value={entry.limit === null ? `${entry.used} (no limit)` : `${entry.used} of ${entry.limit}`}
+                        tone={full ? "warning" : "default"}
+                      />
+                    );
+                  })
+                : null}
               <Stat label="Support tickets (total)" value={String(data.counts.support_tickets)} />
               <Stat
                 label="Failed logins on record"
@@ -615,8 +637,8 @@ export default function UserThreeSixtyPage() {
             </div>
 
             {data.subscription && (
-              <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Subscription (source of truth, not what the user claims)</p>
+              <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
+                <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Subscription (source of truth, not what the user claims)</p>
                 <div className="mt-2 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-2">
                   <p>Plan: {data.subscription.plan_code}</p>
                   <p>Status: {data.subscription.status}</p>
@@ -627,8 +649,8 @@ export default function UserThreeSixtyPage() {
             )}
 
             {data.auth && (
-              <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Login / auth record - use this to verify a "login isn't working" claim</p>
+              <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
+                <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Login / auth record - use this to verify a "login isn't working" claim</p>
                 <div className="mt-2 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-2">
                   <p>Email verified: {formatDateTime(data.auth.email_verified_at)}</p>
                   <p>Consecutive failed logins: {data.auth.failed_login_count}</p>
@@ -637,7 +659,7 @@ export default function UserThreeSixtyPage() {
                 </div>
                 {data.active_sessions.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Recent sessions/devices</p>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Recent sessions/devices</p>
                     <div className="mt-2 space-y-2">
                       {data.active_sessions.map((sess, index) => (
                         <div key={index} className="rounded-xl border border-violet-50 bg-violet-50/40 px-3 py-2 text-xs font-bold text-slate-600">
@@ -651,8 +673,8 @@ export default function UserThreeSixtyPage() {
               </div>
             )}
 
-            <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Fix this account</p>
+            <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Fix this account</p>
               <p className="mt-1 text-xs font-semibold text-slate-500">
                 Every action below is logged into this user's own timeline with your admin email and the reason you
                 give - and every other tab (Users, Billing, Promo Codes) reflects the change the moment you reopen it,
@@ -830,8 +852,8 @@ export default function UserThreeSixtyPage() {
                   </ActionCard>
                 )}
 
-                <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
-                  <p className="text-sm font-black text-slate-900">Export this user's data</p>
+                <div className="rounded-xl border border-violet-200 bg-violet-50/30 p-4">
+                  <p className="text-sm font-extrabold text-slate-900">Export this user's data</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">
                     Same export the user's own self-service "Download my data" produces - downloaded as a JSON file, for a
                     support request or deletion prep where the user can't sign in themselves.
@@ -840,7 +862,7 @@ export default function UserThreeSixtyPage() {
                     type="button"
                     disabled={exportBusy}
                     onClick={submitExportOnBehalf}
-                    className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-black text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-3 rounded-xl bg-purple-700 px-4 py-2 text-xs font-extrabold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {exportBusy ? "Exporting..." : "Download data export"}
                   </button>
@@ -868,8 +890,8 @@ export default function UserThreeSixtyPage() {
                   </ActionCard>
                 ) : null}
 
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-                  <p className="text-sm font-black text-rose-900">Delete this account permanently</p>
+                <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-4">
+                  <p className="text-sm font-extrabold text-rose-900">Delete this account permanently</p>
                   <p className="mt-1 text-xs font-semibold text-rose-700">
                     Irreversible. Deletes this teacher's profile, subscription, worksheets, tickets, and history. Type the
                     exact teacher_id ({teacherIdParam}) below to confirm.
@@ -891,15 +913,15 @@ export default function UserThreeSixtyPage() {
                     type="button"
                     disabled={deleteBusy || deleteConfirmId !== teacherIdParam}
                     onClick={submitDeleteAccount}
-                    className="mt-3 rounded-xl bg-rose-700 px-4 py-2 text-xs font-black text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-3 rounded-xl bg-rose-700 px-4 py-2 text-xs font-extrabold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {deleteBusy ? "Deleting..." : "Permanently delete account"}
                   </button>
                   {deleteError && <p className="mt-2 text-xs font-bold text-rose-700">{deleteError}</p>}
                 </div>
 
-                <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-4">
-                  <p className="text-sm font-black text-slate-900">Regenerate a failed PDF/export</p>
+                <div className="rounded-xl border border-violet-200 bg-violet-50/30 p-4">
+                  <p className="text-sm font-extrabold text-slate-900">Regenerate a failed PDF/export</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">
                     Re-renders the PDF/answer-key/preview from this paper's already-stored data - nothing about the
                     content changes. If it fails again, the error shown is the real bug to go fix.
@@ -909,7 +931,7 @@ export default function UserThreeSixtyPage() {
                     {data.worksheets.map((ws) => (
                       <div key={ws.worksheet_id} className="flex items-center justify-between gap-2 rounded-xl border border-violet-50 bg-white px-3 py-2">
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-black text-slate-800">{ws.title}</p>
+                          <p className="truncate text-xs font-extrabold text-slate-800">{ws.title}</p>
                           <p className="text-[11px] font-bold text-slate-400">
                             {formatDateTime(ws.created_at)} - {ws.pdf_ready ? "Export ready" : "Export not ready"}
                           </p>
@@ -918,7 +940,7 @@ export default function UserThreeSixtyPage() {
                           type="button"
                           disabled={exportBusyId === ws.worksheet_id}
                           onClick={() => submitRegenerateExport(ws.worksheet_id)}
-                          className="flex-shrink-0 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-black text-purple-800 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex-shrink-0 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-purple-800 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {exportBusyId === ws.worksheet_id ? "Working..." : "Regenerate"}
                         </button>
@@ -931,16 +953,16 @@ export default function UserThreeSixtyPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-violet-100 bg-white/90 p-5 shadow-soft">
+            <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Full timeline, newest first</p>
+                <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Full timeline, newest first</p>
                 <div className="flex flex-wrap gap-1.5">
                   {KIND_FILTERS.map((filter) => (
                     <button
                       key={filter.key}
                       type="button"
                       onClick={() => setKindFilter(filter.key)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-black transition ${
+                      className={`rounded-full px-3 py-1.5 text-xs font-extrabold transition ${
                         kindFilter === filter.key ? "bg-purple-700 text-white" : "bg-violet-50 text-slate-600 hover:bg-violet-100"
                       }`}
                     >
@@ -960,8 +982,8 @@ export default function UserThreeSixtyPage() {
                         <span className={`mt-1.5 h-2.5 w-2.5 flex-shrink-0 rounded-full ${STATUS_STYLES[item.status]}`} />
                         <div className="min-w-0 flex-1 border-b border-violet-50 pb-3">
                           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                            <p className="text-sm font-black text-slate-900">
-                              <span className="mr-2 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-purple-700">
+                            <p className="text-sm font-extrabold text-slate-900">
+                              <span className="mr-2 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-purple-700">
                                 {KIND_LABELS[item.kind]}
                               </span>
                               {item.title}

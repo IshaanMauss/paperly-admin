@@ -460,7 +460,13 @@ export type UserThreeSixtyTimelineItem = {
   detail: string | null;
 };
 
+export type UserUsageEntry = { used: number; limit: number | null; window?: string };
 export type UserThreeSixty = {
+  usage_summary?: {
+    usage: Record<string, UserUsageEntry> | null;
+    resets: { day: string; month: string } | null;
+    plan_label: string;
+  } | null;
   worksheets: {
     worksheet_id: string;
     title: string;
@@ -522,4 +528,28 @@ export type UserThreeSixty = {
     redeemed_at: string | null;
   }[];
   timeline: UserThreeSixtyTimelineItem[];
+};
+
+export type PlanOffer = {
+  id: string;
+  label: string;
+  plan_code: string;
+  plan_label: string;
+  discount_percent: number;
+  duration_hours: number;
+  audience_plans: string[];
+  style: "shiny" | "starry" | "plain";
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_live: boolean;
+  shown_count: number | null;
+  redeemed_count: number | null;
+  created_by: string | null;
+  created_at: string | null;
+};
+
+export type PlanOfferListResponse = {
+  offers: PlanOffer[];
+  options: { plans: Record<string, string>; audience: Record<string, string>; styles: string[] };
 };

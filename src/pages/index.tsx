@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { panel, secondaryButton } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, AdminOverview } from "@/lib/apiClient";
 
@@ -74,57 +73,43 @@ export default function HomePage() {
 
   const stats = useMemo(
     () => [
-      [String(overview.users_tracked), "users tracked"],
-      [String(overview.active_trial_plans), "active/trial plans"],
-      [String(overview.payment_events), "payment events"],
-      [String(overview.template_uses), "template uses"],
+      { value: String(overview.users_tracked), label: "Users tracked", href: "/teachers", tone: "text-purple-700 bg-purple-50" },
+      { value: String(overview.active_trial_plans), label: "Active / trial plans", href: "/billing", tone: "text-emerald-700 bg-emerald-50" },
+      { value: String(overview.payment_events), label: "Payment events", href: "/billing", tone: "text-sky-700 bg-sky-50" },
+      { value: String(overview.template_uses), label: "Template uses", href: "/variant-health", tone: "text-amber-700 bg-amber-50" },
+      { value: String(overview.open_support_tickets), label: "Open support tickets", href: "/support", tone: overview.open_support_tickets > 0 ? "text-rose-700 bg-rose-50" : "text-slate-600 bg-violet-100" },
     ],
     [overview]
   );
 
   return (
-    <AppShell title="Platform Operations Overview">
-      {error ? <section className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 font-semibold text-amber-800">Backend status: {error}</section> : null}
+    <AppShell title="Overview">
+      {error ? <section className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">Backend status: {error}</section> : null}
 
-      <section className="mb-6 grid gap-6 rounded-3xl border border-violet-100 bg-white/95 p-6 shadow-card lg:grid-cols-[1.35fr_0.9fr]">
-        <div className="space-y-5">
-          <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-extrabold text-purple-800">Business control plane</span>
-          <div>
-            <h2 className="max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-4xl">Monitor the product after templates are approved.</h2>
-            <p className="mt-4 max-w-3xl text-base font-semibold leading-7 text-slate-500">
-              This is not the template-ingestion workspace. This panel is for owners/admins to see platform usage, billing evidence, support requests, backups, health, and future role-based controls.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/teachers" className={secondaryButton}>View users</Link>
-            <Link href="/billing" className={secondaryButton}>Review billing</Link>
-            <Link href="/backups" className={secondaryButton}>Backup data</Link>
-          </div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{formatUpdatedAt(overview.generated_at)} · {overview.source || "aggregate"}</p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-          {stats.map(([value, label]) => (
-            <div key={label} className="rounded-2xl border border-violet-100 bg-gradient-to-b from-white/90 to-violet-50/70 p-5 shadow-soft">
-              <strong className="block text-3xl font-black text-slate-950">{value}</strong>
-              <span className="text-sm font-bold text-slate-500">{label}</span>
-            </div>
-          ))}
-        </div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-500">
+          {loading ? "Refreshing…" : formatUpdatedAt(overview.generated_at)}
+          {overview.source ? ` · ${overview.source}` : ""}
+        </p>
+      </div>
+
+      <section className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {stats.map((item) => (
+          <Link key={item.label} href={item.href} className="group rounded-xl border border-violet-200 bg-white p-4 shadow-soft transition hover:border-purple-300 hover:shadow-card">
+            <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${item.tone}`}>{item.label}</span>
+            <strong className="mt-3 block text-3xl font-extrabold tracking-tight text-slate-950">{item.value}</strong>
+          </Link>
+        ))}
       </section>
 
-      <section className={panel}>
-        <div className="mb-5">
-          <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-purple-800">Admin map</p>
-          <h2 className="text-2xl font-black text-slate-950">Monitoring sections</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {operations.map((item) => (
-            <Link href={item.href} key={item.href} className="min-h-40 rounded-2xl border border-violet-100 bg-gradient-to-b from-white/90 to-violet-50/70 p-5 shadow-soft transition-colors hover:border-purple-300">
-              <h3 className="mb-2 text-lg font-black text-slate-950">{item.title}</h3>
-              <p className="text-sm font-semibold leading-6 text-slate-500">{item.text}</p>
-            </Link>
-          ))}
-        </div>
+      <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Jump to</h2>
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {operations.map((item) => (
+          <Link href={item.href} key={item.href} className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft transition hover:border-purple-300 hover:shadow-card">
+            <h3 className="text-base font-extrabold text-slate-950">{item.title}</h3>
+            <p className="mt-1.5 text-sm leading-6 text-slate-500">{item.text}</p>
+          </Link>
+        ))}
       </section>
     </AppShell>
   );

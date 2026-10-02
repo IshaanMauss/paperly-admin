@@ -37,7 +37,7 @@ const RISK_LABEL: Record<VariantHealthRisk, string> = {
 
 function RiskBadge({ risk }: { risk: VariantHealthRisk }) {
   return (
-    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black capitalize ${RISK_THEME[risk]}`}>
+    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-extrabold capitalize ${RISK_THEME[risk]}`}>
       {RISK_LABEL[risk]}
     </span>
   );
@@ -152,7 +152,7 @@ function CapacityUsageBars({ rows }: { rows: VariantHealthRow[] }) {
                   title={`${row.total_usage_count} / ${row.capacity} (${Math.round((row.usage_ratio ?? 0) * 100)}%)`}
                 />
               </div>
-              <p className="w-16 shrink-0 text-right text-[11px] font-black text-slate-600">
+              <p className="w-16 shrink-0 text-right text-[11px] font-extrabold text-slate-600">
                 {Math.round((row.usage_ratio ?? 0) * 100)}%
               </p>
             </div>
@@ -205,7 +205,7 @@ function ActionCell({ row, onChanged }: { row: VariantHealthRow; onChanged: (tem
       ) : (
         <button
           type="button"
-          className="rounded-xl border border-rose-200 bg-white/85 px-3 py-1.5 text-xs font-extrabold text-rose-700 transition-colors hover:bg-rose-50"
+          className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-extrabold text-rose-700 transition-colors hover:bg-rose-50"
           onClick={() => setConfirming(true)}
         >
           Deprecate
@@ -273,8 +273,8 @@ export default function VariantHealthPage() {
   return (
     <AppShell title="Variant Health">
       <section className={panel}>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-800">Template capacity</p>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Which templates are running low on distinct variants</h2>
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Template capacity</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Which templates are running low on distinct variants</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Every number on this page is computed live from the real database on each load — nothing here is
           sampled, cached, or estimated from a subset. Two numbers are explicitly approximations and are labeled
@@ -287,8 +287,8 @@ export default function VariantHealthPage() {
           template's ranges (superset) or bring in a sibling from the same subtopic pool — not as proof any
           specific teacher has already seen a repeat.
         </p>
-        <p className="mt-3 max-w-3xl rounded-xl border border-violet-100 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
-          <strong className="font-black text-slate-900">How "Usage" is calculated:</strong> the ratio is the SUM of
+        <p className="mt-3 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
+          <strong className="font-extrabold text-slate-900">How "Usage" is calculated:</strong> the ratio is the SUM of
           every real teacher's usage_count divided by the template's estimated capacity — so a small capacity
           (some templates only have 6–15 real variants) can read "Exhausted" from a handful of ordinary teachers,
           not from one teacher hitting repeats. The table's Usage column now shows the <em>median</em> (the typical
@@ -307,31 +307,31 @@ export default function VariantHealthPage() {
                 key={risk}
                 type="button"
                 onClick={() => setRiskFilter(riskFilter === risk ? "all" : risk)}
-                className={`rounded-2xl border p-4 text-left shadow-sm transition ${
-                  riskFilter === risk ? "border-purple-400 ring-2 ring-violet-200" : "border-violet-100 bg-white"
+                className={`rounded-xl border p-4 text-left shadow-sm transition ${
+                  riskFilter === risk ? "border-purple-400 ring-2 ring-violet-200" : "border-violet-200 bg-white"
                 }`}
               >
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{RISK_LABEL[risk]}</p>
-                <p className="mt-2 text-3xl font-black text-slate-950">{overview.summary[risk]}</p>
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">{RISK_LABEL[risk]}</p>
+                <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.summary[risk]}</p>
               </button>
             ))}
-            <article className="rounded-2xl border border-violet-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Approved templates</p>
-              <p className="mt-2 text-3xl font-black text-slate-950">{overview.summary.total}</p>
+            <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Approved templates</p>
+              <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.summary.total}</p>
             </article>
           </div>
         ) : null}
 
         {!loading && overview && overview.summary.total > 0 ? (
-          <div className="mt-6 grid gap-6 border-t border-violet-100 pt-5 lg:grid-cols-2">
+          <div className="mt-6 grid gap-6 border-t border-violet-200 pt-5 lg:grid-cols-2">
             <div>
-              <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+              <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                 Risk mix (click a slice, or a tile above, to filter)
               </p>
               <RiskDonut summary={overview.summary} />
             </div>
             <div>
-              <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+              <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                 Highest usage-to-capacity ratio
               </p>
               <CapacityUsageBars rows={overview.rows} />
@@ -340,14 +340,14 @@ export default function VariantHealthPage() {
         ) : null}
 
         {!loading && overview ? (
-          <div className="mt-6 border-t border-violet-100 pt-4">
+          <div className="mt-6 border-t border-violet-200 pt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                 Filter the table below
               </p>
               <p className="text-xs font-bold text-slate-500">
-                Showing <span className="font-black text-slate-800">{rows.length}</span> of{" "}
-                <span className="font-black text-slate-800">{overview.rows.length}</span> templates
+                Showing <span className="font-extrabold text-slate-800">{rows.length}</span> of{" "}
+                <span className="font-extrabold text-slate-800">{overview.rows.length}</span> templates
                 {activeFilterCount > 0 ? ` · ${activeFilterCount} filter${activeFilterCount === 1 ? "" : "s"} active` : ""}
               </p>
             </div>
@@ -401,7 +401,7 @@ export default function VariantHealthPage() {
               {activeFilterCount > 0 ? (
                 <button
                   type="button"
-                  className="mb-0.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-black text-purple-800"
+                  className="mb-0.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-extrabold text-purple-800"
                   onClick={() => {
                     setRiskFilter("all");
                     setTopicFilter("all");
@@ -447,7 +447,7 @@ export default function VariantHealthPage() {
                     <td className={td}>
                       <p className="text-xs font-bold text-slate-700">{row.paper_code || "—"}</p>
                       <span
-                        className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-black capitalize ${
+                        className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-extrabold capitalize ${
                           row.popular_igcse ? "border-violet-300 bg-violet-50 text-violet-800" : "border-slate-200 bg-slate-50 text-slate-600"
                         }`}
                       >

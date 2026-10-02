@@ -1,13 +1,12 @@
-export const primaryButton = "rounded-xl border border-purple-600 bg-purple-600 px-4 py-2.5 font-extrabold text-white shadow-soft transition-colors hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
-export const secondaryButton = "rounded-xl border border-violet-200 bg-white/85 px-4 py-2.5 font-extrabold text-purple-950 shadow-soft transition-colors hover:border-purple-300 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
-export const panel = "mb-4 rounded-2xl border border-violet-100 bg-white/80 p-6 shadow-soft";
-export const input = "w-full min-w-0 rounded-xl border border-violet-200 bg-white/85 px-3 py-2.5 text-slate-900 outline-none transition focus:border-purple-600 focus:ring-4 focus:ring-violet-100";
-export const label = "grid min-w-0 gap-2 text-sm font-bold text-slate-700";
-export const muted = "text-slate-600";
-export const notice = "mb-4 rounded-2xl border border-violet-200 border-l-4 border-l-purple-600 bg-violet-50/80 p-4 text-slate-700";
-export const errorNotice = "mb-4 rounded-2xl border border-rose-200 border-l-4 border-l-rose-600 bg-rose-50 p-4 text-rose-700";
-export const table = "w-full border-collapse text-left";
-export const th = "border-b border-violet-100 px-3 py-3 text-xs font-extrabold uppercase tracking-wide text-slate-500";
-export const td = "border-b border-violet-50 px-3 py-3 align-top";
+export const primaryButton = "rounded-lg border border-purple-600 bg-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50";
+export const secondaryButton = "rounded-lg border border-violet-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-soft transition-colors hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50";
+export const panel = "mb-4 rounded-xl border border-violet-200 bg-white p-5 shadow-soft sm:p-6";
+export const input = "w-full min-w-0 rounded-lg border border-violet-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100";
+export const label = "grid min-w-0 gap-1.5 text-sm font-semibold text-slate-700";
+export const muted = "text-slate-500";
+export const notice = "mb-4 rounded-xl border border-violet-200 border-l-4 border-l-purple-600 bg-purple-50/60 p-4 text-sm text-slate-700";
+export const errorNotice = "mb-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-600 bg-rose-50 p-4 text-sm text-rose-700";
+export const table = "w-full border-collapse text-left text-sm";
+export const th = "border-b border-violet-200 bg-violet-50 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-slate-500";
+export const td = "border-b border-violet-100 px-3 py-3 align-top";
 export const code = "whitespace-pre-wrap font-mono text-sm";
-
