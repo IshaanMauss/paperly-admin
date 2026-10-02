@@ -24,6 +24,12 @@ This panel must not duplicate screenshot upload, JSON drafting, template approva
 - Maintenance: put the teacher module into maintenance mode and restore service after approval.
 - Admin Users: future role-based access for owner, admin, reviewer, uploader, support, and finance roles.
 
+## Run Tests tab, status-code guide and test database - 2026-10-02
+
+- **Run Tests** (nav "Run Tests", needs `security.read` to view, `security.write` to run): read checks are safe on production; write checks run only against the locked local test database. Shows environment badges, filter/search, failure explainer, "Not tested yet" scan and a test-database panel (seed/wipe). To use write tests, start the local backend (`python scripts/local_test_db.py backend` in `paperly-mvp/backend`, port 8100) and run a second admin panel instance pointed at it. Never point the production panel's write tests at Supabase; the backend refuses ("Blocked for safety").
+- **Server Logs** has a status-code guide (17 codes, searchable, with live counts) explaining each code in Paperly terms.
+- **Database guards**: production and test databases have guard triggers (`paperly-mvp/docs/claude-project/db-guard-*.sql`). KNOWN LIMIT: they check identity columns only, not JSON/free-text payloads, so never copy production dumps into the test database. Full detail: `paperly-mvp/docs/security-and-deployment.md`.
+
 ## Maintenance Rule
 
 When maintenance is restored, active teacher-module sessions should be invalidated with a session-version or session-epoch check. Users must log in again, but their saved papers, profile, usage, and billing data must remain safe.

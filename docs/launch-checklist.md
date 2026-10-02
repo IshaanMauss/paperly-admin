@@ -14,6 +14,10 @@ This repo is the owner/admin monitoring and response panel. It must not duplicat
 - Add incident response actions: force logout, suspend account, mark resolved, mark false positive, export evidence.
 - Keep route access separate from teacher product routes and ingestion dashboard routes.
 
+## Run Tests and database guard checks - 2026-10-02
+
+Before launch: confirm Run Tests -> Security and access shows `sec.db_guard_installed` passing (mode production, current version) and `sec.db_guard_audit` passing. After any guard version bump, re-run `db-guard-production.sql` in Supabase. Limit to remember: guards do not inspect JSON/free-text payloads; never copy production dumps into the test database (see `paperly-mvp/docs/security-and-deployment.md`).
+
 ## P1
 
 - Improve backup visibility: last backup time, JSON/XLSX export status, future cloud backup target, restore dry-run status.
