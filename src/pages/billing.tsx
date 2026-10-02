@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { panel } from "@/components/ui";
+import { panel, planLabel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminPaymentEventRow, AdminSubscriptionRow, api } from "@/lib/apiClient";
+import { UserLabel } from "../components/UserLabel";
 
 const PAGE_SIZE = 25;
 
@@ -99,7 +100,7 @@ export default function BillingAdminPage() {
         <div className="mt-6 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
-            <input value={search} onChange={(event) => setSearch(event.target.value)} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" placeholder="teacher, event, gateway..." />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" placeholder="user name, email, event, gateway..." />
           </label>
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Plan
@@ -160,10 +161,10 @@ export default function BillingAdminPage() {
                 {subscriptions.map((row) => (
                   <div key={row.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono text-xs">{row.teacher_id}</span>
+                      <UserLabel id={row.teacher_id} name={row.teacher_name} email={row.teacher_email} />
                       <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase text-slate-700">{row.status}</span>
                     </div>
-                    <div className="mt-2 text-slate-900">{row.plan_code}</div>
+                    <div className="mt-2 text-slate-900">{planLabel(row.plan_code)}</div>
                     <div className="mt-1 text-xs text-slate-500">Gateway: {row.gateway} | Ends: {row.current_period_end || "-"}</div>
                   </div>
                 ))}
@@ -188,7 +189,7 @@ export default function BillingAdminPage() {
                       <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase text-slate-700">{row.gateway}</span>
                     </div>
                     <div className="mt-1 font-mono text-xs text-slate-500">{row.event_id || "no event id"}</div>
-                    <div className="mt-1 text-xs text-slate-500">Teacher: {row.teacher_id || "-"} | Created: {new Date(row.created_at).toLocaleString()}</div>
+                    <div className="mt-1 text-xs text-slate-500">User: {row.teacher_name ? `${row.teacher_name} (${row.teacher_id})` : row.teacher_id || "-"} | Created: {new Date(row.created_at).toLocaleString()}</div>
                   </div>
                 ))}
               </div>

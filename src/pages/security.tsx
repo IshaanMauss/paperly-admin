@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { panel, table, td, th } from "@/components/ui";
+import { panel, table, td, th, planLabel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminSecurityEventRow, api, type RlsTableRow } from "@/lib/apiClient";
 
@@ -188,7 +188,7 @@ export default function SecurityPage() {
               <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 sm:grid-cols-3">
                 <span>User: {event.user_name || "Unknown user"}</span>
                 <span>Email: {event.user_email || "Not captured"}</span>
-                <span>Plan: {event.plan_code || "unknown"} / {event.subscription_status || "unknown"}</span>
+                <span>Plan: {planLabel(event.plan_code) } / {event.subscription_status || "unknown"}</span>
                 <span>Status: {event.status || "detected"}</span>
                 <span>When: {event.occurred_at ? new Date(event.occurred_at).toLocaleString() : "Unknown"}</span>
                 <span>Event: {event.event_type}</span>

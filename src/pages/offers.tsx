@@ -161,8 +161,8 @@ function OfferRow({ offer, audienceNames, onToggled }: { offer: PlanOffer; audie
       </td>
       <td className={td}>{offer.audience_plans.map((code) => audienceNames[code] || code).join(", ")}</td>
       <td className={td}>
-        <p className="text-sm font-extrabold text-slate-950">{offer.shown_count ?? 0} shown</p>
-        <p className="text-[11px] font-semibold text-slate-500">{offer.redeemed_count ?? 0} bought</p>
+        <p className="text-sm font-extrabold text-slate-950">{offer.shown_count ?? 0} unique people saw it</p>
+        <p className="text-[11px] font-semibold text-slate-500">{offer.redeemed_count ?? 0} unique people bought</p>
       </td>
       <td className={td}>
         <StatusBadge offer={offer} />

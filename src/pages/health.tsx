@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { api, TemplateSummary } from "@/lib/apiClient";
+import Link from "next/link";
+import { api, ServerLogProblemGroup, TemplateSummary } from "@/lib/apiClient";
 import { panel, primaryButton } from "@/components/ui";
 
 const TEMPLATE_HEALTH_LIMIT = "200";
@@ -20,81 +21,116 @@ type ProductionCheck = {
 
 const productionChecks: ProductionCheck[] = [
   {
-    priority: "P1",
-    title: "ZTNA for admin/backoffice access",
+    priority: "P0",
+    title: "Run the pending database scripts",
     status: "pending",
-    evidence: "README and launch checklist require Cloudflare Access or Tailscale before public exposure. No admin-panel code can prove this by itself.",
-    next: "Configure ZTNA at hosting/network layer before exposing admin/backoffice URLs.",
+    evidence: "Three scripts are written but only take effect once run in the Supabase SQL editor: plan-config-migration.sql (until then Plans & Features cannot save and plans use built-in defaults), fix-part-subtopics-object-shape.sql (24 Paper 4 templates have part subtopics in a shape the filters cannot read) and fix-inequality-fraction-template.sql.",
+    next: "Run them once each, in that order, then re-open Plans & Features and Variant Health to confirm. Institute plans need no new SQL.",
   },
   {
     priority: "P0",
-    title: "Role-based admin auth",
+    title: "Live Razorpay keys and one real test payment",
     status: "partial",
-    evidence: "Backend now has admin auth tables, signed admin access tokens, refresh cookie sessions, bootstrap owner login, and admin-panel session gating. Legacy X-Admin-Token fallback remains for migration/local tools.",
-    next: "Set ADMIN_BOOTSTRAP_PASSWORD, create the first owner account, then replace fallback token use with permission-specific admin route policies.",
+    evidence: "The code verifies the checkout signature and the webhook signature and processes events once only. What nothing can prove from here: live keys and the webhook secret are set on Railway, the webhook URL is registered in Razorpay, and a small real payment has gone all the way through to a plan change.",
+    next: "Set the keys, register the webhook, make one small real purchase on a spare account, and check it in Billing.",
   },
   {
     priority: "P0",
-    title: "Audit logs for admin actions",
+    title: "Custom institute plans (already being promoted)",
     status: "partial",
-    evidence: "Security Events page reads server-side risk logs, but approve/edit/archive/backup/maintenance/billing actions are not all tied to a real admin identity yet.",
-    next: "Add append-only admin audit events for every sensitive action with actor, target, timestamp, and result.",
-  },
-  {
-    priority: "P1",
-    title: "Daily Excel + JSON backups",
-    status: "partial",
-    evidence: "Backups page supports manual JSON/XLSX export. Docs still say scheduled cloud backup and restore dry-run are future work.",
-    next: "Add daily scheduled backup, cloud copy, encryption, visible backup history, and restore test status.",
-  },
-  {
-    priority: "P1",
-    title: "Server-side pagination/filtering",
-    status: "current",
-    evidence: "Completed 2026-08-21: Users, support tickets, subscriptions, payment events, and security events now use backend limit/offset/search/filter/sort contracts with paged admin UI views.",
-    next: "Keep this as the required pattern for every new large admin dataset; do not add client-only full-list filtering for scalable tables.",
-  },
-  {
-    priority: "P0",
-    title: "Upload type and size limits",
-    status: "partial",
-    evidence: "This is mainly enforced in the MVP/backoffice ingestion backend, not inside this admin panel. Admin docs still list it as production protection.",
-    next: "Keep MIME/size/page-count limits server-side for all upload routes and show violations in admin health/security views.",
-  },
-  {
-    priority: "P0",
-    title: "Razorpay webhook verification",
-    status: "pending",
-    evidence: "Billing page explicitly says real Razorpay checkout should use signed webhooks before paid launch.",
-    next: "Implement signed checkout verification, signed webhook verification, and idempotent event processing before paid launch.",
+    evidence: "Built 2026-10-02: per-institute Topical / Full Portion / AI checking / mark scheme switches enforced by the server, per-person caps, seats with a join code and email-domain rule, branding (colours, name, logo, dark mode unchanged), a plan that members get instead of their own, and a delivery checklist in Organizations. Not yet proven: one full run-through with a real test institute.",
+    next: "Create a test institute, work down its checklist, join with a second account, and confirm each switch and cap from the member's side before the first customer.",
   },
   {
     priority: "P0",
     title: "Backend-only plan gates",
     status: "current",
-    evidence: "Teacher-side plan and Popular IGCSE gates were moved to backend enforcement; admin docs still correctly say frontend state must not be trusted.",
-    next: "Keep regression tests for free/monthly/yearly/institute access and extend checks to custom campaign entitlements.",
+    evidence: "Plan limits, Popular filter, mark scheme and AI checking are decided by the server on every request, and an institute's switches and caps go through the same gates. Covered by automated tests.",
+    next: "Keep a test for every new limit or switch before it ships.",
+  },
+  {
+    priority: "P0",
+    title: "Admin sign-in",
+    status: "partial",
+    evidence: "Role-based admin accounts with signed tokens and refresh cookies are in place and the panel is gated. The older shared X-Admin-Token fallback still exists for migration and local tools.",
+    next: "Confirm nobody relies on the shared token, then switch it off; make sure the first owner account has a strong password.",
   },
   {
     priority: "P1",
-    title: "Rate limits and DDoS protection",
+    title: "Admin action history",
+    status: "partial",
+    evidence: "Plan publishing, institute settings and request decisions record who did them, and Security Events shows risk activity. There is no single append-only history covering every sensitive admin action (suspend, refund, delete, backup restore).",
+    next: "Add one history table every sensitive admin action writes to, with who, what, which user and when.",
+  },
+  {
+    priority: "P1",
+    title: "Rate limits shared across servers",
+    status: "partial",
+    evidence: "Sign-in, billing, generation and upload routes are rate limited. Without REDIS_URL each server instance counts on its own, so the real limit is higher than written when more than one instance runs.",
+    next: "Add a Redis add-on on Railway and set REDIS_URL; then check Server Logs for 429s.",
+  },
+  {
+    priority: "P1",
+    title: "Alerts when something breaks",
     status: "pending",
-    evidence: "Docs mention Cloudflare/WAF/rate limits, but no admin-panel code proves route-level rate limiting.",
-    next: "Add backend route-level rate limits and deploy CDN/WAF rules for auth, generation, export, and admin APIs.",
+    evidence: "Server Logs and this page show problems clearly once you look, but nothing pushes a message to you when errors spike or the backend goes down.",
+    next: "Add an uptime check on the health endpoint and an alert (email or phone) on a burst of 5xx errors.",
   },
   {
     priority: "P1",
-    title: "Security event logging",
+    title: "Scheduled backups and a restore test",
     status: "partial",
-    evidence: "Security page reads /api/admin/security-events and displays statuses. Incident response buttons are still not complete.",
-    next: "Add status transitions: active, mitigated, resolved, false_positive, with admin actor audit.",
+    evidence: "Manual JSON and Excel exports and a restore routine exist. There is no daily scheduled backup, off-site copy, encryption, or recorded restore test.",
+    next: "Schedule a daily backup to cloud storage, encrypt it, and do one restore into a scratch project to prove it works.",
   },
   {
     priority: "P1",
-    title: "Session revoke and ban workflow",
+    title: "Free-plan preview ad",
     status: "partial",
-    evidence: "Teacher session expiry/maintenance revoke exists conceptually, but admin-side force logout, suspend, ban, and review actions are not fully wired.",
-    next: "Add admin actions for force logout, suspend account, device review, and incident evidence export.",
+    evidence: "The rewarded preview ad flow is built and the server enforces the 30 seconds and one unlock per ad. Until a real ad unit id is set, people see a plain 30-second 'preparing' card instead of an ad.",
+    next: "Create a rewarded ad unit with Google, set NEXT_PUBLIC_GPT_REWARDED_UNIT on Vercel for the user app, redeploy, and test one unlock end to end.",
+  },
+  {
+    priority: "P1",
+    title: "Sign-in session stability",
+    status: "current",
+    evidence: "Fixed 2026-10-02: a renewal that arrives just after another tab already renewed is accepted (same browser), and signed-out visitors no longer trigger a renewal request at all. Server Logs now name the user behind any remaining 401.",
+    next: "Watch Server Logs for a few days; a named user who keeps appearing means their session is being revoked.",
+  },
+  {
+    priority: "P1",
+    title: "ZTNA for admin access",
+    status: "pending",
+    evidence: "The launch checklist asks for Cloudflare Access or Tailscale in front of the admin panel and back office. No code can prove this; it is a hosting setting.",
+    next: "Put the admin URLs behind Cloudflare Access or Tailscale before exposing them publicly.",
+  },
+  {
+    priority: "P1",
+    title: "Upload type and size limits",
+    status: "partial",
+    evidence: "Enforced in the ingestion backend, not in this panel.",
+    next: "Keep type, size and page-count limits on every upload route and surface violations in Security Events.",
+  },
+  {
+    priority: "P1",
+    title: "Server-side paging and filtering",
+    status: "current",
+    evidence: "Users, support, billing, security events and server logs all page and filter on the server.",
+    next: "Keep this pattern for every new large table.",
+  },
+  {
+    priority: "P2",
+    title: "Institute owners managing their own people",
+    status: "pending",
+    evidence: "Seats, roles and limits are managed by you in Organizations. An institute owner cannot yet invite, pause or remove members from inside the app (they can share the join code you give them).",
+    next: "Add a small members screen for institute owners, limited to their own institute.",
+  },
+  {
+    priority: "P2",
+    title: "Pooled allowances for institutes",
+    status: "pending",
+    evidence: "Institute limits are per person (for example 300 AI checks each). A shared pool across the whole institute is not built.",
+    next: "Only build if a customer asks for a shared pool instead of per-person limits.",
   },
 ];
 
@@ -150,6 +186,8 @@ export default function HealthPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [problems, setProblems] = useState<ServerLogProblemGroup[] | null>(null);
+  const [problemsError, setProblemsError] = useState("");
 
   const refreshHealth = useCallback(async () => {
     setLoading(true);
@@ -165,6 +203,14 @@ export default function HealthPage() {
       setError(readableError(err));
     } finally {
       setLoading(false);
+    }
+    try {
+      const summary = await api.getAdminServerLogsSummary();
+      setProblems(summary.problem_groups || []);
+      setProblemsError("");
+    } catch (err) {
+      setProblems(null);
+      setProblemsError(readableError(err));
     }
   }, []);
 
@@ -197,6 +243,31 @@ export default function HealthPage() {
             <p className="mt-3 text-sm font-semibold text-slate-500">Health check reads up to {TEMPLATE_HEALTH_LIMIT} templates, matching the backend API limit.</p>
           </div>
           <button className={primaryButton} onClick={refreshHealth} disabled={loading}>{loading ? "Refreshing..." : "Refresh checks"}</button>
+        </div>
+      </section>
+
+      <section className={panel}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-extrabold text-slate-950">Problems right now</h2>
+          <Link href="/logs" className="text-sm font-extrabold text-violet-700 underline">Open Server Logs</Link>
+        </div>
+        <p className="mt-1 text-sm font-semibold text-slate-500">Repeated failures from recent traffic, who they hit and what to do. Nothing hidden: if it failed, it is listed.</p>
+        {problemsError ? <p className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm font-semibold text-rose-700">Could not read the server logs: {problemsError}</p> : null}
+        {status === "offline" ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-800">The backend is not reachable from the admin panel. Nothing else on this page can be trusted until it is back.</p> : null}
+        {unsafe > 0 ? <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">{unsafe} template{unsafe === 1 ? " is" : "s are"} switched off for generation (safe off). Open Variant Health to see which.</p> : null}
+        {missingPaper > 0 ? <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">{missingPaper} template{missingPaper === 1 ? " has" : "s have"} no paper tag, so paper filters will skip {missingPaper === 1 ? "it" : "them"}.</p> : null}
+        {problems && problems.length === 0 && status === "online" && unsafe === 0 && missingPaper === 0 ? <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">No repeated problems in recent traffic.</p> : null}
+        <div className="mt-3 grid gap-3">
+          {(problems || []).slice(0, 6).map((group) => (
+            <div key={`${group.method}-${group.path}-${group.status_code}`} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-mono text-xs font-bold text-slate-800">{group.status_code} {group.method} {group.path}</span>
+                <span className="text-xs font-extrabold text-slate-600">{group.count} times, {group.unique_users} named user{group.unique_users === 1 ? "" : "s"}{group.anonymous_requests ? `, ${group.anonymous_requests} signed-out` : ""}</span>
+              </div>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">{group.meaning}</p>
+              {group.sample_users.length ? <p className="mt-1 text-xs font-semibold text-slate-500">Affected: {group.sample_users.join(", ")}</p> : null}
+            </div>
+          ))}
         </div>
       </section>
 

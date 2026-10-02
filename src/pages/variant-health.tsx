@@ -285,17 +285,17 @@ export default function VariantHealthPage() {
           included this template and were opened/downloaded at least once, not individual question variants.
           Usage and export counts themselves are exact SQL aggregates. Treat "Exhausted" as a signal to widen the
           template's ranges (superset) or bring in a sibling from the same subtopic pool — not as proof any
-          specific teacher has already seen a repeat.
+          specific user has already seen a repeat.
         </p>
         <p className="mt-3 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
           <strong className="font-extrabold text-slate-900">How "Usage" is calculated:</strong> the ratio is the SUM of
-          every real teacher's usage_count divided by the template's estimated capacity — so a small capacity
-          (some templates only have 6–15 real variants) can read "Exhausted" from a handful of ordinary teachers,
-          not from one teacher hitting repeats. The table's Usage column now shows the <em>median</em> (the typical
-          teacher's count — resistant to outliers) alongside the mean ± standard deviation across teachers, so you
-          can tell "many teachers each did a normal amount" apart from "one heavy teacher skewed the total." This
-          number only ever includes real, signed-in teacher-module activity — QA Preview / admin-token / test-panel
-          traffic has no teacher_id and is structurally excluded, so a brand-new admin login cannot inflate it.
+          every real user's usage_count divided by the template's estimated capacity — so a small capacity
+          (some templates only have 6–15 real variants) can read "Exhausted" from a handful of ordinary users,
+          not from one user hitting repeats. The table's Usage column now shows the <em>median</em> (the typical
+          user's count — resistant to outliers) alongside the mean ± standard deviation across users, so you
+          can tell "many users each did a normal amount" apart from "one heavy user skewed the total." This
+          number only ever includes real, signed-in product activity — QA Preview / admin-token / test-panel
+          traffic has no user id and is structurally excluded, so a brand-new admin login cannot inflate it.
         </p>
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}
@@ -395,7 +395,7 @@ export default function VariantHealthPage() {
                   <option value="never_exported">Generated but never exported/downloaded</option>
                 </select>
                 <span className="mt-1 block max-w-[11rem] text-[10.5px] font-semibold text-slate-400">
-                  Whether any real teacher has actually downloaded/previewed a paper using it
+                  Whether any real user has actually downloaded/previewed a paper using it
                 </span>
               </label>
               {activeFilterCount > 0 ? (
@@ -462,10 +462,10 @@ export default function VariantHealthPage() {
                         {row.total_usage_count.toLocaleString()} total
                         {row.usage_ratio != null ? ` (${Math.round(row.usage_ratio * 100)}% of capacity)` : ""}
                       </p>
-                      <p className="text-[11px] text-slate-500">{row.distinct_teachers_used} teacher{row.distinct_teachers_used === 1 ? "" : "s"}</p>
+                      <p className="text-[11px] text-slate-500">{row.distinct_teachers_used} user{row.distinct_teachers_used === 1 ? "" : "s"}</p>
                       {row.median_usage_per_teacher != null ? (
                         <p className="mt-1 text-[11px] font-bold text-slate-600">
-                          typical teacher: {row.median_usage_per_teacher}
+                          typical user: {row.median_usage_per_teacher}
                           {row.mean_usage_per_teacher != null ? (
                             <span className="font-semibold text-slate-400">
                               {" "}(mean {row.mean_usage_per_teacher}

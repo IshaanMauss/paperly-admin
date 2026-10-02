@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/router";
 
 import { AppShell } from "@/components/AppShell";
-import { panel } from "@/components/ui";
+import { panel, planLabel } from "@/components/ui";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 
@@ -588,7 +588,7 @@ export default function UserThreeSixtyPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Stat label="Plan" value={data.subscription ? `${data.subscription.plan_code} (${data.subscription.status})` : "No subscription row"} />
+              <Stat label="Plan" value={data.subscription ? `${planLabel(data.subscription.plan_code)} (${data.subscription.status})` : "No subscription row"} />
               <Stat
                 label="Failed payments (30d)"
                 value={String(data.counts.failed_payments_30d)}
@@ -640,7 +640,7 @@ export default function UserThreeSixtyPage() {
               <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
                 <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Subscription (source of truth, not what the user claims)</p>
                 <div className="mt-2 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-2">
-                  <p>Plan: {data.subscription.plan_code}</p>
+                  <p>Plan: {planLabel(data.subscription.plan_code)}</p>
                   <p>Status: {data.subscription.status}</p>
                   <p>Gateway: {data.subscription.gateway}</p>
                   <p>Current period: {formatDateTime(data.subscription.current_period_start)} to {formatDateTime(data.subscription.current_period_end)}</p>
@@ -893,8 +893,8 @@ export default function UserThreeSixtyPage() {
                 <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-4">
                   <p className="text-sm font-extrabold text-rose-900">Delete this account permanently</p>
                   <p className="mt-1 text-xs font-semibold text-rose-700">
-                    Irreversible. Deletes this teacher's profile, subscription, worksheets, tickets, and history. Type the
-                    exact teacher_id ({teacherIdParam}) below to confirm.
+                    Irreversible. Deletes this user's profile, subscription, worksheets, tickets, and history. Type the
+                    exact user id ({teacherIdParam}) below to confirm.
                   </p>
                   <input
                     className="mt-3 w-full min-w-0 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"

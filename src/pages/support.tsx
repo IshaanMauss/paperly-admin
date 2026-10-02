@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminSupportTicketRow, api } from "@/lib/apiClient";
+import { UserLabel } from "../components/UserLabel";
 
 const PAGE_SIZE = 25;
 
@@ -95,7 +96,7 @@ export default function SupportAdminPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Support operations</p>
-            <h2 className="mt-1 text-3xl font-extrabold text-slate-950">Teacher support queue</h2>
+            <h2 className="mt-1 text-3xl font-extrabold text-slate-950">User support queue</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
               Server-side search, status filters, and paging for feedback and complaints. The browser only receives the current page.
             </p>
@@ -106,7 +107,7 @@ export default function SupportAdminPage() {
         <div className="mt-6 grid gap-3 md:grid-cols-6">
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="teacher id or message..." className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="user id, name or message..." className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500" />
           </label>
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Requester
@@ -170,7 +171,7 @@ export default function SupportAdminPage() {
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{row.status}</span>
                     <span className="text-slate-400">{new Date(row.created_at).toLocaleString()}</span>
                   </div>
-                  <p className="mt-3 font-mono text-xs font-semibold text-slate-500">{row.teacher_id}</p>
+                  <div className="mt-3"><UserLabel id={row.teacher_id} name={row.teacher_name} email={row.teacher_email} />{row.guest_matches_teacher_id ? <p className="mt-1 text-xs font-bold text-amber-700">The email this guest typed matches the account {row.guest_matches_teacher_name || row.guest_matches_teacher_id} ({row.guest_matches_teacher_id}) - they were probably signed out when they sent it.</p> : null}</div>
                   <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{row.message}</p>
                   {row.admin_reply && (
                     <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
@@ -187,7 +188,7 @@ export default function SupportAdminPage() {
                         value={replyDrafts[row.id] ?? row.admin_reply ?? ""}
                         onChange={(event) => setReplyDraft(row.id, event.target.value)}
                         rows={2}
-                        placeholder="Write a reply to this teacher..."
+                        placeholder="Write a reply to this user..."
                         className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-slate-800 outline-none focus:border-violet-500"
                       />
                     </label>

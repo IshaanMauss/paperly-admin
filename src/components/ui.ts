@@ -10,3 +10,14 @@ export const table = "w-full border-collapse text-left text-sm";
 export const th = "border-b border-violet-200 bg-violet-50 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-slate-500";
 export const td = "border-b border-violet-100 px-3 py-3 align-top";
 export const code = "whitespace-pre-wrap font-mono text-sm";
+
+/** Friendly plan name for display. Internal codes (teacher_monthly ...) are never shown to admins. */
+export function planLabel(code?: string | null): string {
+  const c = (code || "").trim();
+  if (!c) return "-";
+  const known: Record<string, string> = {
+    free: "Free", teacher_monthly: "Monthly", teacher_quarterly: "Quarterly", teacher_yearly: "Yearly",
+    institute: "Institute", unknown: "Unknown", all: "All plans",
+  };
+  return known[c.toLowerCase()] || c.replace(/^teacher_/, "").replace(/_/g, " ");
+}

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { panel, primaryButton, secondaryButton, input } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { AdminServerLogRow, AdminServerLogSummary, api } from "@/lib/apiClient";
+import { AdminServerLogRow, AdminServerLogSummary, ServerLogProblemGroup, api } from "@/lib/apiClient";
 import { diagnose } from "@/lib/troubleshoot";
 
 const PAGE_SIZE = 25;
@@ -40,6 +40,50 @@ const URGENCY_THEME: Record<string, string> = {
   medium: "border-amber-200 bg-amber-50 text-amber-800",
   low: "border-slate-200 bg-slate-50 text-slate-700",
 };
+
+// "teacher:<id> (expired session)" is how the backend records an actor; show a person, not a code.
+function actorLabel(row: AdminServerLogRow): { title: string; detail: string } {
+  const raw = row.actor || "anonymous";
+  if (raw === "anonymous") return { title: "Signed-out visitor", detail: "no account or sign-in on this request" };
+  const match = raw.match(/^teacher:(\S+)(?:\s+\((.*)\))?/);
+  if (match) {
+    const note = match[2] ? ` - ${match[2]}` : "";
+    return { title: row.actor_name || "Unknown user", detail: `${row.actor_email ? `${row.actor_email} - ` : ""}id ${match[1]}${note}` };
+  }
+  return { title: raw, detail: "" };
+}
+
+function ProblemGroups({ groups, onPick }: { groups: ServerLogProblemGroup[]; onPick: (path: string, code: number) => void }) {
+  if (!groups.length) {
+    return <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">No repeated problems in the recent window.</p>;
+  }
+  return (
+    <div className="mt-3 grid gap-3">
+      {groups.map((group) => (
+        <div key={`${group.method}-${group.path}-${group.status_code}`} className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusColor(group.status_code)}`}>{group.status_code}</span>
+              <span className="font-mono text-xs text-slate-800">{group.method} {group.path}</span>
+            </div>
+            <span className="text-xs font-extrabold text-slate-600">
+              {group.count} times - {group.unique_users} named user{group.unique_users === 1 ? "" : "s"}
+              {group.anonymous_requests ? ` + ${group.anonymous_requests} signed-out request${group.anonymous_requests === 1 ? "" : "s"}` : ""}
+            </span>
+          </div>
+          <p className="mt-2 text-xs font-semibold leading-5 text-slate-700"><b>What it means:</b> {group.meaning}</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-700"><b>What to do:</b> {group.action}</p>
+          {group.sample_users.length ? <p className="mt-1 text-xs font-semibold text-slate-500">Affected (sample): {group.sample_users.join(", ")}</p> : null}
+          {group.sample_error ? <p className="mt-1 rounded-lg bg-rose-50 p-2 text-xs font-semibold text-rose-800">{group.sample_error}</p> : null}
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-400">
+            <span>Last seen {group.last_seen ? new Date(group.last_seen).toLocaleString() : "-"}</span>
+            <button type="button" onClick={() => onPick(group.path, group.status_code)} className="font-extrabold text-violet-700 underline">Show these requests</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function TroubleshootPanel({ row }: { row: AdminServerLogRow }) {
   const result = diagnose(row);
@@ -99,7 +143,7 @@ function LogRow({ row, onChanged }: { row: AdminServerLogRow; onChanged: (id: st
         <span className="text-xs text-slate-500">{row.occurred_at ? new Date(row.occurred_at).toLocaleString() : "-"}</span>
       </button>
       <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-slate-500">Actor: {row.actor} {row.duration_ms != null ? `| ${row.duration_ms}ms` : ""}</span>
+        <span className="text-xs text-slate-500"><b className="text-slate-800">{actorLabel(row).title}</b>{actorLabel(row).detail ? ` (${actorLabel(row).detail})` : ""} {row.duration_ms != null ? `| ${row.duration_ms}ms` : ""}</span>
         <div className="flex flex-wrap items-center gap-2">
           {isProblem ? (
             <button
@@ -268,6 +312,13 @@ export default function ServerLogsPage() {
 
         {summary ? (
           <div className="mt-5 rounded-xl border border-slate-100 bg-white/60 p-4">
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">What is going wrong, and who it affects</p>
+            <ProblemGroups groups={summary.problem_groups || []} onPick={(path, code) => { setSearch(path); setStatusClass("all"); setStatusCode(code); setTab("problems"); }} />
+          </div>
+        ) : null}
+
+        {summary ? (
+          <div className="mt-5 rounded-xl border border-slate-100 bg-white/60 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">Status breakdown - last {summary.scanned} requests</p>
               {(statusClass !== "all" || statusCode !== "all") && (
@@ -319,7 +370,7 @@ export default function ServerLogsPage() {
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
             Search
-            <input value={search} onChange={(event) => setSearch(event.target.value)} className={`${input} mt-2 normal-case tracking-normal`} placeholder="path, actor..." />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} className={`${input} mt-2 normal-case tracking-normal`} placeholder="user name, email, id or path..." />
           </label>
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
             Method

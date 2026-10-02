@@ -59,7 +59,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
   {
     heading: "Product",
     items: [
-      { href: "/full-portion", label: "Full Portion", icon: "layers" },
+      { href: "/paper-builders", label: "Paper Builders", icon: "layers" },
       { href: "/checking", label: "AI Checking", icon: "check" },
       { href: "/variant-health", label: "Variant Health", icon: "pulse" },
     ],

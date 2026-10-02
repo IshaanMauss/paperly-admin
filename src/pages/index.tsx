@@ -9,7 +9,7 @@ import { api, AdminOverview } from "@/lib/apiClient";
 const operations = [
   { href: "/teachers", title: "User monitoring", text: "Track individual/tutor and institute users, active plans, template usage, generated-paper activity, and analytics events." },
   { href: "/billing", title: "Billing operations", text: "Review subscriptions, payment events, gateway status, and future Razorpay readiness." },
-  { href: "/support", title: "Support desk", text: "Read teacher feedback and complaints submitted from the teacher product." },
+  { href: "/support", title: "Support desk", text: "Read user feedback and complaints submitted from the product." },
   { href: "/backups", title: "Backup and recovery", text: "Export JSON/XLSX operational backups and confirm recovery readiness before deployment." },
   { href: "/health", title: "System health", text: "Check backend reachability, safety counts, missing paper tags, and production hardening gaps." },
   { href: "/security", title: "Security monitoring", text: "Track fraud, fake plan upgrades, no-ad patches, DDoS risk, abuse signals, and response actions." },

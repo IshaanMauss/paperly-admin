@@ -4,13 +4,14 @@ import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type MaintenanceStatus, type WorksheetCleanupResult } from "@/lib/apiClient";
+import { RecentProblems } from "@/components/RecentProblems";
 
 const DEFAULT_STATUS: MaintenanceStatus = {
   maintenance_active: false,
   title: "Paperly-NT is under maintenance",
   message: "We are improving Paperly-NT. Please come back shortly.",
-  required_confirmation_to_enable: "PUT PAPERLY-NT TEACHER MODULE IN MAINTENANCE",
-  required_confirmation_to_disable: "RESTORE PAPERLY-NT TEACHER MODULE",
+  required_confirmation_to_enable: "PUT PAPERLY-NT IN MAINTENANCE",
+  required_confirmation_to_disable: "RESTORE PAPERLY-NT",
 };
 
 export default function MaintenancePage() {
@@ -107,11 +108,12 @@ export default function MaintenancePage() {
       <section className="mb-4 rounded-xl border border-violet-200 bg-white p-4 shadow-soft sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Teacher module safety switch</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Product safety switch</p>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">Controlled maintenance mode</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              This disables the teacher-facing product and replaces it with a maintenance screen. Use it before major schema, billing, or deployment changes.
+              This disables the user-facing product and replaces it with a maintenance screen. Use it before major schema, billing, or deployment changes.
             </p>
+            <RecentProblems />
           </div>
           <button className="min-h-11 rounded-xl border border-violet-200 bg-white px-5 py-3 text-sm font-extrabold text-purple-800 shadow-soft transition-colors sm:self-start" onClick={load}>
             Refresh
@@ -123,7 +125,7 @@ export default function MaintenancePage() {
         <div className="mt-5 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <div className={`rounded-xl border p-4 shadow-sm sm:rounded-xl sm:p-6 ${status.maintenance_active ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-500">Current status</p>
-            <h3 className="mt-2 text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">{loading ? "Loading" : status.maintenance_active ? "Maintenance active" : "Teacher module live"}</h3>
+            <h3 className="mt-2 text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">{loading ? "Loading" : status.maintenance_active ? "Maintenance active" : "Product live"}</h3>
             <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{status.message}</p>
             <div className="mt-5 grid gap-2 text-xs font-bold text-slate-500">
               <span>Source: {status.source || "unknown"}</span>
@@ -133,7 +135,7 @@ export default function MaintenancePage() {
           </div>
 
           <div className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm sm:rounded-xl sm:p-6">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Message shown to teachers</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Message shown to users</p>
             <label className="mt-4 block text-xs font-extrabold uppercase tracking-wider text-slate-500">
               Title
               <input className="mt-1 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-violet-400" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -151,10 +153,10 @@ export default function MaintenancePage() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-extrabold text-amber-900 shadow-soft transition-colors disabled:opacity-50" disabled={status.maintenance_active} onClick={() => openAction(true)}>
-            Put teacher module in maintenance
+            Put the product in maintenance
           </button>
           <button className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-extrabold text-emerald-800 shadow-soft transition-colors disabled:opacity-50" disabled={!status.maintenance_active} onClick={() => openAction(false)}>
-            Restore teacher module
+            Restore the product
           </button>
         </div>
       </section>

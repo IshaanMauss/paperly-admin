@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { panel, primaryButton, secondaryButton, input } from "@/components/ui";
+import { InstituteSetup } from "@/components/InstituteSetup";
 import { useAdminSession } from "@/lib/adminAuth";
 import { OrganizationRequestRow, OrganizationRow, OrganizationsMeta, api } from "@/lib/apiClient";
 
@@ -29,7 +30,7 @@ const REQUEST_STATUS_THEME: Record<string, string> = {
 
 const SOURCE_LABEL: Record<string, string> = {
   new_visitor: "New visitor (pricing page)",
-  existing_teacher: "Existing teacher (inside app)",
+  existing_teacher: "Existing user (inside app)",
 };
 
 function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestRow; adminEmail: string | null; onChanged: (row: OrganizationRequestRow) => void }) {
@@ -95,7 +96,7 @@ function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestR
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-extrabold text-slate-950">{row.institute_name}</p>
-          <p className="text-xs text-slate-500">{SOURCE_LABEL[row.source] || row.source}{row.teacher_id ? ` · teacher_id: ${row.teacher_id}` : ""}</p>
+          <p className="text-xs text-slate-500">{SOURCE_LABEL[row.source] || row.source}{row.teacher_id ? ` · requested by ${row.teacher_name || "user"} (${row.teacher_id})` : ""}</p>
         </div>
         <span className={`rounded-full border px-3 py-1 text-xs font-extrabold capitalize ${REQUEST_STATUS_THEME[row.status] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
           {row.status}
@@ -160,7 +161,11 @@ function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestR
   );
 }
 
-function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: OrganizationsMeta; onSaved: (row: OrganizationRow) => void }) {
+function OrgEditor({ org, meta, onSaved, adminEmail, canWrite }: { org: OrganizationRow; meta: OrganizationsMeta; onSaved: (row: OrganizationRow) => void; adminEmail: string | null; canWrite: boolean }) {
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [displayName, setDisplayName] = useState(org.theme.display_name || "");
+  const [tagline, setTagline] = useState(org.theme.tagline || "");
+  const [logoUrl, setLogoUrl] = useState(org.theme.logo_url || "");
   const [mode, setMode] = useState(org.theme.mode);
   const [background, setBackground] = useState(org.theme.background);
   const [primary, setPrimary] = useState(org.theme.primary);
@@ -176,6 +181,9 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
     background !== org.theme.background ||
     primary !== org.theme.primary ||
     accent !== org.theme.accent ||
+    displayName !== (org.theme.display_name || "") ||
+    tagline !== (org.theme.tagline || "") ||
+    logoUrl !== (org.theme.logo_url || "") ||
     JSON.stringify(flags) !== JSON.stringify(org.feature_flags);
 
   function applyPreset(key: string) {
@@ -192,7 +200,7 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
     setError(null);
     try {
       const updated = await api.updateOrganization(org.id, {
-        branding: { mode, background, primary, accent },
+        branding: { mode, background, primary, accent, display_name: displayName, tagline, logo_url: logoUrl },
         feature_flags: flags,
       });
       onSaved(updated);
@@ -270,7 +278,26 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">Features</p>
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">Name and logo shown next to the Paperly mark</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="text-xs font-semibold text-slate-600">
+            Display name
+            <input className={`${input} mt-1`} maxLength={80} placeholder={org.name} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          </label>
+          <label className="text-xs font-semibold text-slate-600">
+            Tagline (optional)
+            <input className={`${input} mt-1`} maxLength={120} value={tagline} onChange={(e) => setTagline(e.target.value)} />
+          </label>
+          <label className="text-xs font-semibold text-slate-600">
+            Logo link (https, optional)
+            <input className={`${input} mt-1`} maxLength={500} placeholder="https://..." value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-slate-500">What this institute can use</p>
+        <p className="mb-2 text-xs font-semibold text-slate-500">Switches marked (enforced) are checked by the server too, but only once the institute plan is active in the setup panel below.</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {Object.entries(meta.feature_flags).map(([key, info]) => (
             <label key={key} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-xs">
@@ -281,7 +308,7 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
                 onChange={(e) => setFlags((prev) => ({ ...prev, [key]: e.target.checked }))}
               />
               <span>
-                <span className="block font-bold text-slate-800">{info.label}</span>
+                <span className="block font-bold text-slate-800">{info.label}{["topical_builder", "full_portion_builder", "ai_checking", "mark_scheme", "popular_filter", "reuse_questions"].includes(key) ? " (enforced)" : ""}</span>
                 <span className="block text-slate-500">{info.description}</span>
               </span>
             </label>
@@ -296,12 +323,21 @@ function OrgEditor({ org, meta, onSaved }: { org: OrganizationRow; meta: Organiz
         </button>
         {!isDirty && savedAt ? <span className="text-xs font-semibold text-emerald-700">Saved</span> : null}
       </div>
+
+      {org.organization_type !== "personal" ? (
+        <div className="border-t border-slate-200 pt-4">
+          <button type="button" className={secondaryButton} onClick={() => setSetupOpen((value) => !value)}>
+            {setupOpen ? "Hide plan, limits and people" : "Open plan, limits, people and delivery checklist"}
+          </button>
+          {setupOpen ? <div className="mt-4"><InstituteSetup organizationId={org.id} adminEmail={adminEmail} canWrite={canWrite} /></div> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 export default function OrganizationsPage() {
-  const { admin } = useAdminSession();
+  const { admin, hasPermission } = useAdminSession();
   const [tab, setTab] = useState<Tab>("requests");
 
   const [requestStatusFilter, setRequestStatusFilter] = useState<string>("pending");
@@ -364,7 +400,7 @@ export default function OrganizationsPage() {
           <h1 className="mt-1 text-xl font-extrabold text-slate-950">Organizations</h1>
           <p className="mt-1 text-sm text-slate-600">
             Custom/institute workspaces start as a request — from the public pricing page or from an existing
-            teacher inside the app — and become a themed, feature-gated organization once you approve it here.
+            user inside the app — and become a themed, feature-gated organization once you approve it here.
           </p>
           <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
             <button type="button" onClick={() => setTab("requests")} className={`rounded-xl px-4 py-2 text-sm font-extrabold transition ${tab === "requests" ? "bg-white text-violet-800 shadow-soft" : "text-slate-500"}`}>Requests</button>
@@ -394,7 +430,7 @@ export default function OrganizationsPage() {
             {!requestsLoading && !requests.length && !requestsError ? (
               <div className={`${panel} p-6 text-sm text-slate-500`}>
                 No {requestStatusFilter === "all" ? "" : requestStatusFilter} requests right now. New submissions from the
-                pricing page or from a teacher&apos;s custom-plan request will show up here.
+                pricing page or from a user&apos;s custom-plan request will show up here.
               </div>
             ) : null}
 
@@ -421,7 +457,7 @@ export default function OrganizationsPage() {
               </div>
             ) : null}
 
-            {meta && items.map((org) => <OrgEditor key={org.id} org={org} meta={meta} onSaved={handleOrgSaved} />)}
+            {meta && items.map((org) => <OrgEditor key={org.id} org={org} meta={meta} onSaved={handleOrgSaved} adminEmail={admin?.email || null} canWrite={hasPermission("organizations.write")} />)}
           </div>
         )}
       </div>

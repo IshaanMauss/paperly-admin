@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { errorNotice, panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type CheckingOverview } from "@/lib/apiClient";
+import { UserLabel } from "../components/UserLabel";
 
 export default function CheckingPage() {
   const [overview, setOverview] = useState<CheckingOverview | null>(null);
@@ -13,7 +14,7 @@ export default function CheckingPage() {
 
   // Added 2026-09-28: previously only the aggregate counts above existed -
   // there was no way to see individual checks at all.
-  const [submissions, setSubmissions] = useState<{ id: string; teacher_id: string; event_type: string; payload: Record<string, unknown>; occurred_at: string }[]>([]);
+  const [submissions, setSubmissions] = useState<{ id: string; teacher_id: string; teacher_name?: string; teacher_email?: string; event_type: string; payload: Record<string, unknown>; occurred_at: string }[]>([]);
   const [submissionsTotal, setSubmissionsTotal] = useState(0);
   const [submissionsLoading, setSubmissionsLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export default function CheckingPage() {
     <AppShell title="AI / QR Checking">
       <section className={panel}>
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Checking usage</p>
-        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">How teachers are using AI/QR checking</h2>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-950">How users are using AI/QR checking</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           A student's paper is uploaded, its printed QR code is matched back to the Paperly-NT worksheet, and workings are extracted and marked. Every completed check logs a
           {" "}
@@ -73,7 +74,7 @@ export default function CheckingPage() {
               <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.checks_last_30_days}</p>
             </article>
             <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Distinct teachers</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Distinct users</p>
               <p className="mt-2 text-3xl font-extrabold text-slate-950">{overview.distinct_teachers}</p>
             </article>
           </div>
@@ -100,7 +101,7 @@ export default function CheckingPage() {
           {submissions.map((row) => (
             <div key={row.id} className="rounded-xl border border-violet-200 bg-white p-4 text-sm font-semibold text-slate-700">
               <button type="button" onClick={() => setOpenId((value) => (value === row.id ? null : row.id))} className="flex w-full flex-wrap items-center justify-between gap-2 text-left">
-                <span className="font-mono text-xs text-slate-800">{row.teacher_id}</span>
+                <UserLabel id={row.teacher_id} name={row.teacher_name} email={row.teacher_email} />
                 <span className="text-xs text-slate-500">{new Date(row.occurred_at).toLocaleString()}</span>
               </button>
               {openId === row.id ? (

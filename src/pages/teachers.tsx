@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
-import { panel } from "@/components/ui";
+import { panel, planLabel } from "@/components/ui";
 import { useAdminSession } from "@/lib/adminAuth";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminTeacherRow, api } from "@/lib/apiClient";
@@ -193,7 +193,7 @@ export default function UsersPage() {
             Plan
             <select className="mt-1 w-full min-w-0 rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-purple-400" value={planFilter} onChange={(event) => { setPage(0); setPlanFilter(event.target.value); }}>
               {planOptions.map((plan) => (
-                <option key={plan} value={plan}>{plan === "all" ? "All plans" : plan}</option>
+                <option key={plan} value={plan}>{planLabel(plan)}</option>
               ))}
             </select>
           </label>
@@ -302,7 +302,7 @@ export default function UsersPage() {
                         <span className="text-xs font-bold text-slate-400">{userSegment(row) === "institute" ? "Institute group" : "Individual group"}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">{row.plan_code}</td>
+                    <td className="px-4 py-3">{planLabel(row.plan_code)}</td>
                     <td className="px-4 py-3">{row.subscription_status}</td>
                     <td className="px-4 py-3"><span className="rounded-full bg-violet-50 px-2 py-1 text-xs font-extrabold text-purple-800">{row.profile_completion ?? 0}%</span></td>
                     <td className="px-4 py-3">

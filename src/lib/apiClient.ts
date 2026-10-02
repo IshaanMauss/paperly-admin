@@ -14,6 +14,8 @@ import type {
   AdminPaymentEventRow,
   AdminOverview,
   FullPortionOverview,
+  InstituteConfig,
+  InstituteOverview,
   SubtopicCapSettings,
   CheckingOverview,
   VariantHealthOverview,
@@ -258,8 +260,23 @@ export const api = {
   listOrganizations(params?: { search?: string; organization_type?: string; limit?: number; offset?: number }) {
     return request<AdminListResponse<OrganizationRow>>(`/admin/organizations${adminQuery(params)}`);
   },
-  updateOrganization(organizationId: string, payload: { branding?: { mode: string; background?: string; primary?: string; accent?: string }; feature_flags?: Record<string, boolean>; updated_by?: string }) {
+  updateOrganization(organizationId: string, payload: { branding?: { mode: string; background?: string; primary?: string; accent?: string; display_name?: string; tagline?: string; logo_url?: string }; feature_flags?: Record<string, boolean>; updated_by?: string }) {
     return request<OrganizationRow>(`/admin/organizations/${organizationId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  },
+  getInstituteOverview(organizationId: string) {
+    return request<InstituteOverview>(`/admin/organizations/${organizationId}/entitlements`);
+  },
+  saveInstituteConfig(organizationId: string, config: InstituteConfig, updatedBy?: string) {
+    return request<InstituteOverview>(`/admin/organizations/${organizationId}/entitlements`, { method: 'PUT', body: JSON.stringify({ config, updated_by: updatedBy }) });
+  },
+  changeInstituteJoinCode(organizationId: string, action: 'generate' | 'clear') {
+    return request<InstituteOverview>(`/admin/organizations/${organizationId}/join-code`, { method: 'POST', body: JSON.stringify({ action }) });
+  },
+  addInstituteMember(organizationId: string, payload: { email: string; role: string }) {
+    return request<InstituteOverview>(`/admin/organizations/${organizationId}/members`, { method: 'POST', body: JSON.stringify(payload) });
+  },
+  updateInstituteMember(organizationId: string, memberId: string, payload: { role?: string; status?: string }) {
+    return request<InstituteOverview>(`/admin/organizations/${organizationId}/members/${encodeURIComponent(memberId)}`, { method: 'PATCH', body: JSON.stringify(payload) });
   },
   listOrganizationRequests(params?: { status?: string; limit?: number; offset?: number }) {
     return request<AdminListResponse<OrganizationRequestRow>>(`/admin/organization-requests${adminQuery(params)}`);

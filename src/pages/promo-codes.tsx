@@ -174,7 +174,7 @@ function CodeRow({ code, onToggled }: { code: PromoCode; onToggled: (updated: Pr
         </td>
         <td className={td}>
           <p className="text-sm font-extrabold text-slate-950">
-            {code.redemption_count} / {code.max_redemptions ?? "∞"}
+            {code.redemption_count} / {code.max_redemptions ?? "∞"} unique people
           </p>
           <p className="text-[11px] font-semibold text-slate-500">
             {code.redemptions_remaining === null ? "unlimited remaining" : `${code.redemptions_remaining} remaining`}
@@ -269,7 +269,7 @@ export default function PromoCodesPage() {
         <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Issue and track plan-upgrade codes</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Create a code, pick the plan it grants, cap how many people can redeem it, and set an optional expiry —
-          it goes live immediately, no deploy needed. A redeemed code instantly changes that teacher&apos;s plan,
+          it goes live immediately, no deploy needed. A redeemed code instantly changes that user&apos;s plan,
           the same mechanism the mock-billing tools already use. Every count below is live from the database.
         </p>
         <p className="mt-2 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">

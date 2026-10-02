@@ -68,6 +68,10 @@ export type MaintenanceStatus = {
 export type AdminSupportTicketRow = {
   id: string;
   teacher_id: string;
+  teacher_name?: string;
+  teacher_email?: string;
+  guest_matches_teacher_id?: string;
+  guest_matches_teacher_name?: string;
   ticket_type?: string;
   type?: string;
   message: string;
@@ -87,6 +91,8 @@ export type AdminSupportTicketRow = {
 export type AdminSubscriptionRow = {
   id: string;
   teacher_id: string;
+  teacher_name?: string;
+  teacher_email?: string;
   plan_code: string;
   status: string;
   gateway: string;
@@ -102,6 +108,8 @@ export type AdminPaymentEventRow = {
   teacher_id?: string | null;
   processed_at?: string | null;
   created_at: string;
+  teacher_name?: string;
+  teacher_email?: string;
 };
 
 export type AdminOverview = {
@@ -119,7 +127,38 @@ export type FullPortionOverview = {
   topical_worksheets: number;
   full_portion_with_required_subtopics: number;
   average_required_subtopics: number;
+  usage?: {
+    full_portion?: BuilderUsage;
+    topical?: BuilderUsage;
+    ai_checking?: { checks_total: number; checks_30d: number; unique_users_total: number; unique_users_30d: number };
+  };
+  plan_limits?: {
+    plans: BuilderPlanLimits[];
+    hidden_plans: { plan_code: string; reason: string }[];
+  };
   source?: string;
+};
+
+export type BuilderUsage = {
+  papers_total: number;
+  papers_7d: number;
+  papers_30d: number;
+  unique_users_total: number;
+  unique_users_30d: number;
+};
+
+export type BuilderPlanLimits = {
+  plan_code: string;
+  plan_label: string;
+  paper_limit: number | null;
+  paper_limit_window: string | null;
+  max_questions_per_paper: number | null;
+  full_portion_topics_per_paper: number | null;
+  full_portion_papers_per_day: number | null;
+  full_portion_papers_per_month: number | null;
+  ai_checks_per_month: number | null;
+  can_view_mark_scheme: boolean;
+  can_use_popular_filter: boolean;
 };
 
 export type SubtopicCapPlanRow = {
@@ -238,12 +277,31 @@ export type AdminServerLogRow = {
   acknowledged?: boolean;
   acknowledged_by?: string | null;
   acknowledged_at?: string | null;
+  // Added by the backend's name enrichment when the actor is a known user.
+  actor_name?: string;
+  actor_email?: string;
+};
+
+export type ServerLogProblemGroup = {
+  method: string;
+  path: string;
+  status_code: number;
+  count: number;
+  unique_users: number;
+  anonymous_requests: number;
+  sample_users: string[];
+  last_seen: string | null;
+  acknowledged: number;
+  sample_error: string | null;
+  meaning: string;
+  action: string;
 };
 
 export type AdminServerLogSummary = {
   scanned: number;
   classes: Record<string, number>;
   top_codes: { status_code: number; count: number }[];
+  problem_groups?: ServerLogProblemGroup[];
   source: string;
 };
 
@@ -252,6 +310,52 @@ export type OrganizationTheme = {
   background: string;
   primary: string;
   accent: string;
+  display_name?: string;
+  tagline?: string;
+  logo_url?: string;
+};
+
+export type InstituteConfig = {
+  enabled: boolean;
+  base_plan: string;
+  valid_until: string | null;
+  limits: Record<string, number | null>;
+  seats: { max: number | null; join_code: string | null; allowed_email_domains: string[]; require_domain: boolean };
+  notes: string;
+};
+
+export type InstituteLimitRow = {
+  key: string;
+  label: string;
+  help: string;
+  base_value: number | null;
+  effective_value: number | null;
+  mode: "default" | "custom" | "unlimited";
+  value: number | null;
+};
+
+export type InstituteMember = {
+  teacher_id: string;
+  teacher_name: string;
+  teacher_email: string;
+  role: string;
+  status: string;
+  joined_at: string | null;
+  last_login_at: string | null;
+  papers_30d: number;
+  ai_checks_30d: number;
+};
+
+export type InstituteOverview = {
+  organization: OrganizationRow;
+  config: InstituteConfig;
+  base_plan: { code: string; label: string; choices: { code: string; label: string }[] };
+  limits: InstituteLimitRow[];
+  seats: { used: number; max: number | null; join_code: string | null; join_link: string | null; allowed_email_domains: string[]; require_domain: boolean };
+  members: InstituteMember[];
+  checklist: { key: string; label: string; done: boolean; detail: string | null }[];
+  expired: boolean;
+  ready: boolean;
 };
 
 export type OrganizationRow = {
@@ -275,6 +379,8 @@ export type OrganizationRequestRow = {
   id: string;
   source: string;
   teacher_id: string | null;
+  teacher_name?: string;
+  teacher_email?: string;
   institute_name: string;
   contact_name: string | null;
   contact_email: string | null;
