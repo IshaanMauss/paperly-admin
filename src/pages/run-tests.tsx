@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { input, panel, primaryButton, secondaryButton } from "@/components/ui";
 import { api } from "@/lib/apiClient";
-import type { TestCenterOverview, TestCheckResult, TestCheckRow, TestCoverage, TestRunRecord } from "@/lib/apiTypes";
+import type { TestCenterOverview, TestCheckResult, TestCheckRow, TestCoverage, TestDatabaseReport, TestRunRecord } from "@/lib/apiTypes";
 
 type Filter = "all" | "fail" | "pass" | "never" | "flaky";
 
@@ -12,6 +12,7 @@ const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   fail: { label: "Failed", cls: "bg-rose-100 text-rose-700" },
   warn: { label: "Needs a look", cls: "bg-amber-100 text-amber-800" },
   skipped: { label: "Skipped", cls: "bg-slate-200 text-slate-700" },
+  blocked: { label: "Blocked for safety", cls: "bg-indigo-100 text-indigo-800" },
   never: { label: "Never run", cls: "bg-slate-100 text-slate-500" },
 };
 
@@ -78,13 +79,18 @@ function CheckCard({ row, live, busy, onRun, onRemove }: { row: TestCheckRow; li
           <div className="flex flex-wrap items-center gap-2">
             <h4 className="text-sm font-extrabold text-slate-900">{row.title}</h4>
             <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${style.cls}`}>{style.label}</span>
-            <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700">Read-only</span>
+            {row.mode === "write" ? (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800">Writes test data (test database only)</span>
+            ) : (
+              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700">Read-only</span>
+            )}
             {row.flaky ? <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-extrabold text-orange-800" title="Passed and failed in recent runs">Flaky</span> : null}
           </div>
           <p className="mt-1 text-xs font-semibold text-slate-500">{row.what}</p>
           {result ? (
             <p className="mt-1 text-xs font-semibold text-slate-600">
               {result.status === "pass" || result.status === "skipped" ? result.detail : null}
+              {result.status === "blocked" ? <span className="text-indigo-700">{result.detail} {result.fix}</span> : null}
               {result.ms != null ? <span className="ml-2 text-slate-400">{result.ms} ms</span> : null}
               {result.at ? <span className="ml-2 text-slate-400">last run {new Date(result.at).toLocaleString()}</span> : null}
               <span className="ml-2 align-middle"><Spark values={row.durations} /></span>
@@ -98,6 +104,83 @@ function CheckCard({ row, live, busy, onRun, onRemove }: { row: TestCheckRow; li
       </div>
       {result && (result.status === "fail" || result.status === "warn") ? <FailureBox result={result} /> : null}
     </div>
+  );
+}
+
+
+function TestDatabasePanel({ env, onChanged, setNotice }: { env?: TestCenterOverview["environment"]; onChanged: () => void; setNotice: (text: string | null) => void }) {
+  const [info, setInfo] = useState<TestDatabaseReport | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    try {
+      setInfo(await api.getTestDatabase());
+    } catch {
+      setInfo(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const act = async (kind: "seed" | "wipe") => {
+    setBusy(true);
+    try {
+      if (kind === "seed") {
+        const result = await api.seedTestDatabase();
+        setNotice(`Created ${result.users.length} sample users and a sample institute (join code ${result.join_code}). All sample users use the password shown below.`);
+      } else {
+        const result = await api.wipeTestDatabase();
+        setNotice(`Removed ${result.users} test users, ${result.institutes} institutes and ${result.promo_codes} promo codes.`);
+      }
+      await refresh();
+      onChanged();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "That did not work.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const safe = info?.safe ?? env?.test_database?.safe ?? false;
+  const reasons = info?.reasons ?? env?.test_database?.reasons ?? [];
+  return (
+    <section className={panel}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-extrabold text-slate-900">Test database</h3>
+          <p className="max-w-3xl text-sm font-semibold text-slate-600">
+            Write tests create fake users, institutes and promo codes, so they only run on a test database on your own computer. They are locked on the live server by design - the lock cannot be switched off from here.
+          </p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${safe ? "bg-emerald-100 text-emerald-800" : "bg-indigo-100 text-indigo-800"}`}>{safe ? "Unlocked: this is the test database" : "Locked: this is not the test database"}</span>
+      </div>
+      {safe && info ? (
+        <div className="mt-4">
+          <p className="text-sm font-bold text-slate-700">
+            Right now: {info.counts?.users ?? 0} test users, {info.counts?.institutes ?? 0} test institutes, {info.counts?.promo_codes ?? 0} test promo codes. Sample login password: <span className="font-mono">{info.sample_password}</span>. Institute join code: <span className="font-mono">{info.join_code}</span>.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" className={primaryButton} disabled={busy} onClick={() => act("seed")}>Create sample data</button>
+            <button type="button" className={secondaryButton} disabled={busy} onClick={() => act("wipe")}>Remove all test data</button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-semibold text-indigo-900">
+          <p className="font-extrabold">Why it is locked</p>
+          <ul className="mt-1 list-disc pl-5">
+            {reasons.map((r) => (<li key={r}>{r}</li>))}
+          </ul>
+          <p className="mt-3 font-extrabold">How to unlock it (on your computer)</p>
+          <ol className="mt-1 list-decimal pl-5">
+            <li>In the backend folder run <span className="font-mono">python scripts/local_test_db.py up</span> (builds the test database).</li>
+            <li>Run <span className="font-mono">python scripts/local_test_db.py backend</span> (starts a local backend on port 8100 using it).</li>
+            <li>Start a second copy of this admin panel pointing at it: set <span className="font-mono">NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8100/api</span> and run it on another port. Sign in with the test admin the script prints.</li>
+          </ol>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -247,15 +330,19 @@ export default function RunTestsPage() {
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Operations</p>
         <h2 className="mt-1 text-3xl font-extrabold text-slate-950">Is Paperly working?</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          Press Run on any check, or run everything. Every check here only reads - nothing is saved, charged or sent. If something fails you get the plain-words reason, the file and the line.
-          Heavy load tests, real browser tests and payment tests come in later phases.
+          Press Run on any check, or run everything. Read-only checks never change anything. Write tests only run on a local test database and are locked on the live server. If something fails you get the plain-words reason, the file and the line.
+          Heavy load tests, real browser tests and payment tests come in a later step.
         </p>
         {env ? (
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-extrabold">
             <span className={`rounded-full px-3 py-1 ${isProd ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>Environment: {env.environment}{isProd ? " (live)" : ""}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Razorpay: {env.razorpay_mode}</span>
             {env.database_host ? <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Database: {env.database_host}</span> : null}
-            <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-800">Read-only checks</span>
+            {env.test_database ? (
+              <span className={`rounded-full px-3 py-1 ${env.test_database.safe ? "bg-emerald-100 text-emerald-800" : "bg-indigo-100 text-indigo-800"}`}>
+                {env.test_database.safe ? "Test database: write tests unlocked" : "Live database: write tests locked"}
+              </span>
+            ) : null}
           </div>
         ) : null}
         {error ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</div> : null}
@@ -316,6 +403,8 @@ export default function RunTestsPage() {
           </section>
         );
       })}
+
+      <TestDatabasePanel env={env} onChanged={load} setNotice={setNotice} />
 
       <section className={panel}>
         <div className="flex flex-wrap items-center justify-between gap-3">

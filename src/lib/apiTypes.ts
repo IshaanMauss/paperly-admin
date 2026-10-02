@@ -737,7 +737,7 @@ export type TestFailureInfo = {
 };
 
 export type TestCheckResult = {
-  status: "pass" | "fail" | "warn" | "skipped";
+  status: "pass" | "fail" | "warn" | "skipped" | "blocked";
   detail?: string | null;
   fix?: string | null;
   ms?: number | null;
@@ -770,7 +770,7 @@ export type TestRunRecord = {
 };
 
 export type TestCenterOverview = {
-  environment: { environment: string; production_like?: boolean; production?: boolean; razorpay_mode: string; database_host: string; writes_in_phase: string };
+  environment: { environment: string; production_like?: boolean; production?: boolean; razorpay_mode: string; database_host: string; test_database?: TestDatabaseReport };
   sections: string[];
   checks: TestCheckRow[];
   active_run: TestRunRecord | null;
@@ -782,4 +782,15 @@ export type TestCoverage = {
   admin_routes_guarded: number;
   routes_untested: { method: string; path: string; name: string; target: string }[];
   functions_untested: { module: string; name: string; file: string; line: number; target: string }[];
+};
+
+export type TestDatabaseReport = {
+  safe: boolean;
+  reasons: string[];
+  host: string;
+  is_local: boolean;
+  has_marker: boolean;
+  counts?: { users: number; institutes: number; promo_codes: number } | null;
+  sample_password?: string | null;
+  join_code?: string | null;
 };

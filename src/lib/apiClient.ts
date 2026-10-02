@@ -1,5 +1,6 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type {
+  TestDatabaseReport,
   TestCenterOverview,
   TestCoverage,
   TestRunRecord,
@@ -504,5 +505,14 @@ export const api = {
   },
   removeCustomTest(checkId: string) {
     return request<{ ok: boolean }>(`/admin/test-center/custom/${encodeURIComponent(checkId)}`, { method: "DELETE" });
+  },
+  getTestDatabase() {
+    return request<TestDatabaseReport>("/admin/test-center/test-db");
+  },
+  seedTestDatabase() {
+    return request<{ users: string[]; institute_id: string; join_code: string; password: string }>("/admin/test-center/test-db/seed", { method: "POST" });
+  },
+  wipeTestDatabase() {
+    return request<{ users: number; institutes: number; promo_codes: number }>("/admin/test-center/test-db/wipe", { method: "POST" });
   },
 };
