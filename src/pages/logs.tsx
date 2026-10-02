@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { StatusCodeGuide } from "@/components/StatusCodeGuide";
 import { panel, primaryButton, secondaryButton, input } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminServerLogRow, AdminServerLogSummary, ServerLogProblemGroup, api } from "@/lib/apiClient";
@@ -366,6 +367,8 @@ export default function ServerLogsPage() {
             ) : null}
           </div>
         ) : null}
+
+        <StatusCodeGuide counts={summary?.top_codes || []} />
 
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500 md:col-span-2">
