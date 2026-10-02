@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { AppShell } from "@/components/AppShell";
-import { getAdminAccessToken } from "@/lib/adminToken";
+import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import { api } from "@/lib/apiClient";
 import { errorNotice, notice, panel, primaryButton, secondaryButton } from "@/components/ui";
 
@@ -93,6 +93,7 @@ export default function BackupsPage() {
     setMessage("");
     setError("");
     try {
+            if (isAdminAccessTokenExpiring()) await refreshAdminAccessToken();
             const token = getAdminAccessToken();
       const response = await fetch(`${API_BASE_URL}/admin/backups/export?format=${format}`, {
         method: "POST",

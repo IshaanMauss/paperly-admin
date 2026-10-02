@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { getAdminAccessToken } from "@/lib/adminToken";
+import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
@@ -220,6 +220,7 @@ export default function PromoCodesPage() {
     setExportBusy(true);
     setExportError(null);
     try {
+      if (isAdminAccessTokenExpiring()) await refreshAdminAccessToken();
       const token = getAdminAccessToken();
       const response = await fetch(`${API_BASE_URL}/admin/promo-codes/export`, {
         credentials: "include",

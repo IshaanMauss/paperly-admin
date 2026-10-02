@@ -54,6 +54,25 @@ export function rewriteSetCookie(cookie: string): string {
     .join("; ");
 }
 
+/**
+ * When the admin site itself is served over plain http (local use on http://localhost), browsers
+ * can refuse the backend's production cookie (it is Secure, SameSite=None and named __Host-...),
+ * which silently logs the admin out on every page refresh. Make it an ordinary same-site cookie
+ * instead. The backend accepts both cookie names, so nothing else changes. Over https the cookie
+ * is left exactly as the backend sent it.
+ */
+export function adaptSetCookieForPlainHttp(cookie: string): string {
+  const parts = cookie
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !/^secure$/i.test(part))
+    .map((part) => (/^samesite=none$/i.test(part) ? "SameSite=Lax" : part));
+  if (!parts.length) return cookie;
+  parts[0] = parts[0].replace(/^__(?:Host|Secure)-/, "");
+  return parts.join("; ");
+}
+
 export function skipResponseHeader(name: string): boolean {
   const key = name.toLowerCase();
   return HOP_BY_HOP.has(key) || key === "content-encoding" || key === "set-cookie" || key.startsWith("access-control-");

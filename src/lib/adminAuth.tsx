@@ -1,5 +1,5 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { clearAdminAccessToken, setAdminAccessToken } from "@/lib/adminToken";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { clearAdminAccessToken, getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken, setAdminAccessToken } from "@/lib/adminToken";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8003/api";
 
@@ -58,10 +58,24 @@ async function authRequest(path: string, options?: RequestInit) {
   return response.json() as Promise<{ access_token?: string; admin?: AdminUser }>;
 }
 
+async function authedAdminRequest(path: string) {
+  const token = getAdminAccessToken();
+  if (!token) throw new Error("Admin access token missing.");
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(authErrorMessage(text, `Request failed with status ${response.status}`));
+  }
+  return response.json() as Promise<{ admin?: AdminUser }>;
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const refreshInFlight = useRef<Promise<boolean> | null>(null);
 
   const applyAuth = useCallback((payload: { access_token?: string; admin?: AdminUser }) => {
     if (!payload.access_token || !payload.admin) throw new Error("Admin auth response was incomplete.");
@@ -69,30 +83,49 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setAdmin(payload.admin);
   }, []);
 
+  // One shared refresh for the whole page (module level in adminToken.ts), so a reload,
+  // hot reload or several components asking at once never spend the same one-time
+  // refresh cookie twice.
   const refresh = useCallback(async () => {
-    if (refreshInFlight.current) return refreshInFlight.current;
-
-    const request = (async () => {
-      try {
-        const payload = await authRequest("/admin/auth/refresh", { method: "POST" });
-        applyAuth(payload);
-        return true;
-      } catch {
-        clearAdminAccessToken();
-        setAdmin(null);
-        return false;
-      } finally {
-        setReady(true);
-        refreshInFlight.current = null;
-      }
-    })();
-
-    refreshInFlight.current = request;
-    return request;
+    try {
+      const payload = await refreshAdminAccessToken();
+      if (!payload?.access_token || !payload.admin) throw new Error("Admin refresh response was incomplete.");
+      applyAuth(payload as { access_token?: string; admin?: AdminUser });
+      return true;
+    } catch {
+      clearAdminAccessToken();
+      setAdmin(null);
+      return false;
+    } finally {
+      setReady(true);
+    }
   }, [applyAuth]);
 
+  // On load, reuse the signed-in token kept for this tab (valid 15 minutes) so a page refresh
+  // does not depend on the refresh cookie; only ask for a new token when it is missing or old.
   useEffect(() => {
-    void refresh();
+    let active = true;
+    const boot = async () => {
+      const token = getAdminAccessToken();
+      if (token && !isAdminAccessTokenExpiring()) {
+        try {
+          const payload = await authedAdminRequest("/admin/auth/me");
+          if (!active) return;
+          if (payload.admin) {
+            setAdmin(payload.admin);
+            setReady(true);
+            return;
+          }
+        } catch {
+          clearAdminAccessToken();
+        }
+      }
+      if (active) void refresh();
+    };
+    void boot();
+    return () => {
+      active = false;
+    };
   }, [refresh]);
 
   const signIn = useCallback(async (email: string, password: string) => {

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { verifyCfAccessJwt } from "@/lib/server/cfAccess";
-import { buildTargetUrl, forwardRequestHeaders, rewriteSetCookie, skipResponseHeader } from "@/lib/server/gatewayProxy";
+import { adaptSetCookieForPlainHttp, buildTargetUrl, forwardRequestHeaders, rewriteSetCookie, skipResponseHeader } from "@/lib/server/gatewayProxy";
 
 /**
  * Admin gateway proxy (the permanent fix for the admin panel being blocked by ZTNA_GATEWAY_SECRET).
@@ -79,7 +79,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!skipResponseHeader(name)) res.setHeader(name, value);
   });
   const cookies = typeof upstream.headers.getSetCookie === "function" ? upstream.headers.getSetCookie() : [];
-  if (cookies.length) res.setHeader("Set-Cookie", cookies.map(rewriteSetCookie));
+  if (cookies.length) {
+    const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+    const secureOrigin = forwardedProto ? forwardedProto === "https" : Boolean((req.socket as { encrypted?: boolean }).encrypted);
+    res.setHeader("Set-Cookie", cookies.map((cookie) => rewriteSetCookie(secureOrigin ? cookie : adaptSetCookieForPlainHttp(cookie))));
+  }
   res.setHeader("Cache-Control", "no-store");
   res.send(Buffer.from(await upstream.arrayBuffer()));
 }

@@ -1,4 +1,4 @@
-import { getAdminAccessToken } from "@/lib/adminToken";
+import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type {
   TemplateSummary,
   TemplateListResponse,
@@ -89,16 +89,26 @@ export function adminApiErrorMessage(text: string, fallback: string): string {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = getAdminAccessToken();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options?.headers || {}),
-    },
-  });
+  const send = () => {
+    const token = getAdminAccessToken();
+    return fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options?.headers || {}),
+      },
+    });
+  };
+
+  if (isAdminAccessTokenExpiring()) {
+    await refreshAdminAccessToken();
+  }
+  let response = await send();
+  if (response.status === 401 && (await refreshAdminAccessToken())) {
+    response = await send();
+  }
   if (!response.ok) {
     const text = await response.text();
     throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
@@ -107,15 +117,25 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 async function formRequest<T>(path: string, formData: FormData): Promise<T> {
-  const token = getAdminAccessToken();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  const send = () => {
+    const token = getAdminAccessToken();
+    return fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  };
+
+  if (isAdminAccessTokenExpiring()) {
+    await refreshAdminAccessToken();
+  }
+  let response = await send();
+  if (response.status === 401 && (await refreshAdminAccessToken())) {
+    response = await send();
+  }
   if (!response.ok) {
     const text = await response.text();
     throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
