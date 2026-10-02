@@ -1,5 +1,8 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type {
+  TestCenterOverview,
+  TestCoverage,
+  TestRunRecord,
   PlanConfigState,
   PlanConfigSparse,
   PlanConfigPreview,
@@ -483,5 +486,23 @@ export const api = {
       "/admin/backups/restore",
       { method: "POST", body: JSON.stringify({ backup, dry_run: dryRun, confirmation }) }
     );
+  },
+  getTestCenter() {
+    return request<TestCenterOverview>("/admin/test-center");
+  },
+  getTestCoverage() {
+    return request<TestCoverage>("/admin/test-center/coverage");
+  },
+  startTestRun(ids?: string[]) {
+    return request<TestRunRecord>("/admin/test-center/run", { method: "POST", body: JSON.stringify({ ids: ids ?? null }) });
+  },
+  getTestRun(runId: string) {
+    return request<TestRunRecord>(`/admin/test-center/run/${encodeURIComponent(runId)}`);
+  },
+  addCustomTest(kind: "function" | "route", target: string) {
+    return request<{ id: string }>("/admin/test-center/custom", { method: "POST", body: JSON.stringify({ kind, target }) });
+  },
+  removeCustomTest(checkId: string) {
+    return request<{ ok: boolean }>(`/admin/test-center/custom/${encodeURIComponent(checkId)}`, { method: "DELETE" });
   },
 };

@@ -724,3 +724,62 @@ export type PlanConfigPreview = {
   subscribers?: Record<string, number>;
   note?: string | null;
 };
+
+export type TestFailureInfo = {
+  error_type: string;
+  technical: string;
+  plain: string;
+  fix: string;
+  file: string | null;
+  line: number | null;
+  function: string | null;
+  code: { n: number; text: string; hit: boolean }[];
+};
+
+export type TestCheckResult = {
+  status: "pass" | "fail" | "warn" | "skipped";
+  detail?: string | null;
+  fix?: string | null;
+  ms?: number | null;
+  at?: string | null;
+  error?: TestFailureInfo | null;
+};
+
+export type TestCheckRow = {
+  id: string;
+  section: string;
+  title: string;
+  what: string;
+  mode: string;
+  last: TestCheckResult | null;
+  flaky: boolean;
+  durations: number[];
+  removable: boolean;
+};
+
+export type TestRunRecord = {
+  id: string;
+  status: "running" | "finished" | "crashed";
+  started_at: string;
+  finished_at: string | null;
+  total: number;
+  done: number;
+  current: string | null;
+  ids: string[];
+  results: Record<string, TestCheckResult>;
+};
+
+export type TestCenterOverview = {
+  environment: { environment: string; production_like?: boolean; production?: boolean; razorpay_mode: string; database_host: string; writes_in_phase: string };
+  sections: string[];
+  checks: TestCheckRow[];
+  active_run: TestRunRecord | null;
+};
+
+export type TestCoverage = {
+  routes_total: number;
+  functions_total: number;
+  admin_routes_guarded: number;
+  routes_untested: { method: string; path: string; name: string; target: string }[];
+  functions_untested: { module: string; name: string; file: string; line: number; target: string }[];
+};

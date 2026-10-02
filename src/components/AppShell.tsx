@@ -72,6 +72,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
       { href: "/backups", label: "Backups", icon: "database" },
       { href: "/health", label: "Health", icon: "pulse" },
       { href: "/logs", label: "Server Logs", icon: "list" },
+      { href: "/run-tests", label: "Run Tests", icon: "check" },
       { href: "/security", label: "Security", icon: "lock" },
     ],
   },
