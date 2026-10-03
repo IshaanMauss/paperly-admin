@@ -794,3 +794,32 @@ export type TestDatabaseReport = {
   sample_password?: string | null;
   join_code?: string | null;
 };
+
+export type AuthStatus = {
+  environment: string;
+  email: { mode: "smtp" | "mock"; configured: boolean };
+  sms: { provider: string; configured: boolean; phone_login_enabled: boolean; daily_cap: number };
+  otp: { minutes: number; max_attempts: number };
+  /** True when the server stores the readable text of each code (mock mode, never in production). */
+  shows_code_text: boolean;
+};
+
+export type AuthOutboxMessage = {
+  id: string;
+  channel: "email" | "sms";
+  recipient: string;
+  purpose: string;
+  provider: string;
+  status: "mock" | "sent" | "failed";
+  body: string | null;
+  error: string | null;
+  teacher_id: string | null;
+  created_at: string | null;
+};
+
+export type AuthProbeResult = {
+  ok: boolean;
+  error: string | null;
+  code_visible: boolean;
+  message: AuthOutboxMessage | null;
+};

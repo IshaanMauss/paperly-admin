@@ -18,6 +18,10 @@ This repo is the owner/admin monitoring and response panel. It must not duplicat
 
 Before launch: confirm Run Tests -> Security and access shows `sec.db_guard_installed` passing (mode production, current version) and `sec.db_guard_audit` passing. After any guard version bump, re-run `db-guard-production.sql` in Supabase. Limit to remember: guards do not inspect JSON/free-text payloads; never copy production dumps into the test database (see `paperly-mvp/docs/security-and-deployment.md`).
 
+## Phone sign-in and sign-in codes - 2026-10-03
+
+Before turning phone sign-in on: run `paperly-mvp/docs/claude-project/phone-otp-migration.sql` in Supabase first, then deploy; set `SMS_PROVIDER=msg91` and its keys only after the DLT template is approved (its wording must equal the text shown by Run Tests -> "The SMS text carries the code and fits the DLT template"). Then open Run Tests -> "Sign-in codes (email and phone)", press "Send test code" with your own number, and confirm the text arrives. Until SMTP exists, email codes (sign-up verification, forgot password) cannot be delivered in production; the same panel shows "recorded only (no mail server)".
+
 ## P1
 
 - Improve backup visibility: last backup time, JSON/XLSX export status, future cloud backup target, restore dry-run status.

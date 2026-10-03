@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { SignInCodesPanel } from "@/components/SignInCodesPanel";
 import { input, panel, primaryButton, secondaryButton } from "@/components/ui";
 import { api } from "@/lib/apiClient";
 import type { TestCenterOverview, TestCheckResult, TestCheckRow, TestCoverage, TestDatabaseReport, TestRunRecord } from "@/lib/apiTypes";
@@ -403,6 +404,8 @@ export default function RunTestsPage() {
           </section>
         );
       })}
+
+      <SignInCodesPanel />
 
       <TestDatabasePanel env={env} onChanged={load} setNotice={setNotice} />
 

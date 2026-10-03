@@ -1,6 +1,9 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type {
   TestDatabaseReport,
+  AuthOutboxMessage,
+  AuthProbeResult,
+  AuthStatus,
   TestCenterOverview,
   TestCoverage,
   TestRunRecord,
@@ -505,6 +508,17 @@ export const api = {
   },
   removeCustomTest(checkId: string) {
     return request<{ ok: boolean }>(`/admin/test-center/custom/${encodeURIComponent(checkId)}`, { method: "DELETE" });
+  },
+  getAuthStatus() {
+    return request<AuthStatus>("/admin/test-center/auth-status");
+  },
+  getAuthOutbox(channel?: "email" | "sms", limit = 50) {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (channel) query.set("channel", channel);
+    return request<{ messages: AuthOutboxMessage[] }>(`/admin/test-center/auth-outbox?${query.toString()}`);
+  },
+  sendAuthProbe(channel: "email" | "sms", recipient: string) {
+    return request<AuthProbeResult>("/admin/test-center/auth-probe", { method: "POST", body: JSON.stringify({ channel, recipient }) });
   },
   getTestDatabase() {
     return request<TestDatabaseReport>("/admin/test-center/test-db");
