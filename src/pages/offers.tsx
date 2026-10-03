@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
+import { usePersistedState } from "@/lib/draftStore";
 import { api, type PlanOffer } from "@/lib/apiClient";
 
 // Time-limited offers (2026-10-02): pick a plan, a discount, how long each person's
@@ -26,14 +27,14 @@ function OfferPreview({ plan, discount, hours, style, title }: { plan: string; d
 }
 
 function CreateOfferForm({ options, onCreated }: { options: { plans: Record<string, string>; audience: Record<string, string>; styles: string[] }; onCreated: () => void }) {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = usePersistedState("offers.title", "");
   const [planCode, setPlanCode] = useState(Object.keys(options.plans).includes("teacher_yearly") ? "teacher_yearly" : Object.keys(options.plans)[0]);
-  const [discount, setDiscount] = useState("40");
-  const [hours, setHours] = useState("12");
+  const [discount, setDiscount] = usePersistedState("offers.discount", "40");
+  const [hours, setHours] = usePersistedState("offers.hours", "12");
   const [audience, setAudience] = useState<string[]>(Object.keys(options.audience));
   const [style, setStyle] = useState("shiny");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
+  const [startsAt, setStartsAt] = usePersistedState("offers.startsAt", "");
+  const [endsAt, setEndsAt] = usePersistedState("offers.endsAt", "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

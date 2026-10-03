@@ -5,6 +5,7 @@ import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToke
 import { API_BASE_URL } from "@/lib/apiClient";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
+import { usePersistedState } from "@/lib/draftStore";
 import { api, type PromoCode, type PromoCodeRedemptionRow } from "@/lib/apiClient";
 
 // Admin-issued coupon/promo code tab, built 2026-09-15 per Toyaj's CEO ask:
@@ -38,12 +39,12 @@ function StatusBadge({ code }: { code: PromoCode }) {
 }
 
 function CreateCodeForm({ planOptions, onCreated }: { planOptions: Record<string, string>; onCreated: () => void }) {
-  const [code, setCode] = useState("");
+  const [code, setCode] = usePersistedState("promo.code", "");
   const [planCode, setPlanCode] = useState(Object.keys(planOptions)[0] || "teacher_yearly");
-  const [label, setLabelText] = useState("");
-  const [discountPercent, setDiscountPercent] = useState("100");
-  const [maxRedemptions, setMaxRedemptions] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
+  const [label, setLabelText] = usePersistedState("promo.label", "");
+  const [discountPercent, setDiscountPercent] = usePersistedState("promo.discountPercent", "100");
+  const [maxRedemptions, setMaxRedemptions] = usePersistedState("promo.maxRedemptions", "");
+  const [expiresAt, setExpiresAt] = usePersistedState("promo.expiresAt", "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

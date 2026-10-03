@@ -4,6 +4,7 @@ import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import Link from "next/link";
 import { api, ServerLogProblemGroup, TemplateSummary } from "@/lib/apiClient";
 import { panel, primaryButton } from "@/components/ui";
+import { SystemStatusPanel } from "@/components/SystemStatusPanel";
 
 const TEMPLATE_HEALTH_LIMIT = "200";
 
@@ -22,10 +23,10 @@ type ProductionCheck = {
 const productionChecks: ProductionCheck[] = [
   {
     priority: "P0",
-    title: "Run the pending database scripts",
+    title: "Run the phone sign-in database script",
     status: "pending",
-    evidence: "Three scripts are written but only take effect once run in the Supabase SQL editor: plan-config-migration.sql (until then Plans & Features cannot save and plans use built-in defaults), fix-part-subtopics-object-shape.sql (24 Paper 4 templates have part subtopics in a shape the filters cannot read) and fix-inequality-fraction-template.sql.",
-    next: "Run them once each, in that order, then re-open Plans & Features and Variant Health to confirm. Institute plans need no new SQL.",
+    evidence: "docs/claude-project/phone-otp-migration.sql adds the phone column and the sign-in code tables. Until it runs in the Supabase SQL editor and the new backend is deployed, phone sign-in cannot work. The Live system status above shows the live database version against the version this release expects.",
+    next: "Run it once in Supabase, deploy, re-run db-guard-production.sql, then run alembic stamp 0030_phone_otp_and_auth_outbox.",
   },
   {
     priority: "P0",
@@ -52,15 +53,15 @@ const productionChecks: ProductionCheck[] = [
     priority: "P0",
     title: "Admin sign-in",
     status: "partial",
-    evidence: "Role-based admin accounts with signed tokens and refresh cookies are in place and the panel is gated. The older shared X-Admin-Token fallback still exists for migration and local tools.",
-    next: "Confirm nobody relies on the shared token, then switch it off; make sure the first owner account has a strong password.",
+    evidence: "Role-based admin accounts, signed tokens, refresh cookies and per-route permissions are in place, and the shared admin token is off by default and refused in production. Not built: two-factor sign-in and re-asking for the password before backups, restores and maintenance.",
+    next: "Add admin two-factor and a step-up password prompt for the most dangerous actions.",
   },
   {
     priority: "P1",
     title: "Admin action history",
-    status: "partial",
-    evidence: "Plan publishing, institute settings and request decisions record who did them, and Security Events shows risk activity. There is no single append-only history covering every sensitive admin action (suspend, refund, delete, backup restore).",
-    next: "Add one history table every sensitive admin action writes to, with who, what, which user and when.",
+    status: "current",
+    evidence: "Every admin action that changes something (suspend, plan, offers, maintenance, backups, settings, organizations) is recorded automatically with who, what, which record, from where and whether it worked. See Audit Log. Incident evidence can be exported from Security.",
+    next: "Keep it that way: new admin routes are covered automatically. Consider showing the Audit Log only to owners.",
   },
   {
     priority: "P1",
@@ -80,7 +81,7 @@ const productionChecks: ProductionCheck[] = [
     priority: "P1",
     title: "Scheduled backups and a restore test",
     status: "partial",
-    evidence: "Manual JSON and Excel exports and a restore routine exist. There is no daily scheduled backup, off-site copy, encryption, or recorded restore test.",
+    evidence: "Manual JSON and Excel exports (with readable names and a last-backup warning on the Backups page) and an insert-only restore exist. There is no daily scheduled backup, off-site copy, encryption, or recorded restore test.",
     next: "Schedule a daily backup to cloud storage, encrypt it, and do one restore into a scratch project to prove it works.",
   },
   {
@@ -101,7 +102,7 @@ const productionChecks: ProductionCheck[] = [
     priority: "P1",
     title: "ZTNA for admin access",
     status: "pending",
-    evidence: "The launch checklist asks for Cloudflare Access or Tailscale in front of the admin panel and back office. No code can prove this; it is a hosting setting.",
+    evidence: "The code enforces a gateway secret on the admin API and the panel has a gateway proxy; Live system status shows whether the secret is set. Whether Cloudflare Access or Tailscale actually sits in front is a hosting setting no code can prove.",
     next: "Put the admin URLs behind Cloudflare Access or Tailscale before exposing them publicly.",
   },
   {
@@ -245,6 +246,8 @@ export default function HealthPage() {
           <button className={primaryButton} onClick={refreshHealth} disabled={loading}>{loading ? "Refreshing..." : "Refresh checks"}</button>
         </div>
       </section>
+
+      <SystemStatusPanel refreshKey={refreshTick} />
 
       <section className={panel}>
         <div className="flex flex-wrap items-center justify-between gap-2">

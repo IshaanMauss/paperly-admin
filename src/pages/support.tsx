@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { AdminSupportTicketRow, api } from "@/lib/apiClient";
+import { AdminSupportTicketRow, api } from "@/lib/apiClient";
+import { usePersistedState } from "@/lib/draftStore";
 import { UserLabel } from "../components/UserLabel";
 
 const PAGE_SIZE = 25;
@@ -23,7 +24,7 @@ export default function SupportAdminPage() {
   const [error, setError] = useState<string | null>(null);
   // Added 2026-09-28: reply/resolve UI - previously a ticket could only ever
   // be viewed here, never actioned.
-  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyDrafts, setReplyDrafts] = usePersistedState<Record<string, string>>("support.replyDrafts", {});
   const [resolving, setResolving] = useState<string | null>(null);
   const [resolveError, setResolveError] = useState<Record<string, string>>({});
 
@@ -41,7 +42,7 @@ export default function SupportAdminPage() {
     setResolveError((prev) => ({ ...prev, [ticketId]: "" }));
     try {
       const updated = await api.resolveSupportTicket(ticketId, reply, nextStatus);
-      setRows((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...updated } : row)));
+      setRows((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...updated } : row))); setReplyDrafts((prev) => { const rest = { ...prev }; delete rest[ticketId]; return rest; });
     } catch (err) {
       setResolveError((prev) => ({ ...prev, [ticketId]: err instanceof Error ? err.message : "Could not resolve ticket." }));
     } finally {

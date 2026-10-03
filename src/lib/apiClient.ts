@@ -133,6 +133,74 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+/** POST that returns a file. The server's Content-Disposition name is used so downloads keep their readable business names. */
+export async function downloadRequest(path: string, body?: unknown): Promise<{ blob: Blob; filename: string }> {
+  const send = () => {
+    const token = getAdminAccessToken();
+    return fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  };
+  if (isAdminAccessTokenExpiring()) await refreshAdminAccessToken();
+  let response = await send();
+  if (response.status === 401 && (await refreshAdminAccessToken())) response = await send();
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
+  }
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  return { blob: await response.blob(), filename: match ? match[1] : "paperly-nt-download" };
+}
+
+export function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export type AuditLogItem = {
+  id: string;
+  at: string | null;
+  admin: string;
+  action: string | null;
+  target: Record<string, string>;
+  outcome: "ok" | "failed" | "error" | null;
+  status_code: number | null;
+  ip: string | null;
+  route: string | null;
+  method: string | null;
+};
+
+export type SystemStatusItem = { key: string; label: string; state: "ok" | "warn" | "down" | "unknown"; detail: string; action: string | null };
+export type SystemStatus = {
+  checked_at: string;
+  environment: string;
+  overall: "ok" | "warn" | "down";
+  counts: { ok: number; warn: number; down: number; unknown: number };
+  groups: { title: string; items: SystemStatusItem[] }[];
+};
+
+export type BackupHistory = {
+  last_export_at: string | null;
+  last_export_by: string | null;
+  last_export_age_days: number | null;
+  stale: boolean;
+  export_count_365d: number;
+  recent: AuditLogItem[];
+  last_restore_attempt_at: string | null;
+  note: string;
+};
+
 async function formRequest<T>(path: string, formData: FormData): Promise<T> {
   const send = () => {
     const token = getAdminAccessToken();
@@ -317,6 +385,9 @@ export const api = {
   getVariantHealth() {
     return request<VariantHealthOverview>("/admin/templates/variant-health");
   },
+  recalculateTemplateStats() {
+    return request<{ calculated: number; remaining: number; total: number }>("/admin/templates/variant-health/recalculate", { method: "POST" });
+  },
   getPromoCodes() {
     return request<PromoCodeListResponse>("/admin/promo-codes");
   },
@@ -485,11 +556,32 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  refundTeacherPayment(teacherId: string, payload: { reason: string; amount_rupees?: number; cancel_plan: boolean }) {
+    return request<{ refund: { refund_id: string; amount_paise: number | null; status: string | null }; plan_cancelled: boolean }>(
+      `/admin/teachers/${encodeURIComponent(teacherId)}/billing/refund`,
+      { method: "POST", body: JSON.stringify(payload) }
+    );
+  },
   restoreBackup(backup: Record<string, unknown>, dryRun: boolean, confirmation?: string) {
     return request<{ dry_run: boolean; tables: Record<string, { in_backup: number; would_insert: number; inserted: number; skipped_rows: number; note?: string }> }>(
       "/admin/backups/restore",
       { method: "POST", body: JSON.stringify({ backup, dry_run: dryRun, confirmation }) }
     );
+  },
+  getAuditLog(params: { days?: number; admin?: string; onlyFailed?: boolean; limit?: number } = {}) {
+    const query = new URLSearchParams({ days: String(params.days ?? 30), limit: String(params.limit ?? 200) });
+    if (params.admin) query.set("admin", params.admin);
+    if (params.onlyFailed) query.set("only_failed", "true");
+    return request<{ items: AuditLogItem[]; total: number; window_days: number }>(`/admin/audit-log?${query.toString()}`);
+  },
+  getSystemStatus() {
+    return request<SystemStatus>("/admin/system-status");
+  },
+  getBackupHistory() {
+    return request<BackupHistory>("/admin/backups/history");
+  },
+  exportIncidentEvidence(teacherId: string, hours = 72, note?: string) {
+    return downloadRequest("/admin/security-events/export-evidence", { teacher_id: teacherId, hours, note });
   },
   getTestCenter() {
     return request<TestCenterOverview>("/admin/test-center");

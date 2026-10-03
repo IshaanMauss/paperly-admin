@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { panel, table, td, th, planLabel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { AdminSecurityEventRow, api, type RlsTableRow } from "@/lib/apiClient";
+import { AdminSecurityEventRow, api, saveBlob, type RlsTableRow } from "@/lib/apiClient";
 
 const PAGE_SIZE = 25;
 
@@ -31,6 +31,19 @@ export default function SecurityPage() {
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
   const [error, setError] = useState("");
+  const [evidenceBusy, setEvidenceBusy] = useState("");
+
+  async function exportEvidence(event: AdminSecurityEventRow) {
+    setEvidenceBusy(event.id);
+    try {
+      const { blob, filename } = await api.exportIncidentEvidence(event.teacher_id, 72);
+      saveBlob(blob, filename);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not export evidence.");
+    } finally {
+      setEvidenceBusy("");
+    }
+  }
 
   const [rlsTables, setRlsTables] = useState<RlsTableRow[]>([]);
   const [rlsSource, setRlsSource] = useState<string | undefined>(undefined);
@@ -192,6 +205,16 @@ export default function SecurityPage() {
                 <span>Status: {event.status || "detected"}</span>
                 <span>When: {event.occurred_at ? new Date(event.occurred_at).toLocaleString() : "Unknown"}</span>
                 <span>Event: {event.event_type}</span>
+              </div>
+              <div className="mt-3">
+                <button
+                  type="button"
+                  disabled={evidenceBusy === event.id || !event.teacher_id}
+                  onClick={() => void exportEvidence(event)}
+                  className="rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs font-extrabold text-slate-800 hover:bg-purple-50 disabled:opacity-50"
+                >
+                  {evidenceBusy === event.id ? "Preparing..." : "Export evidence (last 72h)"}
+                </button>
               </div>
             </article>
           ))}

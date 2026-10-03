@@ -1,214 +1,91 @@
-# Paperly Admin Control Panel
+# Paperly-NT Admin Control Panel
 
-Last updated: 2026-08-21.
+Last updated: 2026-10-03.
 
-This folder is the owner/admin monitoring panel for Paperly. It is not the template ingestion dashboard and it is not the sellable teacher product.
+The owner/admin control plane for Paperly-NT: Next.js (pages router) app for monitoring, users, billing, plans, support, backups, health, maintenance, security and admin accounts. It is not the template-ingestion dashboard and not the sellable teacher product.
 
-## Product Boundary
+Status words used in these docs: DONE (in code), PARTLY (built, gap named), OPEN (not built), OWNER (hosting/account step only the owner can do), NOT CHECKABLE (needs a live service or browser).
 
-- `paperly-mvp/backend`: FastAPI backend, database, template engine, worksheet/export engine, billing routes, backup routes, and admin APIs.
-- `paperly-mvp/dashboard`: internal backoffice for Upload -> Review -> Approve -> QA Preview.
-- `paperly-teacher-module`: sellable paper-building product for users.
-- `paperly-admin-panel`: owner/admin control plane for monitoring, users, billing, support, backups, health, maintenance, and future roles.
+Related docs: `docs/admin-pages-and-permissions.md` (every page, its backend routes and permission keys), `docs/admin-gateway-setup.md`, `docs/launch-checklist.md`, `docs/project-history.md`, `docs/dfd/`.
 
-This panel must not duplicate screenshot upload, JSON drafting, template approval, or QA preview. Those remain in `paperly-mvp/dashboard`.
+## Product boundary
 
-## Main Sections
+- `paperly-mvp/backend`: FastAPI backend, database, template engine, worksheet/export engine, billing, backups and the admin APIs.
+- `paperly-mvp/dashboard`: internal backoffice for Upload, Review, Approve, QA Preview. This panel never duplicates screenshot upload, JSON drafting, approval or QA preview.
+- `paperly-teacher-module`: the sellable paper-building product.
+- `paperly-admin-panel` (this repo): monitoring, users, billing, support, backups, health, maintenance, security and admin team.
 
-- Overview: platform health, business summary, active risks, and key actions.
-- Users: split Individual / Tutor and Institute views, with search, sorting, plan state, activity, and usage.
-- Billing: subscriptions, plan states, renewal dates, and payment/webhook evidence.
-- Support: feedback, complaints, callback requests, and unresolved customer issues.
-- Backups: manual JSON/XLSX exports now; daily cloud backup target later.
-- Health: backend reachability, database readiness, production checks, and route status.
-- Maintenance: put the teacher module into maintenance mode and restore service after approval.
-- Admin Users: future role-based access for owner, admin, reviewer, uploader, support, and finance roles.
+Admin sign-in is separate from teacher sign-in and from the backoffice. A health or billing outage shown here is informational and must never rewrite a teacher's plan or workspace.
 
-## Run Tests tab, status-code guide and test database - 2026-10-02
-
-- **Run Tests** (nav "Run Tests", needs `security.read` to view, `security.write` to run): read checks are safe on production; write checks run only against the locked local test database. Shows environment badges, filter/search, failure explainer, "Not tested yet" scan and a test-database panel (seed/wipe). To use write tests, start the local backend (`python scripts/local_test_db.py backend` in `paperly-mvp/backend`, port 8100) and run a second admin panel instance pointed at it. Never point the production panel's write tests at Supabase; the backend refuses ("Blocked for safety").
-- Run Tests also has Payments, PDF look, AI checking and Load and speed sections (Phase 3). `ai.live` is off by default (needs `TEST_CENTER_AI_LIVE=1` on the server). Details: `paperly-mvp/docs/security-and-deployment.md`.
-- **Server Logs** has a status-code guide (17 codes, searchable, with live counts) explaining each code in Paperly terms.
-- **Database guards**: production and test databases have guard triggers (`paperly-mvp/docs/claude-project/db-guard-*.sql`). KNOWN LIMIT: they check identity columns only, not JSON/free-text payloads, so never copy production dumps into the test database. Full detail: `paperly-mvp/docs/security-and-deployment.md`.
-
-## Maintenance Rule
-
-When maintenance is restored, active teacher-module sessions should be invalidated with a session-version or session-epoch check. Users must log in again, but their saved papers, profile, usage, and billing data must remain safe.
-
-## Backup Rule
-
-- Excel/XLSX backup is for humans: sales review, auditing, customer support, and business interpretation.
-- JSON backup is for disaster recovery: restore data if the database is damaged or lost.
-- SQL dump is the future strongest full restore format for production databases.
-
-Current state: manual backup can download locally. Target state: daily cloud backups plus admin-visible backup history and restore dry-run.
-
-## Production Checks
-
-Current health-page truth as of 2026-08-20:
-
-- Current: Backend-only plan gates are active for teacher-side protected access, but must keep regression tests.
-- Partial: Audit/security event logging exists for risk events, but not every admin action is actor-traced yet.
-- Partial: Manual JSON/XLSX backup export exists, but scheduled cloud backup and restore dry-run are pending.
-- Stale as of 2026-08-21: Health previously used backend pagination limits, but full server-side pagination/filtering was not complete across all admin datasets.
-- Partial: Upload type and size limits belong mostly to MVP/backoffice upload routes and must remain server-enforced.
-- Partial: Session revoke/ban workflow exists conceptually through session expiry/maintenance, but admin response actions are not fully wired.
-- Partial: Role-based admin auth now has backend admin users, signed sessions, refresh cookies, and admin-panel gating; permission-specific route enforcement and fallback removal are still pending.
-- Pending: ZTNA for hosted admin/backoffice access.
-- Pending: Razorpay webhook verification and idempotent payment processing.
-- Pending: Route-level rate limits, WAF/CDN rules, and production CORS origin lock-down.
-
-## Local Run
+## Quick start
 
 ```powershell
-cd C:\Users\ishaa\OneDrive\Desktop\paperly-admin-panel
 npm install
-npm run dev
+npm run dev          # http://localhost:3002 (next dev --webpack -p 3002)
 ```
 
-The app expects:
+Scripts: `npm run lint` (`next lint`), `npm test` (vitest), `npm run build`, `npm start`.
 
-```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8003/api
-```
+## Environment variables
 
-To use the Railway backend instead (2026-10-01), set `NEXT_PUBLIC_API_BASE_URL=https://paperly-mvp-production.up.railway.app/api` in `.env.local`. For login to work there, Railway needs `ADMIN_BOOTSTRAP_EMAIL`/`ADMIN_BOOTSTRAP_PASSWORD`/`ADMIN_BOOTSTRAP_NAME`, this panel's address in `CORS_ORIGINS`, and `ZTNA_GATEWAY_SECRET` left empty until a gateway is set up (otherwise the browser's preflight gets a 403). `ALLOW_ADMIN_TOKEN_FALLBACK` must be false in production.
+Set in `.env.local` (git-ignored). Never put real API keys in frontend env files.
 
-To use the Railway backend instead (2026-10-01), set `NEXT_PUBLIC_API_BASE_URL=https://paperly-mvp-production.up.railway.app/api` in `.env.local`. For login to work there, Railway needs `ADMIN_BOOTSTRAP_EMAIL`/`ADMIN_BOOTSTRAP_PASSWORD`/`ADMIN_BOOTSTRAP_NAME`, this panel's address in `CORS_ORIGINS`, and `ZTNA_GATEWAY_SECRET` left empty until a gateway is set up (otherwise the browser's preflight gets a 403). `ALLOW_ADMIN_TOKEN_FALLBACK` must be false in production.
+| Variable | Used for |
+|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | Where the browser sends API calls. `/api/gateway` (the proxy, normal setup), or `http://127.0.0.1:8003/api` for a purely local backend with no gateway secret. |
+| `ADMIN_BACKEND_URL` | Server-side only. Backend API root the gateway proxy forwards to (for example `https://<railway-host>/api`). Required for the proxy. |
+| `ADMIN_GATEWAY_SECRET` | Server-side only. Same value as the backend's `ZTNA_GATEWAY_SECRET` (at least 40 random characters). |
+| `ADMIN_GATEWAY_HEADER` | Optional. Defaults to `X-Ztna-Gateway-Secret`. |
+| `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` | Optional. Set both to require a valid Cloudflare Access login at the proxy. |
 
-## Backend Routes Used
+Backend variables the panel depends on: `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`, `ADMIN_BOOTSTRAP_NAME` (first owner account), `ZTNA_GATEWAY_SECRET`, `CORS_ORIGINS` (this panel's origin, no wildcards), `ALLOW_ADMIN_TOKEN_FALLBACK=false` in production. Full setup: `docs/admin-gateway-setup.md`.
 
-- `GET /api/admin/teachers`
-- `GET /api/admin/support-tickets`
-- `GET /api/admin/billing/subscriptions`
-- `GET /api/admin/billing/payment-events`
-- `POST /api/admin/backups/export?format=json`
-- `POST /api/admin/backups/export?format=xlsx`
-- `GET /api/admin/platform-status`
-- `POST /api/admin/platform-status`
-- `GET /api/templates` for health/risk summary only, not ingestion.
+## Pages
 
-## Security Notes
+Navigation groups in `src/components/AppShell.tsx`. Backend routes and permission keys for each page are in `docs/admin-pages-and-permissions.md`.
 
-- Current admin protection uses `ADMIN_API_TOKEN` when configured.
-- This is an MVP stopgap, not final production auth.
-- Before hosted deployment, add real admin login, RBAC, signed sessions, audit logs, and per-role permissions.
+- Overview: platform health, business summary, active risks, key actions.
+- People: Users (Individual / Tutor and Institute tabs, search, sort, plan state, activity, test-account flag), User 360 (full per-user history with remediation actions and a Refund card), Organizations (institute theming, flags, seats and join code, entitlements, delivery checklist, Requests inbox), Admin Team (admin accounts, roles, per-account permissions).
+- Money: Billing (subscriptions, payment events), Plans & Features (draft, preview, publish, rollback of plan words and prices; versions are kept), Offers (time-limited offers), Promo Codes (create, toggle, redemptions, CSV export).
+- Product: Paper Builders (Full Portion, Topical and AI-checking usage and subtopic caps; `/full-portion` redirects here), AI Checking (overview and submissions), Variant Health.
+- Operations: Support (tickets, reply and resolve), Maintenance (maintenance mode with typed confirmation, worksheet cleanup), Backups, Health, Server Logs (with a status-code guide), Run Tests, Security, Audit Log.
 
-## Zero-Trust Network Access
+Notes on individual pages:
 
-Admin and backoffice URLs should not be fully public.
+- Backups: manual downloads, an Excel business workbook and a restorable JSON, both with readable names (`paperly-nt_backup_business-workbook_<date>_<time>-UTC.xlsx`, `paperly-nt_backup_restorable-data_<date>_<time>-UTC.json`); last-backup time and recent download history with a warning after 7 days; an insert-only restore with a dry run and typed confirmation. The workbook has a Read Me sheet and plain column headings. The backup covers users, subscriptions, payments, papers, templates, organizations and members, institute requests, offers, plan configuration history, quota counters and drafts. Passwords, sign-in tokens and sign-in codes are never included. The download itself is audited.
+- Health: live system status (database speed and version, shared rate-limit store, disk, last-hour requests, server errors and refused requests, key settings, last backup) plus problems right now and the readiness notes. A value that cannot be checked says so.
+- Security: security events with a status filter (statuses read from each event; the filter offers resolved and false positive), a row-level-security status panel, and an Export evidence button per event (one JSON file with the last 72 hours of that account; the download is audited). Suspend, unsuspend, force sign-out and delete are done from User 360. No admin route that sets an event's status to resolved or false positive exists in the backend (OPEN), so those two statuses appear only if an event already carries them.
+- Audit Log: every admin write (POST, PUT, PATCH, DELETE under `/api/admin`, sign-in excluded) is recorded automatically with who, what, which record, IP and result; request bodies and passwords are never stored. A new route is covered without extra code.
+- Run Tests: read checks are safe on production; write checks run only against the locked local test database (the backend answers "Blocked for safety" otherwise). Sections include Security and access, Payments, PDF look, AI checking (`ai.live` is off unless `TEST_CENTER_AI_LIVE=1` on the server), Load and speed, a test-database panel (seed and wipe) and "Sign-in codes (email and phone)" with status, outbox and a send-test-code control. To use write tests, run the local test backend (`python scripts/local_test_db.py backend` in `paperly-mvp/backend`, port 8100) and a second panel instance pointed at it. Detail: `paperly-mvp/docs/security-and-deployment.md`.
+- Maintenance: restoring service must invalidate active teacher sessions through the session-epoch check; saved papers, profiles, usage and billing stay safe. The confirmation phrases (`PUT PAPERLY-NT TEACHER MODULE IN MAINTENANCE`, `RESTORE PAPERLY-NT TEACHER MODULE`, `RESTORE PAPERLY-NT DATABASE FROM BACKUP`) must match the backend text in `app/api/routes/admin_backups_maintenance.py`; release panel and backend together if either changes.
 
-Recommended setup:
+## Auth, permissions and security
 
-- Use Cloudflare Access for hosted admin/backoffice domains.
-- Use Tailscale for private/internal development access or team-only private services.
-- Protect `paperly-admin-panel`, `paperly-mvp/dashboard`, and mutating backend admin routes.
-- Do not put the public teacher module behind ZTNA; users must be able to reach it normally.
-- Keep app-level admin login/RBAC even after ZTNA. ZTNA is the first gate, not the only gate.
+- Real admin accounts with roles (owner, admin, security, finance, support, template_manager, reviewer, uploader, viewer), signed short-lived tokens and a refresh cookie. Every admin route checks a permission key through the backend; denied attempts are logged as security events. The access token lives in memory only (`src/lib/adminToken.ts`); this panel writes nothing to browser storage. The older shared `ADMIN_API_TOKEN` fallback is off by default and refused in production.
+- Backend per-account login lockout (5 failed admin sign-ins, 15 minutes by default) and a Content-Security-Policy on the backend's responses are in place. DONE.
+- Gateway proxy `src/pages/api/gateway/[...path].ts`: the browser calls `/api/gateway/...`; the server route optionally checks the Cloudflare Access token, adds the gateway secret header and forwards to the backend, so the secret never reaches browser code. Vercel-style limits (about 4.5 MB bodies, 60 s) apply if hosted there; large backups or restores should run from a local session.
+- Zero-trust: DONE in code (gateway secret check, startup warning in production, Health shows whether the secret is set). Whether Cloudflare Access or Tailscale actually sits in front of a hosted admin is OWNER and not checkable from code. Do not put the public teacher module behind it. App-level admin login and roles stay on even with ZTNA.
+- OPEN: admin two-factor sign-in; step-up password prompt before backups, restores and maintenance; Content-Security-Policy and other security headers on this Next.js app (`next.config.ts` sets none).
+- Pagination: users, support tickets, subscriptions, payment events and security events are paged and filtered on the backend (`limit`, `offset`, `search`, filters, sort). Every new large dataset must do the same.
 
-Production rule: a person should pass identity/device/network access first, then Paperly admin login/role checks second.
-## Security Event Monitoring
+## Backup rules
 
-The Security page now reads `GET /api/admin/security-events`.
+- Excel is for humans (sales review, audit, support); JSON is for recovery; a SQL dump is the future full-restore format.
+- OPEN: scheduled daily backup, an off-site encrypted copy, a recorded restore drill, and cloud backup history.
 
-Events currently logged by the backend:
+## Testing
 
-- blocked worksheet/topical generation caused by plan or quota limits
-- selected-template access mismatch, usually stale UI state or request tampering
+- Unit tests (vitest): `adminAuth`, `apiClient`, `taxonomy`, `templatePresentation`, `troubleshoot`. Last recorded run (2026-09-30, on a clean Linux install): 47 of 47 passed and `next build` succeeded for all 19 routes at that time; not re-run for this update.
+- CI: `.github/workflows/tests.yml` (lint, tests) and `.github/workflows/security.yml` (`npm audit --omit=dev --audit-level=high`, non-blocking while findings on next, postcss and sharp are open; gitleaks secret scan; weekly schedule).
+- OPEN: automated browser tests for this panel. Backend tests for the audit hook, system status and evidence export are in `paperly-mvp/backend/tests`.
 
-This is the first practical slice of the larger security architecture. It does not replace Cloudflare WAF, ZTNA, admin RBAC, atomic quotas, webhook verification, or encrypted backups; it gives the owner panel a real audit stream while those layers are added.
+## Deployment
 
+Currently run locally by the admin against the Railway backend through the proxy (`docs/admin-gateway-setup.md`). If hosted, set the same three server variables in the hosting project, add this panel's origin to the backend `CORS_ORIGINS`, and put an access wall in front of it.
 
-## Business-readable QA signals
+## Known limitations
 
-The admin panel should make production risk understandable without opening code:
-
-- Export leak detected: browser header/footer, localhost URL, or API path visible in a customer-facing PDF.
-- Diagram missing: template says diagram is required but export rendered an empty diagram box.
-- Topic tag mismatch: template appears under the wrong topic or is missing a required cross-topic tag.
-- Plan-gate mismatch: frontend state claims access but backend billing/subscription state disagrees.
-- Security event status should use clear states: `planned`, `implemented`, `active`, `mitigated`, `resolved`, and `false_positive`.
-## P0 Security Alignment - 2026-08-08
-
-The Admin Control Panel is the monitoring and response surface, not the ingestion dashboard. The current shared P0 architecture plan is documented in `C:\Users\ishaa\OneDrive\Desktop\paperly-mvp\docs\p0-security-architecture-plan.md`.
-
-Admin-panel P0s still to complete:
-
-- Add real admin auth and RBAC before hosted deployment.
-- Keep ZTNA as the first gate for admin/backoffice URLs, then Paperly admin login as the second gate.
-- Show server-side audit and security events with clear statuses: `planned`, `implemented`, `active`, `mitigated`, `resolved`, `false_positive`.
-- Make user, billing, backup, support, maintenance, and risk actions traceable to a real admin identity.
-- Do not duplicate Upload -> Review -> Approve -> QA Preview; that remains in `paperly-mvp/dashboard`.
-
-
-## Launch Checklist
-
-See `docs/launch-checklist.md` for the Admin Panel P0/P1/P2 launch-readiness list. The shared three-repo August launch map is in `C:\Users\ishaa\OneDrive\Desktop\paperly-mvp\docs\august-launch-readiness.md`.
-
-
-
-## Data Archive and Pre-production Reset
-
-The admin panel must support two different data-control actions. They are intentionally separate because their risk levels are different.
-
-### Archive user/data
-
-Archive means remove selected records from normal admin views without destroying restore evidence.
-
-- Use for one user, one organization, one support record, one payment trail, or one generated worksheet group.
-- Archived data should be hidden from normal tables by default.
-- Archive must keep a compressed restore pointer or export reference so the record can be investigated later.
-- Archive must log who performed the action, when it happened, what was archived, and why.
-- Archive is reversible only through an owner/admin restore path or direct database restore procedure.
-- Archive must not be used as a production-wide cleanup tool.
-
-### Reset pre-production data
-
-Reset is a launch-cleanup action, not a normal admin operation. It should clear test/demo business data before production launch while preserving product configuration that should survive launch.
-
-Required reset guardrails:
-
-- Allowed only for owner admins.
-- Disabled when `APP_ENV=production`.
-- Requires typed confirmation: `RESET PAPERLY PREPRODUCTION DATA`.
-- Requires a second confirmation screen showing affected tables and estimated record counts.
-- Must export backup first in both JSON and human-readable Excel format.
-- Must write an audit log before and after the reset.
-- Must never silently delete approved template/product configuration unless owner explicitly selects that scope.
-
-Default reset scope before launch:
-
-- Test teacher/user accounts.
-- Demo sessions and refresh tokens.
-- Generated worksheets and worksheet exports.
-- Usage analytics and template-use counters.
-- Support tickets created during testing.
-- Manual/test billing rows and payment-event test data.
-- Onboarding/profile test answers.
-
-Default preserved scope:
-
-- Approved templates and verified question bank.
-- Admin accounts and owner access.
-- Security configuration.
-- Public landing-page content and product settings.
-- Migration history.
-
-
-### Current Update - 2026-08-21
-
-- Current: Admin Users, Support, Billing Subscriptions, Payment Events, and Security Events now use server-side `limit`, `offset`, `search`, filters, and sort contracts.
-- Current: Admin UI pages now request one page at a time instead of loading full large datasets into the browser.
-- Scale rule: for 50k+ users, every new admin dataset must follow this backend-paged pattern; client-only filtering is no longer acceptable for growing tables.
-- Verification: backend admin route syntax/import checks passed and the admin production build completed successfully.
-
-## Current truth - 2026-08-26
-
-Status: Current. Earlier notes remain for history; this section is the active launch reading.
-
-- The admin panel is the owner control plane for monitoring, billing, support, backups, health, maintenance, security events, and admin users.
-- It must not duplicate MVP/backoffice template ingestion, Manage JSON, approval, or QA preview. Those remain in `paperly-mvp/dashboard`.
-- Admin-panel authentication is separate from teacher authentication and separate from MVP/backoffice template-management sessions. It should use admin-purpose sessions, admin roles, and admin audit events.
-- Admin actions must be traceable to a real admin identity, especially maintenance, backup/export, support status changes, billing review, user suspension, and future archive/reset actions.
-- The panel should explain platform state without corrupting product state. A health or billing outage must not silently change teacher plan state or selected-paper workflow.
-- Level 1 admin flow is documented in `docs/dfd/admin-control-panel-level1-flow.mmd`.
+- OPEN: admin 2FA and step-up; scheduled and off-site backups; support priority, owner and callback fields; role-specific home pages; automated alerts that message the owner (uptime or error-burst alert is a hosting task); automated browser tests; Content-Security-Policy on this app; archive and pre-production reset controls (specified in `docs/launch-checklist.md`, not built).
+- OPEN: dependency advisories (next, postcss, sharp).
+- OWNER: WAF or CDN rules, production CORS origin list, live Razorpay keys, SMTP and SMS providers, secret rotation, the ZTNA hosting setting.
+- Route naming (`/users` is the Admin Team page, `/teachers` is Users) is cosmetic debt.

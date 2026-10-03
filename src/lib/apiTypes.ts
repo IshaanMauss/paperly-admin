@@ -184,7 +184,25 @@ export type CheckingOverview = {
 
 export type VariantHealthRisk = "exhausted" | "watch" | "healthy" | "unknown";
 
+export type TemplateStatKind = "exact" | "estimate" | "very_large" | "unknown";
+
+export type TemplateStats = {
+  combinations: number | null;
+  combinations_kind: TemplateStatKind;
+  answers: number | null;
+  answers_kind: TemplateStatKind;
+  wordings: number;
+  part_wordings_max: number | null;
+  draws?: number;
+  note?: string;
+  computed_at?: string;
+};
+
 export type VariantHealthRow = {
+  created_at: string | null;
+  updated_at: string | null;
+  approved_at: string | null;
+  stats: TemplateStats | null;
   template_id: string;
   template_code: string;
   template_type: string;

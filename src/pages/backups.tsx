@@ -1,12 +1,9 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { AppShell } from "@/components/AppShell";
-import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
-import { api } from "@/lib/apiClient";
+import { api, downloadRequest, saveBlob, type BackupHistory } from "@/lib/apiClient";
 import { errorNotice, notice, panel, primaryButton, secondaryButton } from "@/components/ui";
 
 const RESTORE_CONFIRMATION = "RESTORE PAPERLY-NT DATABASE FROM BACKUP";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8003/api";
 
 const excelTabs = [
   "Users",
@@ -19,12 +16,28 @@ const excelTabs = [
   "Templates",
   "Admin Activity",
   "Security & Risk Events",
+  "Security Incidents",
+  "User Activity",
+  "Offers",
+  "Plan Configuration History",
 ];
 
 export default function BackupsPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [history, setHistory] = useState<BackupHistory | null>(null);
+
+  async function loadHistory() {
+    try {
+      setHistory(await api.getBackupHistory());
+    } catch {
+      setHistory(null);
+    }
+  }
+  useEffect(() => {
+    void loadHistory();
+  }, []);
 
   // Added 2026-09-28: previously export existed with no restore path at all.
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -93,24 +106,10 @@ export default function BackupsPage() {
     setMessage("");
     setError("");
     try {
-            if (isAdminAccessTokenExpiring()) await refreshAdminAccessToken();
-            const token = getAdminAccessToken();
-      const response = await fetch(`${API_BASE_URL}/admin/backups/export?format=${format}`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      if (!response.ok) throw new Error(await response.text());
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `paperly-nt_backup_${new Date().toISOString().slice(0, 10)}.${format}`;
-      link.click();
-      URL.revokeObjectURL(url);
-      setMessage(`${format.toUpperCase()} backup exported.`);
+      const { blob, filename } = await downloadRequest(`/admin/backups/export?format=${format}`);
+      saveBlob(blob, filename);
+      setMessage(`${format === "xlsx" ? "Excel business workbook" : "Restorable JSON backup"} saved as ${filename}.`);
+      void loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Backup route is not available yet.");
     } finally {
@@ -126,12 +125,30 @@ export default function BackupsPage() {
       <section className={panel}>
         <h2 className="text-2xl font-extrabold text-slate-950">Backup control</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          Excel is for human inspection with business-readable tabs. JSON is for restore-ready backups. Production should schedule this daily and store copies outside the database.
+          The Excel business workbook is for people: a Read Me tab, plain column headings and one tab per topic. The restorable JSON is for recovery and keeps database names. Passwords, sign-in tokens and sign-in codes are never included. Backups are manual downloads; for automatic copies use the database provider's own backups.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <button className={primaryButton} disabled={busy} onClick={() => void exportBackup("xlsx")}>Export Excel backup</button>
-          <button className={secondaryButton} disabled={busy} onClick={() => void exportBackup("json")}>Export JSON backup</button>
+          <button className={primaryButton} disabled={busy} onClick={() => void exportBackup("xlsx")}>Download Excel business workbook</button>
+          <button className={secondaryButton} disabled={busy} onClick={() => void exportBackup("json")}>Download restorable JSON backup</button>
         </div>
+        {history ? (
+          <div className={`mt-5 rounded-xl border p-4 text-sm font-semibold ${history.stale ? "border-amber-200 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>
+            <p className="font-extrabold">
+              {history.last_export_at
+                ? `Last backup: ${new Date(history.last_export_at).toLocaleString()} by ${history.last_export_by || "an admin"} (${history.last_export_age_days} day(s) ago)`
+                : "No backup has been downloaded yet."}
+            </p>
+            {history.stale ? <p className="mt-1">Older than 7 days or never taken. Download a fresh backup.</p> : null}
+            <p className="mt-1 text-xs">Downloads in the last year: {history.export_count_365d}. {history.note}</p>
+            {history.recent.length > 0 ? (
+              <ul className="mt-2 grid gap-1 text-xs">
+                {history.recent.slice(0, 5).map((item) => (
+                  <li key={item.id}>{item.at ? new Date(item.at).toLocaleString() : "?"} - {item.admin} - {item.action} ({item.outcome})</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className={panel}>

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { errorNotice, panel, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { useAdminSession } from "@/lib/adminAuth";
-import { api, type VariantHealthOverview, type VariantHealthRisk, type VariantHealthRow } from "@/lib/apiClient";
+import { api, type TemplateStatKind, type VariantHealthOverview, type VariantHealthRisk, type VariantHealthRow } from "@/lib/apiClient";
 
 // Surfaces the same "how much of a template's real capacity has this been
 // drawn from" signal the 2026-09 capacity/quality audit computed by hand, so
@@ -40,6 +40,36 @@ function RiskBadge({ risk }: { risk: VariantHealthRisk }) {
     <span className={`rounded-full border px-2.5 py-1 text-[11px] font-extrabold capitalize ${RISK_THEME[risk]}`}>
       {RISK_LABEL[risk]}
     </span>
+  );
+}
+
+function formatWhen(value: string | null) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function formatStat(value: number | null | undefined, kind: TemplateStatKind | undefined, draws?: number) {
+  if (kind === "very_large") return `Very large (no repeats in ${draws ?? "many"} draws)`;
+  if (value == null) return "Not calculated yet";
+  return `${kind === "estimate" ? "about " : ""}${value.toLocaleString()}`;
+}
+
+function kindLabel(kind: TemplateStatKind | undefined) {
+  if (kind === "exact") return "exact count";
+  if (kind === "estimate") return "estimate from real questions";
+  if (kind === "very_large") return "too many to count";
+  return "";
+}
+
+function StatBox({ label, value, kind, draws }: { label: string; value: number | null | undefined; kind?: TemplateStatKind; draws?: number }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <p className="text-[10.5px] font-extrabold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-black text-slate-900">{formatStat(value, kind, draws)}</p>
+      {kind ? <p className="text-[10.5px] font-semibold text-slate-400">{kindLabel(kind)}</p> : null}
+    </div>
   );
 }
 
@@ -230,6 +260,9 @@ export default function VariantHealthPage() {
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [popularFilter, setPopularFilter] = useState<"all" | "popular" | "normal">("all");
   const [exportFilter, setExportFilter] = useState<ExportFilter>("all");
+  const [openRows, setOpenRows] = useState<Record<string, boolean>>({});
+  const [calculating, setCalculating] = useState(false);
+  const [calcMessage, setCalcMessage] = useState<string | null>(null);
 
   function load() {
     setLoading(true);
@@ -245,6 +278,27 @@ export default function VariantHealthPage() {
   useEffect(() => {
     load();
   }, [refreshTick]);
+
+  async function calculateMissing() {
+    setCalculating(true);
+    setCalcMessage(null);
+    try {
+      let remaining = 1;
+      let guard = 0;
+      while (remaining > 0 && guard < 60) {
+        const result = await api.recalculateTemplateStats();
+        remaining = result.remaining;
+        guard += 1;
+        setCalcMessage(`${result.total - remaining} of ${result.total} templates calculated`);
+        if (result.calculated === 0) break;
+      }
+      load();
+    } catch (err) {
+      setCalcMessage(err instanceof Error ? err.message : "Could not calculate.");
+    } finally {
+      setCalculating(false);
+    }
+  }
 
   function handleDeprecated(templateId: string) {
     setOverview((prev) => (prev ? { ...prev, rows: prev.rows.filter((row) => row.template_id !== templateId) } : prev));
@@ -419,97 +473,103 @@ export default function VariantHealthPage() {
 
       {!loading && overview && rows.length ? (
         <section className={panel}>
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <button type="button" className={`${secondaryButton} px-3 py-1.5 text-xs`} disabled={calculating} onClick={calculateMissing}>
+              {calculating ? "Calculating..." : "Calculate missing numbers"}
+            </button>
+            <p className="text-[11px] font-semibold text-slate-500">
+              {overview.rows.filter((row) => !row.stats).length} of {overview.rows.length} templates need their numbers calculated or refreshed.
+              New templates are calculated when they are approved.
+            </p>
+            {calcMessage ? <p className="text-[11px] font-bold text-slate-600">{calcMessage}</p> : null}
+          </div>
           <div className="overflow-x-auto">
             <table className={table}>
               <thead>
                 <tr>
                   <th className={th}>Template</th>
-                  <th className={th}>Topic / Subtopic</th>
-                  <th className={th}>Paper / Popularity</th>
-                  <th className={th}>Capacity</th>
-                  <th className={th}>Usage</th>
-                  <th className={th}>Exports</th>
-                  <th className={th}>Risk</th>
-                  <th className={th}>Action</th>
+                  <th className={th}>Added</th>
+                  <th className={th}>Updated</th>
+                  <th className={th}>Approved</th>
+                  <th className={th}>Exhaustion</th>
+                  <th className={th}></th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr key={row.template_id}>
-                    <td className={td}>
-                      <p className="font-mono text-xs font-bold text-slate-800">{row.template_code}</p>
-                      <p className="text-[11px] text-slate-500">{row.template_type} · {row.difficulty}</p>
-                    </td>
-                    <td className={td}>
-                      <p className="text-sm font-semibold text-slate-800">{row.topic}</p>
-                      <p className="text-xs text-slate-500">{row.subtopic || "—"}</p>
-                    </td>
-                    <td className={td}>
-                      <p className="text-xs font-bold text-slate-700">{row.paper_code || "—"}</p>
-                      <span
-                        className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-extrabold capitalize ${
-                          row.popular_igcse ? "border-violet-300 bg-violet-50 text-violet-800" : "border-slate-200 bg-slate-50 text-slate-600"
-                        }`}
-                      >
-                        {row.popular_igcse ? "Popular IGCSE" : "Normal"}
-                      </span>
-                    </td>
-                    <td className={td}>
-                      <p className="text-sm font-bold text-slate-800">{formatCapacity(row)}</p>
-                    </td>
-                    <td className={td}>
-                      <p className="text-sm font-bold text-slate-800">
-                        {row.total_usage_count.toLocaleString()} total
-                        {row.usage_ratio != null ? ` (${Math.round(row.usage_ratio * 100)}% of capacity)` : ""}
-                      </p>
-                      <p className="text-[11px] text-slate-500">{row.distinct_teachers_used} user{row.distinct_teachers_used === 1 ? "" : "s"}</p>
-                      {row.median_usage_per_teacher != null ? (
-                        <p className="mt-1 text-[11px] font-bold text-slate-600">
-                          typical user: {row.median_usage_per_teacher}
-                          {row.mean_usage_per_teacher != null ? (
-                            <span className="font-semibold text-slate-400">
-                              {" "}(mean {row.mean_usage_per_teacher}
-                              {row.stdev_usage_per_teacher != null ? ` ± ${row.stdev_usage_per_teacher}` : ""})
-                            </span>
-                          ) : null}
-                        </p>
+                {rows.map((row) => {
+                  const open = !!openRows[row.template_id];
+                  return (
+                    <Fragment key={row.template_id}>
+                      <tr>
+                        <td className={td}>
+                          <p className="font-mono text-xs font-bold text-slate-800">{row.template_code}</p>
+                          <p className="text-[11px] text-slate-500">{row.topic} / {row.subtopic || "—"}</p>
+                        </td>
+                        <td className={td}><p className="text-xs text-slate-700">{formatWhen(row.created_at)}</p></td>
+                        <td className={td}><p className="text-xs text-slate-700">{formatWhen(row.updated_at)}</p></td>
+                        <td className={td}><p className="text-xs text-slate-700">{formatWhen(row.approved_at)}</p></td>
+                        <td className={td}>
+                          <RiskBadge risk={row.risk} />
+                          <p className="mt-1 text-[11px] text-slate-500">
+                            {row.usage_ratio != null ? `${Math.round(row.usage_ratio * 100)}% used` : "—"}
+                          </p>
+                        </td>
+                        <td className={td}>
+                          <button
+                            type="button"
+                            className={`${secondaryButton} px-3 py-1.5 text-xs`}
+                            aria-expanded={open}
+                            onClick={() => setOpenRows((prev) => ({ ...prev, [row.template_id]: !open }))}
+                          >
+                            {open ? "Show less" : "Show more"}
+                          </button>
+                        </td>
+                      </tr>
+                      {open ? (
+                        <tr>
+                          <td className={td} colSpan={6}>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              <StatBox label="Possible number combinations" value={row.stats?.combinations} kind={row.stats?.combinations_kind} draws={row.stats?.draws} />
+                              <StatBox label="Possible different answers a user can see" value={row.stats?.answers} kind={row.stats?.answers_kind} draws={row.stats?.draws} />
+                              <StatBox label="Wordings" value={row.stats?.wordings} kind={row.stats ? "exact" : undefined} />
+                            </div>
+                            {row.stats?.note ? <p className="mt-2 text-[11px] font-semibold text-slate-500">{row.stats.note}</p> : null}
+                            {!row.stats ? (
+                              <p className="mt-2 text-[11px] font-semibold text-amber-700">
+                                These numbers are missing or out of date because the template changed. Use "Calculate missing numbers" above.
+                              </p>
+                            ) : null}
+                            <div className="mt-3 grid gap-3 text-xs text-slate-700 sm:grid-cols-4">
+                              <div>
+                                <p className="font-extrabold text-slate-500">Type / difficulty</p>
+                                <p>{row.template_type} · {row.difficulty}</p>
+                                <p>{row.paper_code || "—"} · {row.popular_igcse ? "Popular IGCSE" : "Normal"}</p>
+                              </div>
+                              <div>
+                                <p className="font-extrabold text-slate-500">Size used for exhaustion</p>
+                                <p>{formatCapacity(row)}</p>
+                              </div>
+                              <div>
+                                <p className="font-extrabold text-slate-500">Usage</p>
+                                <p>{row.total_usage_count.toLocaleString()} total · {row.distinct_teachers_used} user{row.distinct_teachers_used === 1 ? "" : "s"}</p>
+                                {row.median_usage_per_teacher != null ? <p>typical user: {row.median_usage_per_teacher}</p> : null}
+                              </div>
+                              <div>
+                                <p className="font-extrabold text-slate-500">Exports</p>
+                                <p>{row.exported_worksheets_included.toLocaleString()} exported · {row.never_exported_worksheets_included.toLocaleString()} never exported</p>
+                              </div>
+                            </div>
+                            {row.risk === "exhausted" || row.risk === "watch" ? (
+                              <div className="mt-3">
+                                <ActionCell row={row} onChanged={handleDeprecated} />
+                              </div>
+                            ) : null}
+                          </td>
+                        </tr>
                       ) : null}
-                    </td>
-                    <td className={td}>
-                      <p className="text-sm font-bold text-slate-800">
-                        {row.exported_worksheets_included.toLocaleString()} exported
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        {row.never_exported_worksheets_included.toLocaleString()} generated but never exported
-                      </p>
-                      {row.excluded_anonymous_worksheets > 0 ? (
-                        <p className="text-[10.5px] font-semibold text-slate-400">
-                          +{row.excluded_anonymous_worksheets.toLocaleString()} QA/anonymous excluded
-                        </p>
-                      ) : null}
-                      {row.excluded_test_worksheets > 0 ? (
-                        <p className="text-[10.5px] font-semibold text-amber-600">
-                          +{row.excluded_test_worksheets.toLocaleString()} flagged test-account worksheets excluded
-                        </p>
-                      ) : null}
-                      {row.excluded_test_usage > 0 ? (
-                        <p className="text-[10.5px] font-semibold text-amber-600">
-                          +{row.excluded_test_usage.toLocaleString()} flagged test-account uses excluded from usage
-                        </p>
-                      ) : null}
-                    </td>
-                    <td className={td}>
-                      <RiskBadge risk={row.risk} />
-                    </td>
-                    <td className={td}>
-                      {row.risk === "exhausted" || row.risk === "watch" ? (
-                        <ActionCell row={row} onChanged={handleDeprecated} />
-                      ) : (
-                        <p className="text-[11px] font-semibold text-slate-400">No action needed</p>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

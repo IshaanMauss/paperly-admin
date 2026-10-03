@@ -1,8 +1,12 @@
-# Admin gateway: permanent setup
+# Admin gateway setup
+
+Last updated: 2026-10-03. Status: the proxy route is DONE in code (`src/pages/api/gateway/[...path].ts`, helpers in `src/lib/server/gatewayProxy.ts` and `cfAccess.ts`). The current deployment is a locally run panel (below). Hosting the panel, Cloudflare Access and a second login wall are OWNER decisions and are not set up.
 
 Problem this solves: the backend refuses every `/api/admin*` request unless it carries the gateway secret header (`ZTNA_GATEWAY_SECRET` on Railway). A browser cannot hold that secret (anything in browser code is public), so the admin panel was blocked with a 403 before the password was even checked.
 
-## How it works now
+## How it works
+
+The diagram shows the hosted layout; with a locally run panel the Cloudflare Access step and the hosting step do not exist and the other steps are identical.
 
 ```
 Admin person -> Cloudflare Access login -> admin.paperly-nt.com (Vercel, this app)
@@ -27,9 +31,10 @@ The admin panel runs on the admin's own computer (`npm run dev`) and talks to th
    ADMIN_GATEWAY_SECRET=<a new long random value, at least 40 characters>
    ```
    Remove or override any `NEXT_PUBLIC_API_BASE_URL` line in other `.env` files so this one wins.
-2. Railway backend variables, then redeploy:
+2. Backend (Railway) variables, then redeploy:
    - `ZTNA_GATEWAY_SECRET` = the same value as `ADMIN_GATEWAY_SECRET`
-   - `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` as intended
+   - `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` / `ADMIN_BOOTSTRAP_NAME` for the first owner account
+   - this panel's origin in `CORS_ORIGINS` (no wildcards), and `ALLOW_ADMIN_TOKEN_FALLBACK=false`
 3. Restart the admin panel (`npm run dev`), open it, and sign in with the admin account.
 
 Why this is safe: the admin panel is not on the internet at all (only on the admin's machine), the backend refuses every admin request that lacks the secret, and the admin email/password/role check still applies. The 4.5 MB and 60 second limits mentioned below do not apply when running locally.
@@ -42,7 +47,7 @@ Set the same three variables in that project (plus an Access or password wall in
 
 ## Optional extra login wall (add later, any one of these)
 
-- In-app two-step login (authenticator code) for admin accounts. No vendor, works with what you have. Recommended next.
+- In-app two-step login (authenticator code) for admin accounts. OPEN (not built). No vendor needed; recommended next, together with a step-up password prompt before backups, restores and maintenance (also OPEN).
 - Vercel Pro deployment protection or password protection on the admin project (check the current plan and add-on price in Vercel first).
 - Cloudflare Access in front of the admin site: requires moving the domain's DNS to Cloudflare; then set `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` and the proxy will require the Access login.
 
@@ -53,4 +58,5 @@ Leave `ZTNA_GATEWAY_SECRET` empty locally and keep `NEXT_PUBLIC_API_BASE_URL=htt
 ## Limits to know
 
 - Vercel functions cap request and response bodies at about 4.5 MB and run for up to 60 seconds. Large backup exports or restores above that size will not pass through this proxy; run those from a local admin session or move that single call to a signed direct download later.
-- Rotate `ADMIN_GATEWAY_SECRET` by changing it on Vercel and Railway together (redeploy both).
+- Rotate `ADMIN_GATEWAY_SECRET` by changing it in this panel's environment and as `ZTNA_GATEWAY_SECRET` on the backend together (redeploy or restart both). Health shows whether the backend has the secret set.
+- The panel's own pages carry no Content-Security-Policy (OPEN); the backend sets one on its responses.

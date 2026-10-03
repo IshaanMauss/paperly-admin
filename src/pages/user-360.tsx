@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { AppShell } from "@/components/AppShell";
 import { panel, planLabel } from "@/components/ui";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
+import { usePersistedState } from "@/lib/draftStore";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 
 function formatDateTime(value?: string | null) {
@@ -117,25 +118,25 @@ export default function UserThreeSixtyPage() {
 
   const [planOptions, setPlanOptions] = useState<Record<string, string>>({});
   const [grantPlan, setGrantPlan] = useState("");
-  const [grantReason, setGrantReason] = useState("");
+  const [grantReason, setGrantReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.grantReason` : "", "");
   const [grantBusy, setGrantBusy] = useState(false);
   const [grantError, setGrantError] = useState<string | null>(null);
   const [grantSuccess, setGrantSuccess] = useState<string | null>(null);
 
   const [promoCode, setPromoCode] = useState("");
-  const [promoReason, setPromoReason] = useState("");
+  const [promoReason, setPromoReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.promoReason` : "", "");
   const [promoBusy, setPromoBusy] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
 
-  const [sessionReason, setSessionReason] = useState("");
+  const [sessionReason, setSessionReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.sessionReason` : "", "");
   const [sessionBusy, setSessionBusy] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionSuccess, setSessionSuccess] = useState<string | null>(null);
 
   // Added 2026-09-28: suspend/unsuspend, export-on-behalf, delete, and
   // billing-cancel - previously none of these existed for admin at all.
-  const [suspendReason, setSuspendReason] = useState("");
+  const [suspendReason, setSuspendReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.suspendReason` : "", "");
   const [suspendBusy, setSuspendBusy] = useState(false);
   const [suspendError, setSuspendError] = useState<string | null>(null);
   const [suspendSuccess, setSuspendSuccess] = useState<string | null>(null);
@@ -143,13 +144,19 @@ export default function UserThreeSixtyPage() {
   const [exportBusy, setExportBusy] = useState(false);
   const [exportOnBehalfError, setExportOnBehalfError] = useState<string | null>(null);
 
-  const [billingCancelReason, setBillingCancelReason] = useState("");
+  const [billingCancelReason, setBillingCancelReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.billingCancelReason` : "", "");
   const [billingCancelBusy, setBillingCancelBusy] = useState(false);
   const [billingCancelError, setBillingCancelError] = useState<string | null>(null);
   const [billingCancelSuccess, setBillingCancelSuccess] = useState<string | null>(null);
+  const [refundReason, setRefundReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.refundReason` : "", "");
+  const [refundAmount, setRefundAmount] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.refundAmount` : "", "");
+  const [refundCancelPlan, setRefundCancelPlan] = useState(true);
+  const [refundBusy, setRefundBusy] = useState(false);
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const [refundSuccess, setRefundSuccess] = useState<string | null>(null);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState("");
-  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteReason, setDeleteReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.deleteReason` : "", "");
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -157,17 +164,17 @@ export default function UserThreeSixtyPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
 
-  const [quotaReason, setQuotaReason] = useState("");
+  const [quotaReason, setQuotaReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.quotaReason` : "", "");
   const [quotaBusy, setQuotaBusy] = useState(false);
   const [quotaError, setQuotaError] = useState<string | null>(null);
   const [quotaSuccess, setQuotaSuccess] = useState<string | null>(null);
 
-  const [unstickReason, setUnstickReason] = useState("");
+  const [unstickReason, setUnstickReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.unstickReason` : "", "");
   const [unstickBusy, setUnstickBusy] = useState(false);
   const [unstickError, setUnstickError] = useState<string | null>(null);
   const [unstickSuccess, setUnstickSuccess] = useState<string | null>(null);
 
-  const [verifyReason, setVerifyReason] = useState("");
+  const [verifyReason, setVerifyReason] = usePersistedState(teacherIdParam ? `user360.${teacherIdParam}.verifyReason` : "", "");
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [verifySuccess, setVerifySuccess] = useState<string | null>(null);
@@ -388,6 +395,34 @@ export default function UserThreeSixtyPage() {
       setBillingCancelError(err instanceof Error ? err.message : "Could not cancel this user's subscription.");
     } finally {
       setBillingCancelBusy(false);
+    }
+  }
+
+  async function submitRefund() {
+    if (!teacherIdParam || refundReason.trim().length < 8) {
+      setRefundError("Write a reason of at least 8 characters.");
+      return;
+    }
+    const amount = refundAmount.trim() ? Number(refundAmount) : undefined;
+    if (amount !== undefined && (!Number.isFinite(amount) || amount <= 0)) {
+      setRefundError("Enter a refund amount in rupees, or leave it empty for a full refund.");
+      return;
+    }
+    setRefundBusy(true);
+    setRefundError(null);
+    setRefundSuccess(null);
+    try {
+      const out = await api.refundTeacherPayment(teacherIdParam, { reason: refundReason.trim(), amount_rupees: amount, cancel_plan: refundCancelPlan });
+      const paid = out.refund.amount_paise != null ? ` of Rs ${(out.refund.amount_paise / 100).toFixed(2)}` : "";
+      setRefundSuccess(`Refund${paid} sent (${out.refund.status ?? "requested"}), reference ${out.refund.refund_id}.${out.plan_cancelled ? " Plan cancelled." : ""}`);
+      setRefundReason("");
+      setRefundAmount("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setRefundError(err instanceof Error ? err.message : "Could not send the refund.");
+    } finally {
+      setRefundBusy(false);
     }
   }
 
@@ -872,7 +907,7 @@ export default function UserThreeSixtyPage() {
                 {data.subscription ? (
                   <ActionCard
                     title="Cancel this user's subscription"
-                    description="Cancels their real subscription (same effect as their own self-service cancel). Does not issue a payment-gateway refund."
+                    description="Cancels their real subscription (same effect as their own self-service cancel). Does not move money; use the refund card below to send money back."
                     busy={billingCancelBusy}
                     error={billingCancelError}
                     success={billingCancelSuccess}
@@ -887,6 +922,38 @@ export default function UserThreeSixtyPage() {
                       value={billingCancelReason}
                       onChange={(event) => setBillingCancelReason(event.target.value)}
                     />
+                  </ActionCard>
+                ) : null}
+
+                {data.subscription ? (
+                  <ActionCard
+                    title="Refund this user's payment (Razorpay)"
+                    description="Sends real money back for their latest Razorpay payment, once per payment. Needs the refund permission (owner by default). Leave the amount empty for a full refund."
+                    busy={refundBusy}
+                    error={refundError}
+                    success={refundSuccess}
+                    submitLabel="Send refund"
+                    confirmMessage="Send this refund through Razorpay now? This cannot be undone."
+                    onSubmit={submitRefund}
+                  >
+                    <input
+                      className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                      inputMode="decimal"
+                      placeholder="Amount in rupees (empty = full refund)"
+                      value={refundAmount}
+                      onChange={(event) => setRefundAmount(event.target.value)}
+                    />
+                    <textarea
+                      className="mt-2 w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                      rows={2}
+                      placeholder="Reason (required) - e.g. charged twice, plan not delivered"
+                      value={refundReason}
+                      onChange={(event) => setRefundReason(event.target.value)}
+                    />
+                    <label className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <input type="checkbox" checked={refundCancelPlan} onChange={(event) => setRefundCancelPlan(event.target.checked)} />
+                      Also cancel their plan
+                    </label>
                   </ActionCard>
                 ) : null}
 

@@ -1,0 +1,37 @@
+name: Security scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1" # every Monday, so a newly published advisory is caught without a push
+
+jobs:
+  npm-dependencies:
+    name: Node dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      # Production dependencies only. Reported as a warning until the open advisories are cleared with
+      # `npm audit fix` and a real build check; then delete `continue-on-error` so a new one blocks the merge.
+      - name: Audit
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
