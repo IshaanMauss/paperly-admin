@@ -290,7 +290,11 @@ export default function VariantHealthPage() {
         remaining = result.remaining;
         guard += 1;
         setCalcMessage(`${result.total - remaining} of ${result.total} templates calculated`);
-        if (result.calculated === 0) break;
+        if (result.calculated === 0) {
+          const first = result.failed?.[0];
+          if (first) setCalcMessage(`Stopped: ${first.template_code} failed (${first.error}). ${result.total - remaining} of ${result.total} calculated.`);
+          break;
+        }
       }
       load();
     } catch (err) {
