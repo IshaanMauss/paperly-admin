@@ -76,6 +76,7 @@ Notes on individual pages:
 ## Testing
 
 - Unit tests (vitest): `adminAuth`, `apiClient`, `taxonomy`, `templatePresentation`, `troubleshoot`. Last recorded run (2026-09-30, on a clean Linux install): 47 of 47 passed and `next build` succeeded for all 19 routes at that time; not re-run for this update.
+- Latest runs (2026-10-09, Windows machine): `npx tsc --noEmit --incremental false` and `npm run build` passed; earlier the same day 6 test files (51 tests) passed. The Variant Health page gained a progress bar and a Formulas dialog (type check and lint clean).
 - CI: `.github/workflows/tests.yml` (lint, tests) and `.github/workflows/security.yml` (`npm audit --omit=dev --audit-level=high`, non-blocking while findings on next, postcss and sharp are open; gitleaks secret scan; weekly schedule).
 - OPEN: automated browser tests for this panel. Backend tests for the audit hook, system status and evidence export are in `paperly-mvp/backend/tests`.
 
