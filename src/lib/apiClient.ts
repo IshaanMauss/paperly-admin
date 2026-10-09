@@ -386,7 +386,7 @@ export const api = {
     return request<VariantHealthOverview>("/admin/templates/variant-health");
   },
   recalculateTemplateStats() {
-    return request<{ calculated: number; remaining: number; total: number; failed?: { template_code: string; error: string }[] }>("/admin/templates/variant-health/recalculate", { method: "POST" });
+    return request<{ calculated: number; remaining: number; total: number; stale_total?: number; skipped?: { template_code: string; error: string }[]; skipped_before?: number; failed?: { template_code: string; error: string }[] }>("/admin/templates/variant-health/recalculate?batch=1", { method: "POST" });
   },
   getPromoCodes() {
     return request<PromoCodeListResponse>("/admin/promo-codes");

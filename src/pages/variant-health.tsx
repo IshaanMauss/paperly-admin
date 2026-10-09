@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { errorNotice, panel, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { useAdminSession } from "@/lib/adminAuth";
+import { VariantFormulaGuide } from "@/components/templates/VariantFormulaGuide";
 import { api, type TemplateStatKind, type VariantHealthOverview, type VariantHealthRisk, type VariantHealthRow } from "@/lib/apiClient";
 
 // Surfaces the same "how much of a template's real capacity has this been
@@ -263,6 +264,8 @@ export default function VariantHealthPage() {
   const [openRows, setOpenRows] = useState<Record<string, boolean>>({});
   const [calculating, setCalculating] = useState(false);
   const [calcMessage, setCalcMessage] = useState<string | null>(null);
+  const [calcProgress, setCalcProgress] = useState<{ done: number; total: number } | null>(null);
+  const [formulasOpen, setFormulasOpen] = useState(false);
 
   function load() {
     setLoading(true);
@@ -282,39 +285,45 @@ export default function VariantHealthPage() {
   async function calculateMissing() {
     setCalculating(true);
     setCalcMessage(null);
-    let lastDone = 0;
-    let total = 0;
+    setCalcProgress({ done: 0, total: 0 });
+    let handled = 0;
+    let initial = 0;
+    const skippedNow: string[] = [];
     try {
       let remaining = 1;
       let calls = 0;
       let failures = 0;
-      const stuck: string[] = [];
-      while (remaining > 0 && calls < 300) {
+      // One template per request: each call is short, so the gateway never times it out, and the bar moves per template.
+      while (remaining > 0 && calls < 600) {
         calls += 1;
         let result;
         try {
           result = await api.recalculateTemplateStats();
           failures = 0;
         } catch (err) {
-          // One slow request is not the end: progress is saved after every template, so just ask again.
           failures += 1;
           if (failures >= 3) {
-            setCalcMessage(`Stopped after ${lastDone} of ${total || "?"} templates because the server did not answer three times in a row (${err instanceof Error ? err.message : "no reply"}). Everything already calculated is saved; press the button again to continue.`);
+            setCalcMessage(`Paused after ${handled} of ${initial || "?"} because the server did not answer three times in a row (${err instanceof Error ? err.message : "no reply"}). Everything already calculated is saved; press the button again to continue.`);
             load();
             return;
           }
           continue;
         }
         remaining = result.remaining;
-        total = result.total;
-        lastDone = result.total - remaining;
-        for (const item of result.failed || []) if (!stuck.includes(item.template_code)) stuck.push(`${item.template_code} (${item.error})`);
-        setCalcMessage(`${lastDone} of ${result.total} templates calculated${stuck.length ? `, ${stuck.length} could not be calculated` : ""}`);
-        if (result.calculated === 0 && (result.failed?.length || 0) > 0) {
-          // Every template left in this round failed: stop and say exactly which and why.
-          setCalcMessage(`Stopped: ${stuck.slice(0, 3).join("; ")}. ${lastDone} of ${result.total} calculated.`);
+        if (!initial) initial = result.stale_total ?? remaining + result.calculated + (result.skipped?.length || 0) + (result.failed?.length || 0);
+        handled = Math.max(initial - remaining, 0);
+        for (const item of result.skipped || []) skippedNow.push(`${item.template_code} (${item.error})`);
+        setCalcProgress({ done: handled, total: initial });
+        setCalcMessage(`${handled} of ${initial} done${skippedNow.length ? ` · ${skippedNow.length} set aside` : ""}`);
+        if (result.calculated === 0 && (result.skipped?.length || 0) === 0 && (result.failed?.length || 0) > 0) {
+          setCalcMessage(`Stopped: ${(result.failed || []).slice(0, 2).map((item) => `${item.template_code} (${item.error})`).join("; ")}. ${handled} of ${initial} done.`);
           break;
         }
+      }
+      if (skippedNow.length) {
+        setCalcMessage(`Finished ${handled} of ${initial}. ${skippedNow.length} template${skippedNow.length === 1 ? " was" : "s were"} set aside because they were too slow or failed: ${skippedNow.slice(0, 3).join("; ")}. They stay "unknown" until the template is edited.`);
+      } else if (initial > 0) {
+        setCalcMessage(`All ${initial} templates calculated.`);
       }
       load();
     } catch (err) {
@@ -375,6 +384,7 @@ export default function VariantHealthPage() {
           number only ever includes real, signed-in product activity — QA Preview / admin-token / test-panel
           traffic has no user id and is structurally excluded, so a brand-new admin login cannot inflate it.
         </p>
+        <p className="mt-3"><button type="button" className={`${secondaryButton} px-3 py-1.5 text-xs`} onClick={() => setFormulasOpen(true)}>ⓘ How is this calculated? (formulas)</button></p>
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}
 
@@ -505,6 +515,22 @@ export default function VariantHealthPage() {
               {overview.rows.filter((row) => !row.stats).length} of {overview.rows.length} templates need their numbers calculated or refreshed.
               New templates are calculated when they are approved.
             </p>
+            <button type="button" className={`${secondaryButton} px-3 py-1.5 text-xs`} onClick={() => setFormulasOpen(true)}>
+              ⓘ Formulas
+            </button>
+            {calcProgress && (calculating || calcProgress.total > 0) ? (
+              <div className="w-full" role="status" aria-live="polite">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-violet-100" aria-hidden="true">
+                  <div
+                    className="h-full rounded-full bg-violet-600 transition-all duration-300"
+                    style={{ width: `${calcProgress.total > 0 ? Math.min(100, Math.round((calcProgress.done / calcProgress.total) * 100)) : calculating ? 4 : 0}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] font-bold text-slate-600">
+                  {calcProgress.total > 0 ? `${calcProgress.done} of ${calcProgress.total} templates (${Math.round((calcProgress.done / calcProgress.total) * 100)}%)` : "Starting..."}
+                </p>
+              </div>
+            ) : null}
             {calcMessage ? <p className="text-[11px] font-bold text-slate-600">{calcMessage}</p> : null}
           </div>
           <div className="overflow-x-auto">
@@ -615,6 +641,7 @@ export default function VariantHealthPage() {
           Refresh now
         </button>
       </p>
+    <VariantFormulaGuide open={formulasOpen} onClose={() => setFormulasOpen(false)} example={overview?.rows.find((row) => row.distinct_teachers_used > 0 && row.capacity) ?? null} />
     </AppShell>
   );
 }
