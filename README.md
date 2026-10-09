@@ -52,7 +52,7 @@ Navigation groups in `src/components/AppShell.tsx`. Backend routes and permissio
 
 Notes on individual pages:
 
-- Backups: manual downloads, an Excel business workbook and a restorable JSON, both with readable names (`paperly-nt_backup_business-workbook_<date>_<time>-UTC.xlsx`, `paperly-nt_backup_restorable-data_<date>_<time>-UTC.json`); last-backup time and recent download history with a warning after 7 days; an insert-only restore with a dry run and typed confirmation. The workbook has a Read Me sheet and plain column headings. The backup covers users, subscriptions, payments, papers, templates, organizations and members, institute requests, offers, plan configuration history, quota counters and drafts. Passwords, sign-in tokens and sign-in codes are never included. The download itself is audited.
+- Backups: **Export data** (Excel business workbook with a last-week, last-month or custom date range) and **Download backup** (restorable JSON), both with readable names (`paperly-nt_backup_business-workbook_<date>_<time>-UTC.xlsx`, `paperly-nt_backup_restorable-data_<date>_<time>-UTC.json`); last-backup time and recent download history with a warning after 7 days; an insert-only restore with a dry run and typed confirmation. The workbook has a Read Me sheet and plain column headings. The backup covers users, subscriptions, payments, papers, templates, organizations and members, institute requests, offers, plan configuration history, quota counters and drafts. Passwords, sign-in tokens and sign-in codes are never included. The download itself is audited.
 - Health: live system status (database speed and version, shared rate-limit store, disk, last-hour requests, server errors and refused requests, key settings, last backup) plus problems right now and the readiness notes. A value that cannot be checked says so.
 - Security: security events with a status filter (statuses read from each event; the filter offers resolved and false positive), a row-level-security status panel, and an Export evidence button per event (one JSON file with the last 72 hours of that account; the download is audited). Suspend, unsuspend, force sign-out and delete are done from User 360. No admin route that sets an event's status to resolved or false positive exists in the backend (OPEN), so those two statuses appear only if an event already carries them.
 - Audit Log: every admin write (POST, PUT, PATCH, DELETE under `/api/admin`, sign-in excluded) is recorded automatically with who, what, which record, IP and result; request bodies and passwords are never stored. A new route is covered without extra code.
@@ -70,7 +70,7 @@ Notes on individual pages:
 
 ## Backup rules
 
-- Excel is for humans (sales review, audit, support); JSON is for recovery; a SQL dump is the future full-restore format.
+- Export data (Excel) is for humans (sales review, audit, support, outreach); Download backup (JSON) is for recovery; a SQL dump is the future full-restore format.
 - OPEN: scheduled daily backup, an off-site encrypted copy, a recorded restore drill, and cloud backup history.
 
 ## Testing

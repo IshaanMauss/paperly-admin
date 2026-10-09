@@ -69,7 +69,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
     items: [
       { href: "/support", label: "Support", icon: "headset" },
       { href: "/maintenance", label: "Maintenance", icon: "wrench" },
-      { href: "/backups", label: "Backups", icon: "database" },
+      { href: "/backups", label: "Export & Backup", icon: "database" },
       { href: "/health", label: "Health", icon: "pulse" },
       { href: "/logs", label: "Server Logs", icon: "list" },
       { href: "/run-tests", label: "Run Tests", icon: "check" },

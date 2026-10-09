@@ -1,6 +1,6 @@
 # Project History
 
-Last updated: 2026-10-03.
+Last updated: 2026-10-08.
 
 This file is the month-level product history for the admin panel. It keeps the panel's role clear: monitoring, support, billing, plans, safety and operations. It should not drift into template ingestion, which remains outside this panel.
 
@@ -100,3 +100,11 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - The tab now lists each template with when it was added, updated and approved, and its exhaustion. Show more opens possible number combinations, possible different answers and wordings, labelled exact, estimate or very large.
 - A Calculate missing numbers button fills the sizes for templates that have none, in small batches until none remain. It must be pressed once after deploy for the 125 approved templates.
 - Still open: changes are uncommitted and not deployed.
+
+## 2026-10-08 (night) - Export data, plans apply bar, Variant Health, User 360 tabs
+
+- Backups page: the Excel action is now **Export data** with Everything, Last 7 days, Last month and a custom range (Indian time, both days included); the JSON action is **Download backup**. The workbook gained Billing Summary, Payments and Customer Contacts sheets.
+- Features & Plans: sections open and close, a top overview shows what changed, and an apply bar is the one place to publish a draft. A backend test proves each toggle and limit reaches the product through the same computed status the app reads.
+- Variant Health: the page shows why a size calculation stopped and no longer times out on large templates.
+- User 360 is split into Summary, Payments, Papers, Sign-in, Messages & tickets, Timeline and Fix account. Summary has a refund and dispute checklist; Payments shows every attempt in full; messages never show the text of a sign-in code.
+- Still open: nothing here is committed or deployed; the panel has not been built on the Windows machine.

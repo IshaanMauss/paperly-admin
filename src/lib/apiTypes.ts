@@ -65,6 +65,23 @@ export type MaintenanceStatus = {
   required_confirmation_to_disable: string;
 };
 
+export type AdminQuestionReportContext = {
+  kind?: string;
+  reason?: string;
+  note?: string;
+  mode?: string;
+  template_code?: string;
+  syllabus_code?: string;
+  paper_code?: string | null;
+  tier?: string | null;
+  topic?: string | null;
+  subtopic?: string | null;
+  variables?: Record<string, unknown>;
+  question_text?: string;
+  answer_text?: string;
+  worksheet_id?: string | null;
+};
+
 export type AdminSupportTicketRow = {
   id: string;
   teacher_id: string;
@@ -84,6 +101,8 @@ export type AdminSupportTicketRow = {
   // Added 2026-09-28: previously there was nothing to resolve/reply into -
   // only GET /support-tickets existed. See api.resolveSupportTicket.
   admin_reply?: string | null;
+  // Only on "question_report" tickets (the teacher's "This looks wrong" button).
+  context_json?: AdminQuestionReportContext | null;
   resolved_at?: string | null;
   resolved_by?: string | null;
 };
@@ -458,6 +477,8 @@ export type AdminPageParams = {
   status?: string;
   ticket_type?: string;
   requester_type?: string;
+  syllabus?: string;
+  mode?: string;
   gateway?: string;
   event_type?: string;
   severity?: string;
@@ -584,8 +605,64 @@ export type UserThreeSixtyTimelineItem = {
   detail: string | null;
 };
 
+export type UserPaymentDetail = {
+  id: string;
+  at: string | null;
+  processed_at: string | null;
+  gateway: string;
+  event_type: string;
+  event_id: string | null;
+  outcome: "paid" | "failed" | "started" | "other";
+  amount_paise: number | null;
+  taxable_value_paise: number | null;
+  gst_amount_paise: number | null;
+  gst_rate_percent: number | null;
+  currency: string | null;
+  plan_code: string | null;
+  order_id: string | null;
+  payment_id: string | null;
+  promo_code: string | null;
+  discount_percent: number | null;
+  offer_id: string | null;
+  gateway_details: Record<string, string | number | boolean | null>;
+  customer_at_payment: Record<string, string | null>;
+  client: Record<string, string | null>;
+  plan_period: Record<string, string | null>;
+  billable: boolean;
+  bill_number: string | null;
+  amount_saved: boolean;
+};
+export type UserDisputeCheck = { label: string; result: "yes" | "no" | "unknown" | "info"; evidence: string };
+export type UserMessageRow = { at: string | null; channel: string; recipient: string; purpose: string; provider: string; status: string; error: string | null };
+export type UserTicketRow = {
+  id: string;
+  type: string;
+  status: string;
+  message: string;
+  created_at: string | null;
+  admin_reply: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+};
+export type UserSignInBlock = {
+  email: string;
+  email_verified: boolean;
+  phone: string | null;
+  phone_verified: boolean;
+  has_password: boolean;
+  created_at: string | null;
+  last_login_at: string | null;
+  distinct_ips: string[];
+  session_count: number;
+};
+
 export type UserUsageEntry = { used: number; limit: number | null; window?: string };
 export type UserThreeSixty = {
+  payments_detail?: UserPaymentDetail[];
+  dispute_checks?: UserDisputeCheck[];
+  messages?: UserMessageRow[];
+  tickets?: UserTicketRow[];
+  sign_in?: UserSignInBlock;
   usage_summary?: {
     usage: Record<string, UserUsageEntry> | null;
     resets: { day: string; month: string } | null;

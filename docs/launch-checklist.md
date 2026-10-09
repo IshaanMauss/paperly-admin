@@ -20,7 +20,7 @@ Status key: DONE = in code; PARTLY = built, gap named; OPEN = not built; OWNER =
 - Webhook and checkout verification: DONE in the backend (webhook signature over the raw body, order and payment verified before a plan is granted).
 - Rate limits: DONE in the backend (global per-IP default plus tighter limits on admin login, sign-in codes, generation and export). They are shared across servers only when `REDIS_URL` is set; Health shows whether it is.
 - Route access kept separate from teacher routes and the ingestion dashboard: DONE.
-- Content-Security-Policy and security headers on this Next.js app: OPEN (`next.config.ts` sets none). The backend sets its own.
+- Content-Security-Policy and security headers on this Next.js app: DONE in report-only mode; OPEN: watch the `[csp]` logs, then set `CSP_MODE=enforce`. The backend sets its own.
 - Dependency audit: PARTLY. CI runs `npm audit` non-blocking; findings on next, postcss and sharp are open.
 
 ## P1
@@ -62,4 +62,6 @@ Reset is a launch-cleanup action on a separate owner-only page (not beside user 
 
 ## Current truth
 
-The panel has the right boundary (monitoring and business control, not ingestion). Remaining launch risk: the ZTNA hosting layer (OWNER), admin two-factor and step-up prompts, scheduled and off-site backups, and a Content-Security-Policy on this app. The teacher module's sign-in does not secure this panel.
+The panel has the right boundary (monitoring and business control, not ingestion). Remaining launch risk: the ZTNA hosting layer (OWNER), admin two-factor and step-up prompts, scheduled and off-site backups, and switching this app's Content-Security-Policy from report-only to enforce. The teacher module's sign-in does not secure this panel.
+
+The admin panel now also sends a Permissions-Policy header (camera, microphone, geolocation and similar off) next to the report-only CSP. The panel runs on my local machine only, so there is nothing to scan yet: scan it with Security Headers and CSP Evaluator once it is hosted, and again after `CSP_MODE=enforce`; results for the teacher site are in `paperly-teacher-module/docs/launch-checklist.md` ("Security scans").

@@ -284,7 +284,7 @@ export default function RunTestsPage() {
     }
   };
 
-  const live = run?.results || {};
+  const live = useMemo(() => run?.results || {}, [run]);
   const matches = useCallback(
     (row: TestCheckRow) => {
       const q = search.trim().toLowerCase();

@@ -6,8 +6,9 @@
     "dev": "next dev --webpack -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
-    "lint": "next lint",
-    "test": "vitest run"
+    "lint": "tsc --noEmit && eslint src",
+    "test": "vitest run",
+    "lint:hooks": "eslint src"
   },
   "dependencies": {
     "@types/node": "22.10.5",
@@ -20,8 +21,12 @@
     "typescript": "5.7.2"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.0.0",
     "autoprefixer": "^10.5.2",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "tailwindcss": "^3.4.17",
+    "typescript-eslint": "^8.0.0",
     "vitest": "^2.1.9"
   },
   "overrides": {

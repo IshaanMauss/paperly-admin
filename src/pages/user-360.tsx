@@ -7,6 +7,18 @@ import { panel, planLabel } from "@/components/ui";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
 import { usePersistedState } from "@/lib/draftStore";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
+import { DisputeChecklist, MessagesPanel, PapersPanel, PaymentsPanel, SignInSummary } from "@/components/user360/EvidencePanels";
+
+type TabKey = "summary" | "payments" | "papers" | "signin" | "messages" | "timeline" | "fix";
+const TABS: Array<{ key: TabKey; label: string }> = [
+  { key: "summary", label: "Summary" },
+  { key: "payments", label: "Payments" },
+  { key: "papers", label: "Papers" },
+  { key: "signin", label: "Sign-in" },
+  { key: "messages", label: "Messages & tickets" },
+  { key: "timeline", label: "Timeline" },
+  { key: "fix", label: "Fix account" },
+];
 
 function formatDateTime(value?: string | null) {
   if (!value) return "Never";
@@ -107,6 +119,7 @@ export default function UserThreeSixtyPage() {
   const router = useRouter();
   const teacherIdParam = typeof router.query.teacher_id === "string" ? router.query.teacher_id : "";
 
+  const [tab, setTab] = useState<TabKey>("summary");
   const [searchInput, setSearchInput] = useState("");
   const [suggestions, setSuggestions] = useState<UserResolveHit[]>([]);
   const [searchBusy, setSearchBusy] = useState(false);
@@ -622,6 +635,24 @@ export default function UserThreeSixtyPage() {
               )}
             </div>
 
+            <div className="flex flex-wrap gap-1.5 rounded-xl border border-violet-200 bg-white p-2 shadow-soft">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={`rounded-lg px-4 py-2 text-sm font-extrabold transition ${tab === t.key ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-violet-50"}`}
+                >
+                  {t.label}
+                  {t.key === "payments" && data.counts.payments > 0 ? ` (${data.counts.payments})` : ""}
+                  {t.key === "messages" && data.counts.open_support_tickets > 0 ? ` (${data.counts.open_support_tickets} open)` : ""}
+                </button>
+              ))}
+            </div>
+
+            {tab === "summary" && (
+              <>
+            <DisputeChecklist checks={data.dispute_checks ?? []} />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Plan" value={data.subscription ? `${planLabel(data.subscription.plan_code)} (${data.subscription.status})` : "No subscription row"} />
               <Stat
@@ -683,7 +714,15 @@ export default function UserThreeSixtyPage() {
               </div>
             )}
 
-            {data.auth && (
+              </>
+            )}
+
+            {tab === "payments" && <PaymentsPanel payments={data.payments_detail ?? []} />}
+            {tab === "papers" && <PapersPanel worksheets={data.worksheets} />}
+            {tab === "messages" && <MessagesPanel messages={data.messages ?? []} tickets={data.tickets ?? []} />}
+            {tab === "signin" && data.sign_in && <SignInSummary info={data.sign_in} />}
+
+            {tab === "signin" && data.auth && (
               <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
                 <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Login / auth record - use this to verify a "login isn't working" claim</p>
                 <div className="mt-2 grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-2">
@@ -708,6 +747,8 @@ export default function UserThreeSixtyPage() {
               </div>
             )}
 
+            {tab === "fix" && (
+              <>
             <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Fix this account</p>
               <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -1020,6 +1061,10 @@ export default function UserThreeSixtyPage() {
               </div>
             </div>
 
+              </>
+            )}
+
+            {tab === "timeline" && (
             <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Full timeline, newest first</p>
@@ -1065,6 +1110,7 @@ export default function UserThreeSixtyPage() {
                 )}
               </div>
             </div>
+            )}
           </div>
         )}
       </section>

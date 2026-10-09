@@ -237,9 +237,9 @@ export default function PlansPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick]);
 
-  const fields = state?.schema.fields || [];
-  const livePlans = state?.published.plans || {};
-  const defaults = state?.defaults || {};
+  const fields = useMemo(() => state?.schema.fields || [], [state]);
+  const livePlans = useMemo(() => state?.published.plans || {}, [state]);
+  const defaults = useMemo(() => state?.defaults || {}, [state]);
 
   // What differs from the built-in defaults: the only thing the server stores.
   const sparse = useMemo<PlanConfigSparse>(() => {
@@ -257,7 +257,7 @@ export default function PlansPage() {
   }, [values, fields, defaults, state]);
 
   // Unsaved edits: differs from what the server has (the saved draft, or live if there is no draft).
-  const savedPlans = state?.working_plans || {};
+  const savedPlans = useMemo(() => state?.working_plans || {}, [state]);
   const dirtyUnsaved = useMemo(() => {
     return (state?.schema.plan_codes || []).some((code) => fields.some((field) => field.plans.includes(code) && !sameValue(values[code]?.[field.key], savedPlans[code]?.[field.key])));
   }, [values, fields, savedPlans, state]);
@@ -267,7 +267,7 @@ export default function PlansPage() {
     setMessage(null);
   }
 
-  async function saveDraft() {
+  async function saveDraft(): Promise<PlanConfigPreview | null> {
     setBusy(true);
     setError(null);
     try {
@@ -276,11 +276,24 @@ export default function PlansPage() {
       setMessage("Draft saved. Nothing has changed for customers yet.");
       const fresh = await api.getPlanConfig();
       setState(fresh);
+      return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the draft.");
+      return null;
     } finally {
       setBusy(false);
     }
+  }
+
+  /** One button from edit to apply: saves the edits, then opens the review-and-publish box. */
+  async function applyChanges() {
+    let current: PlanConfigPreview | null = preview;
+    if (dirtyUnsaved) current = await saveDraft();
+    if (!current || current.changes.length === 0) {
+      if (current) setMessage("Nothing differs from what is live, so there is nothing to apply.");
+      return;
+    }
+    setShowPublish(true);
   }
 
   async function discard() {
@@ -333,9 +346,15 @@ export default function PlansPage() {
   }
 
   const groups = state?.schema.groups || [];
-  const planCodes = state?.schema.plan_codes || [];
+  const planCodes = useMemo(() => state?.schema.plan_codes || [], [state]);
   const subscribers = state?.subscribers || {};
   const draftSaved = Boolean(state?.draft);
+  const unsavedCount = useMemo(() => {
+    let n = 0;
+    for (const code of planCodes) for (const field of fields) if (field.plans.includes(code) && !sameValue(values[code]?.[field.key], savedPlans[code]?.[field.key])) n += 1;
+    return n;
+  }, [values, fields, savedPlans, planCodes]);
+  const changedVsLive = (code: string, groupKey: string) => fields.filter((f) => f.group === groupKey && f.plans.includes(code) && !sameValue(values[code]?.[f.key], livePlans[code]?.[f.key])).length;
   const priceChanged = Boolean(preview?.price_changed);
   const hasChanges = (preview?.changes.length || 0) > 0;
 
@@ -367,15 +386,56 @@ export default function PlansPage() {
             </div>
           </section>
 
+          <section className={panel}>
+            <h2 className="text-base font-extrabold text-slate-950">At a glance</h2>
+            <p className="mb-3 text-xs font-semibold text-slate-500">What each plan gives right now (live). Click a row's plan name to edit that plan below.</p>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[34rem] text-left text-sm">
+                <thead>
+                  <tr className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                    <th className="pb-2 pr-3">What</th>
+                    {planCodes.map((code) => (
+                      <th key={code} className="pb-2 pr-3">
+                        <button type="button" className={`underline ${activePlan === code ? "text-purple-700" : ""}`} onClick={() => setActivePlan(code)}>{String(livePlans[code]?.label || code)}</button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {fields.filter((f) => f.editable && f.enforced && ["price", "papers", "full_portion", "ai", "answers", "tools"].includes(f.group)).map((f) => (
+                    <tr key={f.key} className="border-t border-violet-100">
+                      <td className="py-1.5 pr-3 font-bold text-slate-700">{f.label}</td>
+                      {planCodes.map((code) => (
+                        <td key={code} className={`py-1.5 pr-3 font-semibold ${f.plans.includes(code) ? "text-slate-900" : "text-slate-300"}`}>
+                          {f.plans.includes(code) ? show(livePlans[code]?.[f.key], f) : "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
           <div className="grid gap-4 xl:grid-cols-[1fr_24rem]">
             <div>
               {groups.map((group) => {
                 const groupFields = fields.filter((field) => field.group === group.key && field.plans.includes(activePlan));
                 if (!groupFields.length) return null;
+                const changedHere = changedVsLive(activePlan, group.key);
+                const summary = groupFields.filter((f) => f.kind === "int" || f.kind === "bool").slice(0, 4).map((f) => `${f.label}: ${show(values[activePlan]?.[f.key], f)}`).join(" · ");
                 return (
-                  <section key={group.key} className={panel}>
-                    <h2 className="text-base font-extrabold text-slate-950">{group.label}</h2>
-                    <p className="text-xs font-semibold text-slate-500">{group.help}</p>
+                  <details key={`${activePlan}-${group.key}-${changedHere > 0}`} className={`${panel} group`} open={changedHere > 0 || group.key === "papers"}>
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2">
+                      <span>
+                        <span className="text-base font-extrabold text-slate-950">{group.label}</span>
+                        {changedHere > 0 ? <span className="ml-2"><Pill tone="amber">{changedHere} changed</Pill></span> : null}
+                        <span className="mt-0.5 block text-xs font-semibold text-slate-500">{summary || group.help}</span>
+                      </span>
+                      <span className="text-xs font-extrabold text-purple-700 group-open:hidden">Open</span>
+                      <span className="hidden text-xs font-extrabold text-purple-700 group-open:inline">Close</span>
+                    </summary>
+                    <p className="mt-2 text-xs font-semibold text-slate-500">{group.help}</p>
                     <div className="mt-2">
                       {groupFields.map((field) => (
                         <FieldRow
@@ -389,7 +449,7 @@ export default function PlansPage() {
                         />
                       ))}
                     </div>
-                  </section>
+                  </details>
                 );
               })}
             </div>
@@ -401,7 +461,7 @@ export default function PlansPage() {
                   {dirtyUnsaved ? "You have edits that are not saved yet." : draftSaved ? "Draft saved." : "No edits."}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className={primaryButton} disabled={busy || !dirtyUnsaved} onClick={saveDraft}>{busy ? "Saving…" : "Save draft"}</button>
+                  <button type="button" className={primaryButton} disabled={busy || !dirtyUnsaved} onClick={() => void saveDraft()}>{busy ? "Saving…" : "Save draft only"}</button>
                   {state.draft ? <button type="button" className={secondaryButton} disabled={busy} onClick={discard}>Discard draft</button> : null}
                 </div>
                 {preview?.has_draft ? (
@@ -417,6 +477,19 @@ export default function PlansPage() {
                 ) : null}
               </section>
             </aside>
+          </div>
+
+          <div className="sticky bottom-3 z-30 mt-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200 bg-white/95 p-3 shadow-lg backdrop-blur" data-testid="plans-action-bar">
+            <p className="text-sm font-extrabold text-slate-900">
+              {unsavedCount > 0 ? `${unsavedCount} edit${unsavedCount === 1 ? "" : "s"} not applied yet` : hasChanges ? `Draft saved: ${preview?.changes.length} change${preview?.changes.length === 1 ? "" : "s"} waiting to be applied` : "No pending changes. Customers see exactly what is shown as Live."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {unsavedCount > 0 ? <button type="button" className={secondaryButton} disabled={busy} onClick={() => setValues(JSON.parse(JSON.stringify(savedPlans)))}>Undo all edits</button> : null}
+              {state.draft ? <button type="button" className={secondaryButton} disabled={busy} onClick={discard}>Discard draft</button> : null}
+              <button type="button" className={primaryButton} disabled={busy || (unsavedCount === 0 && !hasChanges)} onClick={() => void applyChanges()}>
+                {busy ? "Working..." : "Apply changes"}
+              </button>
+            </div>
           </div>
 
           <section className={panel}>

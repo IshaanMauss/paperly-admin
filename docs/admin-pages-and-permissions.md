@@ -18,7 +18,7 @@ Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | Sign in (`login.tsx`) | `POST /admin/auth/login`, `/refresh`, `/logout`, `GET /me`, `POST /change-password` | none (sign-in itself); lockout after repeated failures |
 | Overview (`index.tsx`) | `GET /overview` | `admin.read` |
 | Users (`teachers.tsx`) | `GET /teachers`; `PATCH /teachers/{id}/test-flag` | `users.read`; `users.write` |
-| User 360 (`user-360.tsx`) | `GET /users/resolve`, `GET /users/{id}/three-sixty`, `GET /teachers/{id}/export` | `users.read` |
+| User 360 (`user-360.tsx`, tabs: Summary with dispute checklist, Payments, Papers, Sign-in, Messages & tickets, Timeline, Fix account; panels in `components/user360/EvidencePanels.tsx`) | `GET /users/resolve`, `GET /users/{id}/three-sixty`, `GET /teachers/{id}/export` | `users.read` |
 | | `POST /users/{id}/grant-plan`, `/session/reset`, `/verify-email`; `POST /teachers/{id}/suspend`, `/unsuspend`, `/delete` | `users.write` |
 | | `POST /users/{id}/quota/reset`, `/generation/unstick`; `POST /worksheets/{id}/regenerate-export` | `maintenance.write` |
 | | `POST /users/{id}/promo/force-redeem`; `GET /promo-codes` (code picker) | `promo.write`; `promo.read` |
@@ -45,7 +45,7 @@ Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | | `PATCH /support-tickets/{id}/resolve` | `support.write` |
 | Maintenance (`maintenance.tsx`) | `GET /maintenance` | `maintenance.read` |
 | | `POST /maintenance`, `POST /worksheets/cleanup` | `maintenance.write` |
-| Backups (`backups.tsx`) | `POST /backups/export?format=xlsx\|json`, `GET /backups/history` | `backups.read` |
+| Backups (`backups.tsx`): Export data (xlsx, optional `date_from` and `date_to`) and Download backup (json) | `POST /backups/export?format=xlsx\|json`, `GET /backups/history` | `backups.read` |
 | | `POST /backups/restore` (dry run and real) | `backups.write` |
 | Health (`health.tsx`, `SystemStatusPanel.tsx`) | `GET /system-status` | `admin.read` |
 | | `GET /server-logs/summary`; `GET /api/templates` (catalog stats only) | `logs.read`; public templates list |

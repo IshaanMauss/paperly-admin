@@ -7,6 +7,24 @@ import { useAdminSession } from "@/lib/adminAuth";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type FullPortionOverview, type SubtopicCapPlanRow } from "@/lib/apiClient";
 
+function UsageCard({ title, note, data }: { title: string; note: string; data?: BuilderUsage }) {
+  return (
+    <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">{title}</p>
+      <p className="mt-2 text-3xl font-extrabold text-slate-950">{data ? data.papers_total : "-"}</p>
+      <p className="text-xs font-semibold text-slate-500">papers made, all time</p>
+      {data ? (
+        <ul className="mt-3 space-y-1 text-xs font-semibold text-slate-700">
+          <li>{data.papers_30d} in the last 30 days ({data.papers_7d} in the last 7)</li>
+          <li>{data.unique_users_30d} unique users in the last 30 days</li>
+          <li>{data.unique_users_total} unique users ever</li>
+        </ul>
+      ) : null}
+      <p className="mt-3 text-[11px] font-semibold leading-4 text-slate-400">{note}</p>
+    </article>
+  );
+}
+
 export default function PaperBuildersPage() {
   const { hasPermission } = useAdminSession();
   const canWrite = hasPermission("billing.write");
@@ -67,23 +85,6 @@ export default function PaperBuildersPage() {
   const fmt = (value: number | null | undefined, unit = "") => (value === null || value === undefined ? "Unlimited" : `${value}${unit}`);
   const usage = overview?.usage;
 
-  function UsageCard({ title, note, data }: { title: string; note: string; data?: BuilderUsage }) {
-    return (
-      <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
-        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">{title}</p>
-        <p className="mt-2 text-3xl font-extrabold text-slate-950">{data ? data.papers_total : "-"}</p>
-        <p className="text-xs font-semibold text-slate-500">papers made, all time</p>
-        {data ? (
-          <ul className="mt-3 space-y-1 text-xs font-semibold text-slate-700">
-            <li>{data.papers_30d} in the last 30 days ({data.papers_7d} in the last 7)</li>
-            <li>{data.unique_users_30d} unique users in the last 30 days</li>
-            <li>{data.unique_users_total} unique users ever</li>
-          </ul>
-        ) : null}
-        <p className="mt-3 text-[11px] font-semibold leading-4 text-slate-400">{note}</p>
-      </article>
-    );
-  }
 
   return (
     <AppShell title="Paper Builders">

@@ -6,10 +6,12 @@ import { errorNotice, notice, panel, primaryButton, secondaryButton } from "@/co
 const RESTORE_CONFIRMATION = "RESTORE PAPERLY-NT DATABASE FROM BACKUP";
 
 const excelTabs = [
+  "Billing Summary",
+  "Payments",
+  "Customer Contacts",
   "Users",
   "Organizations",
   "Subscriptions",
-  "Payments",
   "Generated Papers",
   "Template Usage",
   "Support Tickets",
@@ -22,7 +24,44 @@ const excelTabs = [
   "Plan Configuration History",
 ];
 
+type RangeKey = "all" | "today" | "week" | "month30" | "lastMonth" | "thisMonth" | "custom";
+
+const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
+  { key: "week", label: "Last 7 days" },
+  { key: "month30", label: "Last 30 days" },
+  { key: "thisMonth", label: "This month" },
+  { key: "lastMonth", label: "Last month" },
+  { key: "today", label: "Today" },
+  { key: "all", label: "Everything" },
+  { key: "custom", label: "Pick dates" },
+];
+
+function ymd(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** The first and last day (both included) for a preset, in the browser's calendar; "" means no limit. */
+function rangeFor(key: RangeKey, customFrom: string, customTo: string): { from: string; to: string } {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const daysAgo = (n: number) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - n);
+  if (key === "today") return { from: ymd(today), to: ymd(today) };
+  if (key === "week") return { from: ymd(daysAgo(6)), to: ymd(today) };
+  if (key === "month30") return { from: ymd(daysAgo(29)), to: ymd(today) };
+  if (key === "thisMonth") return { from: ymd(new Date(today.getFullYear(), today.getMonth(), 1)), to: ymd(today) };
+  if (key === "lastMonth") return { from: ymd(new Date(today.getFullYear(), today.getMonth() - 1, 1)), to: ymd(new Date(today.getFullYear(), today.getMonth(), 0)) };
+  if (key === "custom") return { from: customFrom, to: customTo };
+  return { from: "", to: "" };
+}
+
 export default function BackupsPage() {
+  const [rangeKey, setRangeKey] = useState<RangeKey>("month30");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const range = rangeFor(rangeKey, customFrom, customTo);
+  const customInvalid = rangeKey === "custom" && (!customFrom || !customTo || customTo < customFrom);
+
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -106,30 +145,71 @@ export default function BackupsPage() {
     setMessage("");
     setError("");
     try {
-      const { blob, filename } = await downloadRequest(`/admin/backups/export?format=${format}`);
+      const params = new URLSearchParams({ format });
+      if (format === "xlsx") {
+        if (range.from) params.set("date_from", range.from);
+        if (range.to) params.set("date_to", range.to);
+      }
+      const { blob, filename } = await downloadRequest(`/admin/backups/export?${params.toString()}`);
       saveBlob(blob, filename);
-      setMessage(`${format === "xlsx" ? "Excel business workbook" : "Restorable JSON backup"} saved as ${filename}.`);
+      setMessage(`${format === "xlsx" ? "Exported data" : "Backup"} saved as ${filename}.`);
       void loadHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Backup route is not available yet.");
+      setError(err instanceof Error ? err.message : "The download did not work.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <AppShell title="Backup & Recovery">
+    <AppShell title="Export & Backup">
       {message ? <section className={notice}>{message}</section> : null}
-      {error ? <section className={errorNotice}>Backup export failed. Backend route needed: POST /api/admin/backups/export. Details: {error}</section> : null}
+      {error ? <section className={errorNotice}>The download did not work. {error}</section> : null}
 
       <section className={panel}>
-        <h2 className="text-2xl font-extrabold text-slate-950">Backup control</h2>
+        <h2 className="text-2xl font-extrabold text-slate-950">Export data</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          The Excel business workbook is for people: a Read Me tab, plain column headings and one tab per topic. The restorable JSON is for recovery and keeps database names. Passwords, sign-in tokens and sign-in codes are never included. Backups are manual downloads; for automatic copies use the database provider's own backups.
+          An Excel workbook for accounts, support and outreach: payments (what was paid, how, bill number, failed or unpaid checkouts), a billing summary, customer contacts with email and phone, users, papers, tickets and admin activity. Pick the days you want. Days are Indian time and both end days are included. Passwords and sign-in codes are never included.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <button className={primaryButton} disabled={busy} onClick={() => void exportBackup("xlsx")}>Download Excel business workbook</button>
-          <button className={secondaryButton} disabled={busy} onClick={() => void exportBackup("json")}>Download restorable JSON backup</button>
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Date range">
+          {RANGE_OPTIONS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => setRangeKey(option.key)}
+              aria-pressed={rangeKey === option.key}
+              className={`rounded-full border px-4 py-2 text-xs font-extrabold transition ${rangeKey === option.key ? "border-violet-600 bg-violet-600 text-white" : "border-violet-200 bg-white text-slate-700 hover:bg-violet-50"}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {rangeKey === "custom" ? (
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="text-xs font-extrabold text-slate-600">From
+              <input type="date" value={customFrom} max={customTo || undefined} onChange={(event) => setCustomFrom(event.target.value)} className="mt-1 block rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-slate-900" />
+            </label>
+            <label className="text-xs font-extrabold text-slate-600">To
+              <input type="date" value={customTo} min={customFrom || undefined} onChange={(event) => setCustomTo(event.target.value)} className="mt-1 block rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-slate-900" />
+            </label>
+          </div>
+        ) : null}
+        <p className="mt-3 text-xs font-bold text-slate-500" data-testid="export-range-summary">
+          {range.from || range.to ? `Will export ${range.from || "the beginning"} to ${range.to || "today"}.` : "Will export everything, from the start."}
+          {customInvalid ? " Choose a start day and an end day that is not before it." : ""}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button className={primaryButton} disabled={busy || customInvalid} onClick={() => void exportBackup("xlsx")}>{busy ? "Preparing..." : "Export data (Excel)"}</button>
+        </div>
+      </section>
+
+      <section className={panel}>
+        <h2 className="text-2xl font-extrabold text-slate-950">Download backup</h2>
+        <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
+          The complete JSON copy of the data, used to recover after a problem (see Restore below). It is always everything, never a date range, and it keeps database names. Passwords, sign-in tokens and sign-in codes are never included. Backups are manual downloads; for automatic copies use the database provider's own backups.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button className={secondaryButton} disabled={busy} onClick={() => void exportBackup("json")}>Download backup (JSON)</button>
         </div>
         {history ? (
           <div className={`mt-5 rounded-xl border p-4 text-sm font-semibold ${history.stale ? "border-amber-200 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>
@@ -216,7 +296,7 @@ export default function BackupsPage() {
       </section>
 
       <section className={panel}>
-        <h2 className="text-xl font-extrabold text-slate-950">Business-readable Excel tabs</h2>
+        <h2 className="text-xl font-extrabold text-slate-950">What the Excel export contains</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           These names are for business review. The JSON export keeps database table names because that is safer for restore.
         </p>

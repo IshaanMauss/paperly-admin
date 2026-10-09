@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { panel } from "@/components/ui";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { AdminSupportTicketRow, api } from "@/lib/apiClient";
+import { AdminSupportTicketRow, api } from "@/lib/apiClient";
+
 import { usePersistedState } from "@/lib/draftStore";
 import { UserLabel } from "../components/UserLabel";
 
@@ -18,6 +19,8 @@ export default function SupportAdminPage() {
   const [status, setStatus] = useState("all");
   const [ticketType, setTicketType] = useState("all");
   const [requesterType, setRequesterType] = useState("all");
+  const [syllabus, setSyllabus] = useState("all");
+  const [builderMode, setBuilderMode] = useState("all");
   const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -60,7 +63,7 @@ export default function SupportAdminPage() {
     let cancelled = false;
     setLoading(true);
     api
-      .listAdminSupportTickets({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, search: search.trim(), status, ticket_type: ticketType, requester_type: requesterType, sort })
+      .listAdminSupportTickets({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, search: search.trim(), status, ticket_type: ticketType, requester_type: requesterType, sort, syllabus, mode: builderMode })
       .then((response) => {
         if (cancelled) return;
         setRows(response.items || []);
@@ -78,7 +81,7 @@ export default function SupportAdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [page, refreshTick, requesterType, search, sort, status, ticketType]);
+  }, [builderMode, page, refreshTick, requesterType, search, sort, status, syllabus, ticketType]);
 
   const start = total ? page * PAGE_SIZE + 1 : 0;
   const end = Math.min(page * PAGE_SIZE + rows.length, total);
@@ -87,6 +90,8 @@ export default function SupportAdminPage() {
     setStatus("all");
     setTicketType("all");
     setRequesterType("all");
+    setSyllabus("all");
+    setBuilderMode("all");
     setSort("newest");
     setPage(0);
   };
@@ -134,6 +139,7 @@ export default function SupportAdminPage() {
               <option value="all">All types</option>
               <option value="feedback">Feedback</option>
               <option value="complaint">Complaint</option>
+              <option value="question_report">Question report (This looks wrong)</option>
               <option value="billing">Billing</option>
               <option value="technical">Technical</option>
             </select>
@@ -147,6 +153,27 @@ export default function SupportAdminPage() {
           </label>
           <button type="button" onClick={reset} className="rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-extrabold text-purple-900 md:self-end">Reset filters</button>
         </div>
+
+        {ticketType === "question_report" && (
+          <div className="mt-3 grid gap-3 md:grid-cols-6">
+            <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
+              Syllabus
+              <select value={syllabus} onChange={(event) => { setSyllabus(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+                <option value="all">All syllabuses</option>
+                <option value="0580">0580</option>
+                <option value="0607">0607</option>
+              </select>
+            </label>
+            <label className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-500">
+              Builder
+              <select value={builderMode} onChange={(event) => { setBuilderMode(event.target.value); setPage(0); }} className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-slate-800">
+                <option value="all">Topical + full portion</option>
+                <option value="topical">Topical</option>
+                <option value="full_portion">Full portion</option>
+              </select>
+            </label>
+          </div>
+        )}
 
         {loading && <div className="mt-6 rounded-xl border border-violet-200 bg-white p-5 text-sm font-bold text-slate-600">Loading support tickets...</div>}
         {error && <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-bold text-rose-700">{error}</div>}
@@ -173,7 +200,20 @@ export default function SupportAdminPage() {
                     <span className="text-slate-400">{new Date(row.created_at).toLocaleString()}</span>
                   </div>
                   <div className="mt-3"><UserLabel id={row.teacher_id} name={row.teacher_name} email={row.teacher_email} />{row.guest_matches_teacher_id ? <p className="mt-1 text-xs font-bold text-amber-700">The email this guest typed matches the account {row.guest_matches_teacher_name || row.guest_matches_teacher_id} ({row.guest_matches_teacher_id}) - they were probably signed out when they sent it.</p> : null}</div>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{row.message}</p>
+                  <p className="mt-2 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">{row.message}</p>
+                  {row.context_json?.kind === "question_report" && (
+                    <div className="mt-3 rounded-xl border border-violet-100 bg-violet-50/60 p-3 text-xs font-semibold text-slate-700">
+                      <p className="font-extrabold text-slate-900">{row.context_json.template_code}</p>
+                      <p className="mt-1">
+                        {row.context_json.syllabus_code} {row.context_json.paper_code || ""} | {row.context_json.tier || "no tier"} | {row.context_json.topic} / {row.context_json.subtopic} | {row.context_json.mode === "full_portion" ? "Full portion" : "Topical"}
+                      </p>
+                      {row.context_json.answer_text ? <p className="mt-1">Answer shown: {row.context_json.answer_text}</p> : null}
+                      <details className="mt-2">
+                        <summary className="cursor-pointer font-extrabold text-purple-800">Variable values of this variant</summary>
+                        <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-white p-2 text-[11px]">{JSON.stringify(row.context_json.variables || {}, null, 2)}</pre>
+                      </details>
+                    </div>
+                  )}
                   {row.admin_reply && (
                     <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                       <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">

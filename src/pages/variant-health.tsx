@@ -282,17 +282,37 @@ export default function VariantHealthPage() {
   async function calculateMissing() {
     setCalculating(true);
     setCalcMessage(null);
+    let lastDone = 0;
+    let total = 0;
     try {
       let remaining = 1;
-      let guard = 0;
-      while (remaining > 0 && guard < 60) {
-        const result = await api.recalculateTemplateStats();
+      let calls = 0;
+      let failures = 0;
+      const stuck: string[] = [];
+      while (remaining > 0 && calls < 300) {
+        calls += 1;
+        let result;
+        try {
+          result = await api.recalculateTemplateStats();
+          failures = 0;
+        } catch (err) {
+          // One slow request is not the end: progress is saved after every template, so just ask again.
+          failures += 1;
+          if (failures >= 3) {
+            setCalcMessage(`Stopped after ${lastDone} of ${total || "?"} templates because the server did not answer three times in a row (${err instanceof Error ? err.message : "no reply"}). Everything already calculated is saved; press the button again to continue.`);
+            load();
+            return;
+          }
+          continue;
+        }
         remaining = result.remaining;
-        guard += 1;
-        setCalcMessage(`${result.total - remaining} of ${result.total} templates calculated`);
-        if (result.calculated === 0) {
-          const first = result.failed?.[0];
-          if (first) setCalcMessage(`Stopped: ${first.template_code} failed (${first.error}). ${result.total - remaining} of ${result.total} calculated.`);
+        total = result.total;
+        lastDone = result.total - remaining;
+        for (const item of result.failed || []) if (!stuck.includes(item.template_code)) stuck.push(`${item.template_code} (${item.error})`);
+        setCalcMessage(`${lastDone} of ${result.total} templates calculated${stuck.length ? `, ${stuck.length} could not be calculated` : ""}`);
+        if (result.calculated === 0 && (result.failed?.length || 0) > 0) {
+          // Every template left in this round failed: stop and say exactly which and why.
+          setCalcMessage(`Stopped: ${stuck.slice(0, 3).join("; ")}. ${lastDone} of ${result.total} calculated.`);
           break;
         }
       }

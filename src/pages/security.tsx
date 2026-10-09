@@ -86,6 +86,8 @@ export default function SecurityPage() {
 
   useEffect(() => {
     void loadEvents();
+    // loadEvents is redefined on every render; the values listed are exactly what should trigger a reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, refreshTick, search, severity, sort, status]);
 
   useEffect(() => {

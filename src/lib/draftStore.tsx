@@ -107,6 +107,8 @@ export function usePersistedState<T>(
       setRestored(false);
       setSavedAt(null);
     }
+    // shouldRestore is a caller-supplied check read at restore time; only a change of owner or key should restore again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [owner, key]);
 
   useEffect(() => {

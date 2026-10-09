@@ -59,4 +59,4 @@ Leave `ZTNA_GATEWAY_SECRET` empty locally and keep `NEXT_PUBLIC_API_BASE_URL=htt
 
 - Vercel functions cap request and response bodies at about 4.5 MB and run for up to 60 seconds. Large backup exports or restores above that size will not pass through this proxy; run those from a local admin session or move that single call to a signed direct download later.
 - Rotate `ADMIN_GATEWAY_SECRET` by changing it in this panel's environment and as `ZTNA_GATEWAY_SECRET` on the backend together (redeploy or restart both). Health shows whether the backend has the secret set.
-- The panel's own pages carry no Content-Security-Policy (OPEN); the backend sets one on its responses.
+- The panel's own pages now send a Content-Security-Policy and security headers (`next.config.ts`, built in `src/lib/contentSecurityPolicy.ts`), in `CSP_MODE=report-only` first; violations are logged as `[csp]` by `/api/csp-report`. Switching to `enforce` is the remaining step. The backend sets its own on its responses.
