@@ -30,6 +30,7 @@ Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | Admin Team (`users.tsx`) | `GET /auth/accounts`, `GET /auth/accounts/meta` | `accounts.read` |
 | | `POST /auth/accounts`, `PATCH /auth/accounts/{id}` | `accounts.write` |
 | Billing (`billing.tsx`) | `GET /billing/subscriptions`, `GET /billing/payment-events` | `billing.read` |
+| Payments (`payments.tsx`) | `GET /payments` (status all, paid, not completed, failed; search; summary) | `billing.read` |
 | Plans & Features (`plans.tsx`) | `GET /plan-config`, `GET /plan-config/preview` | `plans.read` |
 | | `PUT` and `DELETE /plan-config/draft`, `POST /plan-config/publish`, `POST /plan-config/rollback` | `plans.write` |
 | Offers (`offers.tsx`) | `GET /offers` | `promo.read` |

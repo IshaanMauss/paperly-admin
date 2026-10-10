@@ -108,3 +108,10 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Variant Health: the page shows why a size calculation stopped and no longer times out on large templates.
 - User 360 is split into Summary, Payments, Papers, Sign-in, Messages & tickets, Timeline and Fix account. Summary has a refund and dispute checklist; Payments shows every attempt in full; messages never show the text of a sign-in code.
 - Still open: nothing here is committed or deployed; the panel has not been built on the Windows machine.
+
+## 2026-10-10 - Payments page, Offers price preview, dollar prices
+
+- New Payments page (`src/pages/payments.tsx`, nav entry in `AppShell.tsx`) reading `GET /admin/payments`: summary tiles (collected, last 30 days, last 24 hours, checkouts not completed), filter tabs, search by name, email, payment or order id and promo code, dollar and rupee amounts with the GST inside, offer or code used, method, IDs and a link to User 360. Unfinished checkouts are the first place to look when someone says they paid and nothing happened.
+- Offers: a new offer shows the customer price after the discount in dollars and rupees; the fixed dollar rate is 97.
+- Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or its per-month price is above Quarterly.
+- Organizations and User 360 evidence panels show the new amounts.
