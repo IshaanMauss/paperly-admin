@@ -23,7 +23,7 @@ const PUBLISH_PHRASE = "PUBLISH PLAN CHANGES";
 const PRICE_PHRASE = "CHANGE PRICES";
 
 // One fixed display rate, same as the backend (plan_config_registry.USD_INR_RATE) and the customer site.
-const USD_INR_RATE = 88;
+const USD_INR_RATE = 97;
 function usd(rupees: number) {
   const dollars = Math.round((rupees / USD_INR_RATE) * 100) / 100;
   return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2, maximumFractionDigits: 2 })}`;

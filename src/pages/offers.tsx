@@ -22,7 +22,7 @@ function usd(rupees: number, rate: number) {
 function priceLine(options: OfferOptions, planCode: string, discount: number) {
   const price = options.prices?.[planCode];
   if (!price) return null;
-  const rate = options.usd_rate || 88;
+  const rate = options.usd_rate || 97;
   const effective = Math.max(discount, price.standing_percent);
   const pays = Math.round((price.list_rupees * (100 - effective)) / 100);
   return {
