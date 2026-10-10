@@ -119,6 +119,46 @@ export type AdminSubscriptionRow = {
   updated_at?: string | null;
 };
 
+export type AdminPaymentRow = {
+  id: string;
+  created_at: string | null;
+  state: "paid" | "not_completed" | "failed";
+  teacher_id?: string | null;
+  teacher_name?: string;
+  teacher_email?: string;
+  plan_code?: string | null;
+  plan_label?: string | null;
+  amount_paise: number;
+  usd: number;
+  taxable_paise?: number | null;
+  gst_paise?: number | null;
+  discount_percent?: number | null;
+  promo_code?: string | null;
+  offer_id?: string | null;
+  payment_id?: string | null;
+  order_id?: string | null;
+  method?: string | null;
+  gateway_status?: string | null;
+  error?: string | null;
+  payer_name?: string | null;
+  payer_email?: string | null;
+  payer_phone?: string | null;
+};
+
+export type AdminPaymentsResponse = {
+  total: number;
+  items: AdminPaymentRow[];
+  source?: string;
+  summary: {
+    paid_count?: number;
+    collected_paise?: number;
+    last_30_days_paise?: number;
+    last_24_hours_paise?: number;
+    not_completed_count?: number;
+    usd_rate?: number;
+  };
+};
+
 export type AdminPaymentEventRow = {
   id: string;
   gateway: string;

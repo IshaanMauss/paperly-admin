@@ -45,6 +45,7 @@ import type {
   TopicalPaperGeneratePayload,
   Worksheet,
   PlanOffer,
+  AdminPaymentsResponse,
   PlanOfferListResponse,
   PromoCode,
   PromoCodeListResponse,
@@ -307,6 +308,9 @@ export const api = {
   },
   listAdminSubscriptions(params?: AdminPageParams) {
     return request<AdminListResponse<AdminSubscriptionRow>>(`/admin/billing/subscriptions${adminQuery(params)}`);
+  },
+  listAdminPayments(params?: AdminPageParams) {
+    return request<AdminPaymentsResponse>(`/admin/payments${adminQuery(params)}`);
   },
   listAdminPaymentEvents(params?: AdminPageParams) {
     return request<AdminListResponse<AdminPaymentEventRow>>(`/admin/billing/payment-events${adminQuery(params)}`);
