@@ -107,7 +107,7 @@ function RequestCard({ row, adminEmail, onChanged }: { row: OrganizationRequestR
         <p><span className="font-bold text-slate-800">Contact:</span> {row.contact_name || "—"}</p>
         <p><span className="font-bold text-slate-800">Email:</span> {row.contact_email || "—"}</p>
         <p><span className="font-bold text-slate-800">Phone:</span> {row.contact_phone || "—"}</p>
-        <p><span className="font-bold text-slate-800">Estimated:</span> {row.estimated_monthly_rupees ? `₹${row.estimated_monthly_rupees.toLocaleString("en-IN")}/mo` : "—"}</p>
+        <p><span className="font-bold text-slate-800">Estimated:</span> {row.estimated_monthly_rupees ? `$${Math.round(row.estimated_monthly_rupees / 88).toLocaleString("en-US")}/mo` : "—"}</p>
       </div>
 
       {row.requested_features.length ? (

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { errorNotice, input, label as labelClass, notice, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { usePersistedState } from "@/lib/draftStore";
-import { api, type PlanOffer } from "@/lib/apiClient";
+import { api, type OfferOptions, type PlanOffer } from "@/lib/apiClient";
 
 // Time-limited offers (2026-10-02): pick a plan, a discount, how long each person's
 // countdown runs and who sees it. The countdown is real - it starts per person the first
@@ -12,6 +12,25 @@ import { api, type PlanOffer } from "@/lib/apiClient";
 // users are never shown an offer. See app/models/offer.py in the backend.
 
 const STYLE_LABELS: Record<string, string> = { shiny: "Shiny gold", starry: "Starry night", plain: "Plain" };
+
+function usd(rupees: number, rate: number) {
+  const dollars = Math.round((rupees / rate) * 100) / 100;
+  return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2, maximumFractionDigits: 2 })}`;
+}
+
+// What the customer really pays: the larger of the plan's standing offer and this offer, GST included.
+function priceLine(options: OfferOptions, planCode: string, discount: number) {
+  const price = options.prices?.[planCode];
+  if (!price) return null;
+  const rate = options.usd_rate || 88;
+  const effective = Math.max(discount, price.standing_percent);
+  const pays = Math.round((price.list_rupees * (100 - effective)) / 100);
+  return {
+    text: `List ${usd(price.list_rupees, rate)}; the customer pays ${usd(pays, rate)} (Rs ${pays.toLocaleString("en-IN")}, GST included) at ${effective}% off.`,
+    useless: discount <= price.standing_percent,
+    standing: price.standing_percent,
+  };
+}
 
 function OfferPreview({ plan, discount, hours, style, title }: { plan: string; discount: number; hours: number; style: string; title: string }) {
   return (
@@ -26,7 +45,7 @@ function OfferPreview({ plan, discount, hours, style, title }: { plan: string; d
   );
 }
 
-function CreateOfferForm({ options, onCreated }: { options: { plans: Record<string, string>; audience: Record<string, string>; styles: string[] }; onCreated: () => void }) {
+function CreateOfferForm({ options, onCreated }: { options: OfferOptions; onCreated: () => void }) {
   const [title, setTitle] = usePersistedState("offers.title", "");
   const [planCode, setPlanCode] = useState(Object.keys(options.plans).includes("teacher_yearly") ? "teacher_yearly" : Object.keys(options.plans)[0]);
   const [discount, setDiscount] = usePersistedState("offers.discount", "40");
@@ -86,6 +105,16 @@ function CreateOfferForm({ options, onCreated }: { options: { plans: Record<stri
           Discount % (1 to 90)
           <input className={input} type="number" min={1} max={90} value={discount} onChange={(e) => setDiscount(e.target.value)} required />
         </label>
+        {(() => {
+          const line = priceLine(options, planCode, Number(discount) || 0);
+          if (!line) return null;
+          return (
+            <p className={`sm:col-span-2 text-sm font-semibold ${line.useless ? "text-rose-700" : "text-emerald-800"}`}>
+              {line.text}
+              {line.useless ? ` This plan already has a standing offer of ${line.standing}% (set on the Plans screen), so an offer of ${Number(discount) || 0}% changes nothing. Use a bigger percentage.` : ""}
+            </p>
+          );
+        })()}
         <label className={labelClass}>
           Countdown (hours, from when each person first sees it)
           <input className={input} type="number" min={1} max={720} value={hours} onChange={(e) => setHours(e.target.value)} required />
@@ -136,7 +165,7 @@ function StatusBadge({ offer }: { offer: PlanOffer }) {
   return <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold text-emerald-800">Live</span>;
 }
 
-function OfferRow({ offer, audienceNames, onToggled }: { offer: PlanOffer; audienceNames: Record<string, string>; onToggled: (updated: PlanOffer) => void }) {
+function OfferRow({ offer, audienceNames, options, onToggled }: { offer: PlanOffer; audienceNames: Record<string, string>; options: OfferOptions; onToggled: (updated: PlanOffer) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function toggle() {
@@ -158,7 +187,7 @@ function OfferRow({ offer, audienceNames, onToggled }: { offer: PlanOffer; audie
       </td>
       <td className={td}>
         {offer.plan_label}
-        <p className="text-[11px] font-semibold text-slate-500">{offer.discount_percent}% off, {offer.duration_hours} h countdown</p>
+        <p className="text-[11px] font-semibold text-slate-500">{offer.discount_percent}% off, {offer.duration_hours} h countdown{(options.prices?.[offer.plan_code]?.standing_percent ?? 0) >= offer.discount_percent ? " (no effect: below the standing offer)" : ""}</p>
       </td>
       <td className={td}>{offer.audience_plans.map((code) => audienceNames[code] || code).join(", ")}</td>
       <td className={td}>
@@ -179,7 +208,7 @@ function OfferRow({ offer, audienceNames, onToggled }: { offer: PlanOffer; audie
 
 export default function OffersPage() {
   const [offers, setOffers] = useState<PlanOffer[] | null>(null);
-  const [options, setOptions] = useState<{ plans: Record<string, string>; audience: Record<string, string>; styles: string[] } | null>(null);
+  const [options, setOptions] = useState<OfferOptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -211,7 +240,9 @@ export default function OffersPage() {
           Pick a plan and a discount, choose how many hours each person has, and who sees it. Eligible people get a
           popup with the countdown, the plan card on their Billing page changes look, and checkout charges the
           discounted price. The countdown starts when each person first sees the offer; when it ends the price really
-          goes back to normal. People on Yearly never see an offer, and an offer can be used once per person.
+          goes back to normal. Every plan already shows a standing offer (set on the Plans screen), and an offer here only
+          matters if its percentage is bigger than that standing offer: the customer gets the larger of the two, never both.
+          Prices are GST included and shown in dollars. People on Yearly never see an offer, and an offer can be used once per person.
         </p>
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}
@@ -242,6 +273,7 @@ export default function OffersPage() {
                       key={offer.id}
                       offer={offer}
                       audienceNames={options.audience}
+                      options={options}
                       onToggled={(updated) => { setOffers((prev) => (prev ? prev.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)) : prev)); requestAdminDataRefresh(); }}
                     />
                   ))}

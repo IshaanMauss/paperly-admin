@@ -22,6 +22,13 @@ import type {
 const PUBLISH_PHRASE = "PUBLISH PLAN CHANGES";
 const PRICE_PHRASE = "CHANGE PRICES";
 
+// One fixed display rate, same as the backend (plan_config_registry.USD_INR_RATE) and the customer site.
+const USD_INR_RATE = 88;
+function usd(rupees: number) {
+  const dollars = Math.round((rupees / USD_INR_RATE) * 100) / 100;
+  return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2, maximumFractionDigits: 2 })}`;
+}
+
 function sameValue(a: PlanFieldValue | undefined, b: PlanFieldValue | undefined) {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
@@ -30,7 +37,8 @@ function show(value: PlanFieldValue | undefined, field?: PlanField): string {
   if (value === null || value === undefined) return field?.kind === "int" ? "No limit" : "(empty)";
   if (typeof value === "boolean") return value ? "On" : "Off";
   if (Array.isArray(value)) return value.length ? `${value.length} item${value.length === 1 ? "" : "s"}` : "(none)";
-  if (field?.key === "price_rupees") return `Rs ${value}`;
+  if (field?.key === "price_rupees" && typeof value === "number") return `${usd(value)} (Rs ${value}, GST included)`;
+  if (field?.key === "standing_offer_percent") return `${value}% off`;
   return String(value);
 }
 
@@ -166,12 +174,14 @@ function FieldRow({ field, value, live, def, onChange, onReset }: { field: PlanF
 function PlanCardPreview({ values }: { values: PlanValues }) {
   const rows = (values.rows as PlanRowValue[]) || [];
   const price = values.price_rupees as number | undefined;
+  const offerPercent = Number(values.standing_offer_percent || 0);
+  const offerPrice = price ? Math.round((price * (100 - offerPercent)) / 100) : 0;
   return (
     <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-soft">
       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">How it reads to customers</p>
       <p className="mt-2 text-xl font-extrabold text-slate-950">{String(values.label || "")}</p>
       <p className="text-sm font-semibold text-slate-600">{String(values.tagline || "")}</p>
-      <p className="mt-2 text-2xl font-extrabold text-purple-700">{price ? `Rs ${price.toLocaleString("en-IN")}` : "Free"} <span className="text-xs font-bold text-slate-500">{String(values.cadence || "")} · before GST</span></p>
+      <p className="mt-2 text-2xl font-extrabold text-purple-700">{price ? (<>{offerPercent > 0 ? <span className="mr-2 text-base font-bold text-slate-400 line-through">{usd(price)}</span> : null}{usd(offerPrice)}</>) : "Free"} <span className="text-xs font-bold text-slate-500">{String(values.cadence || "")}{price ? ` · Rs ${offerPrice.toLocaleString("en-IN")} charged, GST included` : ""}</span></p>
       <ul className="mt-3 grid gap-1.5">
         {rows.map((row, i) => (
           <li key={i} className={`text-sm ${row.included ? "text-slate-800" : "text-slate-400"}`}>

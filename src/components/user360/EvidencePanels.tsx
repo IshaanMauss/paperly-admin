@@ -87,8 +87,8 @@ export function PaymentsPanel({ payments }: { payments: UserPaymentDetail[] }) {
             <div className="mt-3 grid gap-x-8 gap-y-3 lg:grid-cols-2">
               <div>
                 <p className={heading}>What was charged</p>
-                <Row label="Total" value={p.amount_saved ? rupees(p.amount_paise) : null} />
-                <Row label="Price before GST" value={p.amount_saved ? rupees(p.taxable_value_paise) : null} />
+                <Row label="Total (GST included)" value={p.amount_saved ? `${rupees(p.amount_paise)} (about $${((p.amount_paise ?? 0) / 100 / 88).toFixed(2)})` : null} />
+                <Row label="Taxable value (before GST)" value={p.amount_saved ? rupees(p.taxable_value_paise) : null} />
                 <Row label={`GST ${p.gst_rate_percent ?? ""}%`} value={p.amount_saved ? rupees(p.gst_amount_paise) : null} />
                 <Row label="Promo code" value={p.promo_code} />
                 <Row label="Discount" value={p.discount_percent ? `${p.discount_percent}%` : null} />

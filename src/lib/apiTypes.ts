@@ -752,7 +752,14 @@ export type PlanOffer = {
 
 export type PlanOfferListResponse = {
   offers: PlanOffer[];
-  options: { plans: Record<string, string>; audience: Record<string, string>; styles: string[] };
+  options: OfferOptions;
+};
+export type OfferOptions = {
+  plans: Record<string, string>;
+  audience: Record<string, string>;
+  styles: string[];
+  prices?: Record<string, { list_rupees: number; standing_percent: number }>;
+  usd_rate?: number;
 };
 
 // Admin-editable plans (2026-10-02). See backend app/services/plan_config_service.py.
