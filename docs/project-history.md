@@ -119,3 +119,11 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 ## October 2026 (12th)
 
 - Added the owner-only Database page: Production and Test buttons, schema browser, SQL console with preview, typed confirmations and password re-entry for changes, and a history of SQL applied. Backend routes, safety rules and tests are described in `paperly-mvp/docs/admin-database-console.md`.
+
+## October 2026 (12th, later) - Architecture page
+
+- Added an owner-only Architecture page with 88 Mermaid diagrams covering the backend, the teacher module and this panel: data flow diagrams level 0 to 3 (27), C4 views, sequences, database ER, state machines, flows and maps, deployment and security. Each diagram links deeper ("Go deeper") and sideways, lists checked notes and the real files.
+- New code: `src/lib/architecture/` (types, catalog, `diagrams/*.ts`, `catalog.test.ts`), `src/pages/architecture.tsx`, `src/components/architecture/DiagramViewer.tsx`, a nav entry in `AppShell.tsx` and a new dependency, `mermaid` (loaded only when the page is opened). How to add a diagram: `docs/architecture-diagrams.md`.
+- Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
+- Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
+

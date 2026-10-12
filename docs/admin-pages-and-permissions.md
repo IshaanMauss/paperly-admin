@@ -48,6 +48,7 @@ Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | | `POST /maintenance`, `POST /worksheets/cleanup` | `maintenance.write` |
 | Backups (`backups.tsx`): Export data (xlsx, optional `date_from` and `date_to`) and Download backup (json) | `POST /backups/export?format=xlsx\|json`, `GET /backups/history` | `backups.read` |
 | Database (`database.tsx`, owner only; menu item hidden for other roles): Production / Test buttons; Overview, Tables and schema, SQL console, History | `GET /admin/database/targets`, `/history`, `/{target}/overview`, `/{target}/tables`, `/{target}/tables/{table}`, `/{target}/tables/{table}/rows`; `POST /admin/database/{target}/sql/review` and `/sql/run` | `owner` role (checked on the server), password re-entry for any change |
+| Architecture (`architecture.tsx`, owner only; menu item hidden for other roles): 88 diagrams (data flow levels 0 to 3, C4, sequences, database, state machines, flows, deployment, security) for all three repositories | none (diagrams are bundled with the panel, no backend route) | `owner` role checked in the page |
 | | `POST /backups/restore` (dry run and real) | `backups.write` |
 | Health (`health.tsx`, `SystemStatusPanel.tsx`) | `GET /system-status` | `admin.read` |
 | | `GET /server-logs/summary`; `GET /api/templates` (catalog stats only) | `logs.read`; public templates list |
