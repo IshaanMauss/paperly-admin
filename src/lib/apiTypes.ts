@@ -1110,7 +1110,7 @@ export type DbRunResponse = {
 };
 
 export type DbHistory = {
-  applied_files: { available: boolean; generated_from: string | null; written: string | null; sections: { title: string; entries: { files: string[]; status: "applied" | "not_applied" | "pending" | "note"; text: string }[] }[] };
+  applied_files: { available: boolean; generated_from: string | null; written: string | null; sections: { title: string; entries: { files: string[]; status: "applied" | "kept" | "not_applied" | "pending" | "note"; text: string }[] }[] };
   migrations: { current: string | null; latest: string | null; up_to_date: boolean; chain: { revision: string; title: string; created: string | null; status: "applied" | "pending" | "unknown" }[] };
   console_runs: { id: string; admin: string; at: string | null; target: DbTarget; verb: string; risk: string; tables: string[]; statement: string; outcome: string; rows_affected: number | null; error: string | null; duration_ms: number | null }[];
 };

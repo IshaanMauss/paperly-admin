@@ -8,8 +8,8 @@ import { Pill, SectionTitle } from "./dbUi";
 
 type View = "runs" | "files" | "migrations";
 
-const statusTone = { applied: "good", not_applied: "neutral", pending: "warn", note: "info" } as const;
-const statusLabel = { applied: "Applied", not_applied: "Not applied / retired", pending: "Pending", note: "Note" } as const;
+const statusTone = { applied: "good", kept: "info", not_applied: "neutral", pending: "warn", note: "info" } as const;
+const statusLabel = { applied: "Applied", kept: "Kept (no action needed)", not_applied: "Not applied / retired", pending: "Pending", note: "Note" } as const;
 
 function when(value: string | null) {
   if (!value) return "-";
@@ -21,7 +21,7 @@ export function HistoryPanel() {
   const [data, setData] = useState<DbHistory | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>("runs");
-  const [filter, setFilter] = useState<"all" | "applied" | "pending" | "not_applied">("all");
+  const [filter, setFilter] = useState<"all" | "applied" | "kept" | "pending" | "not_applied">("all");
 
   function load() {
     setError(null);
@@ -83,7 +83,7 @@ export function HistoryPanel() {
           <SectionTitle hint="Taken from the SQL files applied log (docs/sql-files-applied-log.md). Statuses are read from the log's wording; open the log for the exact record.">One-off SQL files</SectionTitle>
           {!data.applied_files.available ? <p className="text-sm font-semibold text-slate-500">The applied-files list is not on this server. Run scripts/build_sql_history.py and redeploy.</p> : null}
           <div className="mb-3 flex flex-wrap gap-2">
-            {(["all", "applied", "pending", "not_applied"] as const).map((f) => (
+            {(["all", "applied", "kept", "pending", "not_applied"] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)} className={`rounded-full border px-3 py-1 text-xs font-bold ${filter === f ? "border-purple-600 bg-purple-600 text-white" : "border-violet-200 bg-white text-slate-600"}`}>
                 {f === "all" ? "All" : statusLabel[f]}
               </button>
