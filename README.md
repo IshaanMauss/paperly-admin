@@ -48,7 +48,7 @@ Navigation groups in `src/components/AppShell.tsx`. Backend routes and permissio
 - People: Users (Individual / Tutor and Institute tabs, search, sort, plan state, activity, test-account flag), User 360 (full per-user history with remediation actions and a Refund card), Organizations (institute theming, flags, seats and join code, entitlements, delivery checklist, Requests inbox), Admin Team (admin accounts, roles, per-account permissions).
 - Money: Billing (subscriptions, payment events), Payments (every Razorpay order with Paid, Not completed or Failed state, dollar and rupee amounts, GST, offer and promo), Plans & Features (draft, preview, publish, rollback of plan words and prices; versions are kept), Offers (time-limited offers, with a customer price preview in dollars and rupees), Promo Codes (create, toggle, redemptions, CSV export).
 - Product: Paper Builders (Full Portion, Topical and AI-checking usage and subtopic caps; `/full-portion` redirects here), AI Checking (overview and submissions), Variant Health.
-- Operations: Support (tickets, reply and resolve), Maintenance (maintenance mode with typed confirmation, worksheet cleanup), Backups, Health, Server Logs (with a status-code guide), Run Tests, Security, Audit Log.
+- Operations: Support (tickets, reply and resolve), Maintenance (maintenance mode with typed confirmation, worksheet cleanup), Backups, Database (owner only: table and schema browser in plain words, guarded SQL console with preview, typed confirmations and password for changes, history of SQL applied, Production and Test switch; see `paperly-mvp/docs/admin-database-console.md`), Health, Server Logs (with a status-code guide), Run Tests, Security, Audit Log.
 
 Notes on individual pages:
 

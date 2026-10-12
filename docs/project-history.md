@@ -1,6 +1,6 @@
 # Project History
 
-Last updated: 2026-10-08.
+Last updated: 2026-10-12.
 
 This file is the month-level product history for the admin panel. It keeps the panel's role clear: monitoring, support, billing, plans, safety and operations. It should not drift into template ingestion, which remains outside this panel.
 
@@ -115,3 +115,7 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Offers: a new offer shows the customer price after the discount in dollars and rupees; the fixed dollar rate is 97.
 - Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or its per-month price is above Quarterly.
 - Organizations and User 360 evidence panels show the new amounts.
+
+## October 2026 (12th)
+
+- Added the owner-only Database page: Production and Test buttons, schema browser, SQL console with preview, typed confirmations and password re-entry for changes, and a history of SQL applied. Backend routes, safety rules and tests are described in `paperly-mvp/docs/admin-database-console.md`.

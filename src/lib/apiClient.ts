@@ -52,6 +52,15 @@ import type {
   PromoCodeRedemptionRow,
   UserResolveHit,
   UserThreeSixty,
+  DbTarget,
+  DbTargetStatus,
+  DbOverview,
+  DbTableSummary,
+  DbTableDetail,
+  DbResultSet,
+  DbReview,
+  DbRunResponse,
+  DbHistory,
 } from "@/lib/apiTypes";
 
 // Every response/payload type lives in apiTypes.ts; re-exported here so existing
@@ -458,6 +467,35 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ version, confirmation, price_confirmation: priceConfirmation || null }),
     });
+  },
+  getDbTargets() {
+    return request<{ targets: DbTargetStatus[] }>("/admin/database/targets");
+  },
+  getDbOverview(target: DbTarget) {
+    return request<DbOverview>(`/admin/database/${target}/overview`);
+  },
+  getDbTables(target: DbTarget) {
+    return request<{ target: DbTarget; tables: DbTableSummary[] }>(`/admin/database/${target}/tables`);
+  },
+  getDbTable(target: DbTarget, table: string) {
+    return request<DbTableDetail>(`/admin/database/${target}/tables/${encodeURIComponent(table)}`);
+  },
+  getDbRows(target: DbTarget, table: string, params: { limit?: number; offset?: number; order_by?: string; descending?: boolean; q?: string } = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "" && value !== false) query.set(key, String(value));
+    });
+    const suffix = query.toString();
+    return request<DbResultSet & { table: string; limit: number; offset: number }>(`/admin/database/${target}/tables/${encodeURIComponent(table)}/rows${suffix ? `?${suffix}` : ""}`);
+  },
+  getDbHistory() {
+    return request<DbHistory>("/admin/database/history");
+  },
+  reviewDbStatement(target: DbTarget, body: { sql: string; enforce_rls: boolean; teacher_id?: string | null }) {
+    return request<DbReview>(`/admin/database/${target}/sql/review`, { method: "POST", body: JSON.stringify(body) });
+  },
+  runDbStatement(target: DbTarget, body: { sql: string; enforce_rls: boolean; teacher_id?: string | null; review_token?: string; phrase?: string; second_phrase?: string; password?: string }) {
+    return request<DbRunResponse>(`/admin/database/${target}/sql/run`, { method: "POST", body: JSON.stringify(body) });
   },
   getRlsStatus() {
     return request<RlsStatus>("/admin/security/rls-status");

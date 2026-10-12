@@ -965,3 +965,152 @@ export type AuthProbeResult = {
   code_visible: boolean;
   message: AuthOutboxMessage | null;
 };
+
+// ---------------------------------------------------------------------------------------------
+// Database (owner only): schema browser, SQL console, history, pooling and guard status
+// ---------------------------------------------------------------------------------------------
+
+export type DbTarget = "production" | "test";
+
+export type DbTargetStatus = {
+  target: DbTarget;
+  label: string;
+  configured: boolean;
+  reachable: boolean;
+  locked: boolean;
+  locked_reason: string | null;
+  host: string | null;
+  database: string | null;
+  marker_present: boolean | null;
+  environment: string;
+};
+
+export type DbGuard = {
+  installed: boolean;
+  mode: string | null;
+  version: string | null;
+  expected_version: string;
+  up_to_date: boolean;
+  guarded_columns: number;
+  unguarded: string[];
+};
+
+export type DbPooling = {
+  connection_mode: string;
+  app_pool_size: number;
+  app_max_overflow: number;
+  app_pool_recycle_seconds: number;
+  app_pre_ping: boolean;
+  workers: number;
+  max_app_connections: number;
+  sync_threadpool_per_worker: number;
+  max_concurrent_generations_per_worker: number;
+  generation_wait_seconds: number;
+  statement_timeout_console_seconds: number;
+  note: string;
+};
+
+export type DbOverview = DbTargetStatus & {
+  server_version: string;
+  connected_as: string;
+  bypasses_rls: boolean;
+  size_bytes: number;
+  max_connections: number;
+  connections_by_state: { state: string; connections: number }[];
+  connections_in_use: number;
+  table_count: number;
+  rows_estimate_total: number;
+  rls_enabled_tables: number;
+  rls_forced_tables: number;
+  tables_without_rls: string[];
+  guard: DbGuard;
+  pooling: DbPooling;
+};
+
+export type DbTableSummary = {
+  name: string;
+  label: string;
+  group: string;
+  description: string;
+  restricted: boolean;
+  rows_estimate: number;
+  bytes: number;
+  columns: number;
+  indexes: number;
+  policies: number;
+  triggers: number;
+  rls_enabled: boolean;
+  rls_forced: boolean;
+  guarded: boolean;
+};
+
+export type DbColumn = {
+  position: number;
+  name: string;
+  label: string;
+  type: string;
+  friendly_type: string;
+  nullable: boolean;
+  default_value: string | null;
+  comment: string | null;
+  primary_key: boolean;
+  references: string | null;
+  sensitive: boolean;
+};
+
+export type DbTableDetail = DbTableSummary & {
+  table: string;
+  columns: DbColumn[];
+  constraints: { name: string; kind: string; kind_label: string; definition: string; columns: string[] | null; references_table: string | null }[];
+  indexes: { name: string; definition: string }[];
+  policies: { name: string; command: string; permissive: string; roles: string[] | string; using_expression: string | null; with_check: string | null }[];
+  triggers: { name: string; definition: string; enabled: boolean }[];
+  referenced_by: { table_name: string; constraint_name: string }[];
+  ddl: string;
+};
+
+export type DbResultSet = {
+  columns: string[];
+  hidden_columns: string[];
+  rows: (string | number | boolean | null)[][];
+  row_count: number;
+  truncated: boolean;
+  duration_ms?: number;
+  rows_estimate?: number;
+};
+
+export type DbStatementAnalysis = { verb: string; risk: "read" | "write" | "high" | "critical" | "blocked"; kind: string; tables: string[]; has_where: boolean; blocked_reason: string | null; notes: string[] };
+
+export type DbTableFact = { name: string; label: string; rls_enabled: boolean; rls_forced: boolean; policies: number; guarded: boolean; rows_estimate: number };
+
+export type DbReview = {
+  target: DbTarget;
+  statement: string;
+  analysis: DbStatementAnalysis;
+  tables: DbTableFact[];
+  enforce_rls: boolean;
+  can_run: boolean;
+  requires_confirmation: boolean;
+  dry_run_error?: string;
+  rows_affected?: number | null;
+  returning?: DbResultSet | null;
+  phrase?: string;
+  second_phrase?: string | null;
+  review_token?: string;
+  expires_in_seconds?: number;
+  password_required?: boolean;
+};
+
+export type DbRunResponse = {
+  target: DbTarget;
+  analysis: DbStatementAnalysis;
+  tables: DbTableFact[];
+  changed: boolean;
+  result: DbResultSet & { ok?: boolean; rows_affected?: number | null; returning?: DbResultSet | null };
+};
+
+export type DbHistory = {
+  applied_files: { available: boolean; generated_from: string | null; written: string | null; sections: { title: string; entries: { files: string[]; status: "applied" | "not_applied" | "pending" | "note"; text: string }[] }[] };
+  migrations: { current: string | null; latest: string | null; up_to_date: boolean; chain: { revision: string; title: string; created: string | null; status: "applied" | "pending" | "unknown" }[] };
+  console_runs: { id: string; admin: string; at: string | null; target: DbTarget; verb: string; risk: string; tables: string[]; statement: string; outcome: string; rows_affected: number | null; error: string | null; duration_ms: number | null }[];
+};

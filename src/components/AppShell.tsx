@@ -36,7 +36,7 @@ function Icon({ name, className = "h-[18px] w-[18px]" }: { name: string; classNa
   );
 }
 
-const navGroups: { heading: string; items: { href: string; label: string; icon: string }[] }[] = [
+const navGroups: { heading: string; items: { href: string; label: string; icon: string; ownerOnly?: boolean }[] }[] = [
   { heading: "", items: [{ href: "/", label: "Overview", icon: "home" }] },
   {
     heading: "People",
@@ -71,6 +71,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
       { href: "/support", label: "Support", icon: "headset" },
       { href: "/maintenance", label: "Maintenance", icon: "wrench" },
       { href: "/backups", label: "Export & Backup", icon: "database" },
+      { href: "/database", label: "Database", icon: "database", ownerOnly: true },
       { href: "/health", label: "Health", icon: "pulse" },
       { href: "/logs", label: "Server Logs", icon: "list" },
       { href: "/run-tests", label: "Run Tests", icon: "check" },
@@ -133,7 +134,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         {navGroups.map((group) => (
           <div key={group.heading || "top"} className="mb-4">
             {group.heading ? <p className="px-3 pb-1.5 pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">{group.heading}</p> : null}
-            {group.items.map((item) => {
+            {group.items.filter((item) => !item.ownerOnly || admin.role === "owner").map((item) => {
               const active = router.pathname === item.href;
               return (
                 <Link
