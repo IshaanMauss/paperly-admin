@@ -2,9 +2,9 @@
 
 Last updated: 2026-10-03. Status: the proxy route is DONE in code (`src/pages/api/gateway/[...path].ts`, helpers in `src/lib/server/gatewayProxy.ts` and `cfAccess.ts`). The current deployment is a locally run panel (below). Hosting the panel, Cloudflare Access and a second login wall are OWNER decisions and are not set up.
 
-Problem this solves: the backend refuses every `/api/admin*` request unless it carries the gateway secret header (`ZTNA_GATEWAY_SECRET` on Railway). A browser cannot hold that secret (anything in browser code is public), so the admin panel was blocked with a 403 before the password was even checked.
+Problem this solves: the backend refuses every `/api/admin*` request unless the request carries the gateway secret header (`ZTNA_GATEWAY_SECRET` on Railway). A browser cannot hold that secret (anything in browser code is public), so the admin panel was blocked with a 403 before the password was even checked.
 
-## How it works
+## How the proxy works
 
 The diagram shows the hosted layout; with a locally run panel the Cloudflare Access step and the hosting step do not exist and the other steps are identical.
 
@@ -35,7 +35,7 @@ The admin panel runs on the admin's own computer (`npm run dev`) and talks to th
    - `ZTNA_GATEWAY_SECRET` = the same value as `ADMIN_GATEWAY_SECRET`
    - `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` / `ADMIN_BOOTSTRAP_NAME` for the first owner account
    - this panel's origin in `CORS_ORIGINS` (no wildcards), and `ALLOW_ADMIN_TOKEN_FALLBACK=false`
-3. Restart the admin panel (`npm run dev`), open it, and sign in with the admin account.
+3. Restart the admin panel (`npm run dev`), open the panel, and sign in with the admin account.
 
 Why this is safe: the admin panel is not on the internet at all (only on the admin's machine), the backend refuses every admin request that lacks the secret, and the admin email/password/role check still applies. The 4.5 MB and 60 second limits mentioned below do not apply when running locally.
 
@@ -43,7 +43,7 @@ To work against a purely local backend instead, use `NEXT_PUBLIC_API_BASE_URL=ht
 
 ## If the admin panel is ever hosted (for example on Vercel)
 
-Set the same three variables in that project (plus an Access or password wall in front of it, see below), and `ZTNA_GATEWAY_SECRET` on Railway. Leave `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` unset unless Cloudflare Access is used.
+Set the same three variables in that project (plus an Access or password wall in front of the project, see below), and `ZTNA_GATEWAY_SECRET` on Railway. Leave `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` unset unless Cloudflare Access is used.
 
 ## Optional extra login wall (add later, any one of these)
 
@@ -58,5 +58,5 @@ Leave `ZTNA_GATEWAY_SECRET` empty locally and keep `NEXT_PUBLIC_API_BASE_URL=htt
 ## Limits to know
 
 - Vercel functions cap request and response bodies at about 4.5 MB and run for up to 60 seconds. Large backup exports or restores above that size will not pass through this proxy; run those from a local admin session or move that single call to a signed direct download later.
-- Rotate `ADMIN_GATEWAY_SECRET` by changing it in this panel's environment and as `ZTNA_GATEWAY_SECRET` on the backend together (redeploy or restart both). Health shows whether the backend has the secret set.
-- The panel's own pages now send a Content-Security-Policy and security headers (`next.config.ts`, built in `src/lib/contentSecurityPolicy.ts`), in `CSP_MODE=report-only` first; violations are logged as `[csp]` by `/api/csp-report`. Switching to `enforce` is the remaining step. The backend sets its own on its responses.
+- Rotate `ADMIN_GATEWAY_SECRET` by changing the value in this panel's environment and as `ZTNA_GATEWAY_SECRET` on the backend together (redeploy or restart both). Health shows whether the backend has the secret set.
+- The panel's own pages now send a Content-Security-Policy and security headers (`next.config.ts`, built in `src/lib/contentSecurityPolicy.ts`), in `CSP_MODE=report-only` first; violations are logged as `[csp]` by `/api/csp-report`. Switching to `enforce` is the remaining step. The backend sets a separate one on responses.

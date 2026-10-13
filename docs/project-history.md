@@ -1,8 +1,8 @@
 # Project History
 
-Last updated: 2026-10-12.
+Last updated: 2026-10-13.
 
-This file is the month-level product history for the admin panel. It keeps the panel's role clear: monitoring, support, billing, plans, safety and operations. It should not drift into template ingestion, which remains outside this panel.
+This file is the month-level product history for the admin panel. The panel's role stays clear: monitoring, support, billing, plans, safety and operations. The file must not drift into template ingestion, which remains outside this panel.
 
 ## Documentation Standard
 
@@ -80,12 +80,12 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 ### 2026-10-03 (later): Audit Log, backups, evidence, live status
 
 - Added the Audit Log page (every admin write, filter by admin and failures).
-- Backups page now shows last export, who ran it and a stale warning; downloads use readable file names.
+- Backups page now shows last export, who ran the export and a stale warning; downloads use readable file names.
 - Security page can export incident evidence for an account.
 - Health page now shows a live system-status panel.
 - User 360 gained a Refund card (real Razorpay refund, once per payment, behind the separate `billing.refund` permission).
 - Backend gained a Content-Security-Policy and a per-account admin login lockout; CI gained `security.yml` (non-blocking `npm audit`, secret scan, weekly run).
-- Wrote `docs/admin-pages-and-permissions.md` from the code: every page, its backend routes and permission keys.
+- Wrote `docs/admin-pages-and-permissions.md` from the code: every page, with backend routes and permission keys.
 
 ## Current Open Threads
 
@@ -97,8 +97,8 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 
 ## 2026-10-03 - Variant Health tab redesigned
 
-- The tab now lists each template with when it was added, updated and approved, and its exhaustion. Show more opens possible number combinations, possible different answers and wordings, labelled exact, estimate or very large.
-- A Calculate missing numbers button fills the sizes for templates that have none, in small batches until none remain. It must be pressed once after deploy for the 125 approved templates.
+- The tab now lists each template with the dates added, updated and approved, and the exhaustion. Show more opens possible number combinations, possible different answers and wordings, labelled exact, estimate or very large.
+- A Calculate missing numbers button fills the sizes for templates that have none, in small batches until none remain. The button must be pressed once after deploy for the 125 approved templates.
 - Still open: changes are uncommitted and not deployed.
 
 ## 2026-10-08 (night) - Export data, plans apply bar, Variant Health, User 360 tabs
@@ -111,9 +111,9 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 
 ## 2026-10-10 - Payments page, Offers price preview, dollar prices
 
-- New Payments page (`src/pages/payments.tsx`, nav entry in `AppShell.tsx`) reading `GET /admin/payments`: summary tiles (collected, last 30 days, last 24 hours, checkouts not completed), filter tabs, search by name, email, payment or order id and promo code, dollar and rupee amounts with the GST inside, offer or code used, method, IDs and a link to User 360. Unfinished checkouts are the first place to look when someone says they paid and nothing happened.
+- New Payments page (`src/pages/payments.tsx`, nav entry in `AppShell.tsx`) reading `GET /admin/payments`: summary tiles (collected, last 30 days, last 24 hours, checkouts not completed), filter tabs, search by name, email, payment or order id and promo code, dollar and rupee amounts with the GST inside, offer or code used, method, IDs and a link to User 360. Unfinished checkouts are the first place to look when a user reports a payment and nothing happened.
 - Offers: a new offer shows the customer price after the discount in dollars and rupees; the fixed dollar rate is 97.
-- Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or its per-month price is above Quarterly.
+- Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or the per-month price is above Quarterly.
 - Organizations and User 360 evidence panels show the new amounts.
 
 ## October 2026 (12th)
@@ -127,3 +127,12 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
 - Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
 
+## 2026-10-13 - Device sign-in controls: Sign-in and Fix tabs, Paused and banned accounts
+
+- User 360, Sign-in tab: shows device_state, devices (with accounts_on_device), bans and device_events for the one-ID-one-device rule (cookie `paperly_device`; detail in `paperly-mvp/docs/one-device-rule.md`).
+- User 360, Fix tab: Unpause device changes, Reset devices, and Ban / Lift ban (reason of at least 8 characters, written to the admin action log). Endpoints: `POST /admin/users/{id}/devices/unpause`, `/devices/reset`, `POST /admin/teachers/{id}/ban`, `/unban`.
+- Users page: new "Paused and banned accounts" card (`DeviceFlagsCard`) reading `GET /admin/users/flags`.
+- Rule behind the controls: the device-change limit is now 2 per 24 hours; after two completed switches the ID is paused 24 hours after the newest switch (refused attempts do not count). Bans cover phone, email (Gmail dots and +tags ignored) and device, survive account deletion, and a device may hold at most 2 accounts ever (test accounts exempt).
+- Production database: the device-lock migration was applied on 2026-10-13 before this release (migration first, then backend, then teacher module and admin panel).
+- Architecture: the device sign-in and ban flow was added as Mermaid source in `docs/architecture-diagrams.md`; the entry is not yet in the page catalog.
+- Commits (local, not pushed): `72c0e69`, `488a8e5`.

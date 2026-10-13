@@ -2,11 +2,11 @@
 
 Date: 2026-10-03
 
-This record describes the admin frontend as it exists in code. It is a control-plane map: how the panel is structured, how it reaches the backend, what operational workflows it exposes, and which risks matter before changing it.
+This record describes the admin frontend as the code stands. The record is a control-plane map: how the panel is structured, how the panel reaches the backend, what operational workflows the panel exposes, and which risks matter before changing the code.
 
 ## Architectural Style
 
-The admin panel is a Next.js Pages Router application. It is separate from the teacher product surface and acts as an operational control plane for the same backend.
+The admin panel is a Next.js Pages Router application. The panel is separate from the teacher product surface and acts as an operational control plane for the same backend.
 
 The architecture is a protected frontend control plane:
 
@@ -17,7 +17,7 @@ The architecture is a protected frontend control plane:
 - `src/lib/server/gatewayProxy.ts` forwards requests while adding the backend gateway secret server-side.
 - `src/lib/adminAuth.tsx` and `src/lib/adminToken.ts` manage admin access/refresh state.
 
-The admin panel should never be treated as only a dashboard. It can mutate plan configuration, users, billing, organizations, offers, promo codes, support status, maintenance mode, backups, template state, and test-center execution.
+The admin panel should never be treated as only a dashboard. The panel can mutate plan configuration, users, billing, organizations, offers, promo codes, support status, maintenance mode, backups, template state, and test-center execution.
 
 ## Runtime Entry Points
 
@@ -73,7 +73,7 @@ Responsibilities:
 
 `src/lib/apiClient.ts`
 
-This is the main typed interface to the backend. It covers:
+This is the main typed interface to the backend. The client covers:
 
 - Template list/create/approve/replace/archive/preview/extract.
 - Worksheet generation/export URLs.
@@ -108,8 +108,8 @@ The shell uses admin session readiness to show a splash, redirect unsigned acces
 `src/pages`
 
 - `index.tsx`: overview metrics and entry cards.
-- `teachers.tsx`: user list, segments, test flag, account visibility.
-- `user-360.tsx`: single-user operational actions, including plan grants, promo force redeem, session reset, quota reset, unsticking generation, email verification, suspend/unsuspend, export/delete on behalf, billing cancel/refund, and export regeneration.
+- `teachers.tsx`: user list, segments, test flag, account visibility, and the "Paused and banned accounts" card (`GET /admin/users/flags`).
+- `user-360.tsx`: single-user operational actions, including plan grants, promo force redeem, session reset, quota reset, unsticking generation, email verification, suspend/unsuspend, export/delete on behalf, billing cancel/refund, export regeneration, and the device and ban controls (Sign-in tab state; unpause device changes, reset devices, ban and lift ban).
 - `users.tsx`: admin team and permission management.
 - `organizations.tsx`: organization list, branding, feature flags, institute requests.
 - `billing.tsx`: subscriptions and payment events.
@@ -132,7 +132,7 @@ The shell uses admin session readiness to show a splash, redirect unsigned acces
 
 `src/components/review/*`, `src/components/preview/*`, `src/components/templates/*`, `src/components/upload/*`
 
-These components support template review, sample display, math-rich preview, upload/extraction, and template-list surfaces. They are shared admin primitives for ingestion and validation work.
+These components support template review, sample display, math-rich preview, upload/extraction, and template-list surfaces. These components are shared admin primitives for ingestion and validation work.
 
 ## Main Workflows
 
@@ -172,6 +172,7 @@ These components support template review, sample display, math-rich preview, upl
 3. Each sensitive action requires a reason and calls a dedicated backend endpoint.
 4. Backend audit log is the source of accountability.
 5. Page reloads or updates local state after action.
+6. Device and ban actions (unpause, reset devices, ban, lift ban) follow the same path with a reason of at least 8 characters for bans; the flow is drawn in `docs/architecture-diagrams.md`.
 
 ### Run Tests
 
@@ -233,7 +234,7 @@ Backup restore is inherently dangerous. Dry-run evidence, confirmation wording, 
 
 ### Test-Center Data Risk
 
-Test-center seed/wipe and auth probe actions must remain scoped to the proper test environment. The panel can initiate them, but database guards and backend checks must prevent real/test data mixing.
+Test-center seed/wipe and auth probe actions must remain scoped to the proper test environment. The panel can initiate these actions, but database guards and backend checks must prevent real/test data mixing.
 
 ### Plan Editing Risk
 

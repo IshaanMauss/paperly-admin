@@ -2,9 +2,9 @@
 
 ## Current state (2026-10-03)
 
-Status: DONE for Levels 0, 1 and 2 below; checked against `src/pages`, `src/lib`, `src/components` and `src/pages/api/gateway/[...path].ts`. Permission decisions, automatic audit of write routes, login lockout and the strict API CSP are backend behaviour in `paperly-mvp` and are NOT CHECKABLE from this repo; the diagrams show them as the boundary this panel calls.
+Status: DONE for Levels 0, 1 and 2 below; checked against `src/pages`, `src/lib`, `src/components` and `src/pages/api/gateway/[...path].ts`. Permission decisions, automatic audit of write routes, login lockout and the strict API CSP are backend behaviour in `paperly-mvp` and are NOT CHECKABLE from this repo; the diagrams show those behaviours as the boundary this panel calls.
 
-Rule: admin sessions and actions stay isolated from teacher sessions (admin tokens carry audience `paperly-admin`). The panel monitors and controls the platform; it does not own template ingestion or teacher paper building.
+Rule: admin sessions and actions stay isolated from teacher sessions (admin tokens carry audience `paperly-admin`). The panel monitors and controls the platform; the panel does not own template ingestion or teacher paper building.
 
 ### Level 0 - context
 
@@ -49,7 +49,7 @@ flowchart TD
   BE --> AUD[("Admin audit log and security events")]
 ```
 
-Pages in `src/pages` and the sections in the sidebar (`AppShell.tsx`): Overview, Users, User 360, Organizations, Admin Team, Billing, Plans and Features, Offers, Promo Codes, Paper Builders, AI Checking, Variant Health, Support, Maintenance, Backups, Health, Server Logs, Run Tests, Security, Audit Log. Write controls are hidden or disabled by `hasPermission(...)` where the page checks it (for example `organizations.write`, `billing.write`, `users.write`); the backend remains the authority.
+Pages in `src/pages` and the sections in the sidebar (`AppShell.tsx`): Overview, Users, User 360, Organizations, Admin Team, Billing, Plans and Features, Offers, Promo Codes, Paper Builders, AI Checking, Variant Health, Support, Maintenance, Backups, Health, Server Logs, Run Tests, Security, Audit Log. Write controls are hidden or disabled by `hasPermission(...)` where the page checks the permission (for example `organizations.write`, `billing.write`, `users.write`); the backend remains the authority.
 
 ### Level 2 - key flows
 
@@ -75,7 +75,7 @@ sequenceDiagram
   B->>API: on 401 one shared refresh, then retry once
 ```
 
-The login form shows backend error text only when it is plain text; HTML or traceback bodies fall back to a generic message.
+The login form shows backend error text only when the text is plain; HTML or traceback bodies fall back to a generic message.
 
 #### 2.2 Audited admin writes
 
@@ -151,7 +151,7 @@ The inline diagrams above are the current reference. Files kept in this folder:
 
 - `admin-control-panel-level1-flow.mmd` - OLDER Level 1 view (2026-08): lists seven sections only and predates audit log, health, run tests, plans, offers, organizations and the gateway proxy. Superseded by Level 1 above.
 - `admin-security-rbac-level2-flow.mmd` - still accurate for token validation, role permission gating and denied-attempt logging; the "step-up auth recommended" branch is not built. See 2.1.
-- `admin-panel-feature-coverage-gap-2026-09-05.mmd` - HISTORICAL and obsolete: every gap it listed is closed except template-lifecycle write routes (edit, replace, delete), which still have no caller in this repo (OPEN).
+- `admin-panel-feature-coverage-gap-2026-09-05.mmd` - HISTORICAL and obsolete: every gap listed there is closed except template-lifecycle write routes (edit, replace, delete), which still have no caller in this repo (OPEN).
 
 ## History
 

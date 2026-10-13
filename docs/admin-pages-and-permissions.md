@@ -1,13 +1,13 @@
 # Admin pages, backend routes and permission keys
 
-Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and `src/components/AppShell.tsx` in this repo, and from the route modules `admin*.py` under `paperly-mvp/backend/app/api/routes` (guards written as `_require_admin_permission("<key>")`). All routes are under `/api/admin` except where stated; the browser reaches them through `/api/gateway`.
+Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and `src/components/AppShell.tsx` in this repo, and from the route modules `admin*.py` under `paperly-mvp/backend/app/api/routes` (guards written as `_require_admin_permission("<key>")`). All routes are under `/api/admin` except where stated; the browser reaches the routes through `/api/gateway`.
 
 ## How permissions work
 
-- Roles and their default permission sets are in `paperly-mvp/backend/app/services/admin_auth.py` (`ROLE_PERMISSIONS`). `owner` has `*` (everything) and cannot be limited. A non-owner account with a custom permission list uses exactly that list; otherwise it gets its role's defaults. Changes apply to new checks immediately.
+- Roles and the default permission sets of each are in `paperly-mvp/backend/app/services/admin_auth.py` (`ROLE_PERMISSIONS`). `owner` has `*` (everything) and cannot be limited. A non-owner account with a custom permission list uses exactly that list; otherwise the account gets the defaults of the role. Changes apply to new checks immediately.
 - Defaults: admin = read keys (admin, users, billing, organizations, support, logs, security, maintenance, backups, promo, templates); security = admin.read, security.read/write, maintenance.read/write, users.read, logs.read/write, organizations.read/write; finance = admin.read, billing.read/write, backups.read, promo.read/write; support = admin.read, support.read/write, users.read, organizations.read/write; viewer = admin.read, health.read; template_manager, reviewer and uploader are template roles (not enforced on the ingestion dashboard yet). Keys that no role default includes, so owner-only unless ticked per account: `plans.read`, `plans.write`, `backups.write`, `accounts.read`, `accounts.write`, `users.write`, `billing.refund`.
 - Roles an owner can assign from Admin Team: owner, admin, reviewer, uploader, viewer; permissions can be ticked per account from the list of 25 keys the backend enforces.
-- `security.write` (needed to run Run Tests write checks and manage the test database) is not in the tickable list: it comes only from the `security` role defaults or the owner role.
+- `security.write` (needed to run Run Tests write checks and manage the test database) is not in the tickable list: the key comes only from the `security` role defaults or the owner role.
 - The sidebar shows every page to every signed-in admin. A page the account cannot read gets a 403 from the backend; only Users, Organizations, Paper Builders and Admin Team also hide or disable controls in the UI with `hasPermission(...)`. The backend check is the real gate. Denied attempts are logged as security events.
 - Every write (POST, PUT, PATCH, DELETE) is recorded in the Audit Log automatically.
 
@@ -15,11 +15,12 @@ Last updated: 2026-10-03. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 
 | Page (nav label, file) | Backend routes used | Permission key |
 |---|---|---|
-| Sign in (`login.tsx`) | `POST /admin/auth/login`, `/refresh`, `/logout`, `GET /me`, `POST /change-password` | none (sign-in itself); lockout after repeated failures |
+| Sign in (`login.tsx`) | `POST /admin/auth/login`, `/refresh`, `/logout`, `GET /me`, `POST /change-password` | none (the sign-in route); lockout after repeated failures |
 | Overview (`index.tsx`) | `GET /overview` | `admin.read` |
-| Users (`teachers.tsx`) | `GET /teachers`; `PATCH /teachers/{id}/test-flag` | `users.read`; `users.write` |
-| User 360 (`user-360.tsx`, tabs: Summary with dispute checklist, Payments, Papers, Sign-in, Messages & tickets, Timeline, Fix account; panels in `components/user360/EvidencePanels.tsx`) | `GET /users/resolve`, `GET /users/{id}/three-sixty`, `GET /teachers/{id}/export` | `users.read` |
+| Users (`teachers.tsx`, includes the "Paused and banned accounts" card, `DeviceFlagsCard`) | `GET /teachers`; `GET /users/flags` (accounts paused for device changes, accounts with an active ban); `PATCH /teachers/{id}/test-flag` | `users.read`; `users.write` |
+| User 360 (`user-360.tsx`, tabs: Summary with dispute checklist, Payments, Papers, Sign-in, Messages & tickets, Timeline, Fix account; the Sign-in tab shows device_state, devices (with accounts_on_device), bans and device_events; panels in `components/user360/EvidencePanels.tsx`) | `GET /users/resolve`, `GET /users/{id}/three-sixty`, `GET /teachers/{id}/export` | `users.read` |
 | | `POST /users/{id}/grant-plan`, `/session/reset`, `/verify-email`; `POST /teachers/{id}/suspend`, `/unsuspend`, `/delete` | `users.write` |
+| | Fix-tab device and ban actions: `POST /users/{id}/devices/unpause` (restarts the device-change count), `POST /users/{id}/devices/reset` (clears registered devices), `POST /teachers/{id}/ban` and `/unban` (reason of at least 8 characters, written to the admin action log) | `users.write` |
 | | `POST /users/{id}/quota/reset`, `/generation/unstick`; `POST /worksheets/{id}/regenerate-export` | `maintenance.write` |
 | | `POST /users/{id}/promo/force-redeem`; `GET /promo-codes` (code picker) | `promo.write`; `promo.read` |
 | | `POST /teachers/{id}/billing/cancel` | `billing.write` |
