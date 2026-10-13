@@ -698,7 +698,8 @@ export type UserSignInBlock = {
 
 export type UserUsageEntry = { used: number; limit: number | null; window?: string };
 export type UserThreeSixty = {
-  devices?: { role: string; label: string | null; active: boolean; added_at: string | null; last_used_at: string | null; ip_address: string | null }[];
+  device_state?: { switches_24h: number; switch_limit: number; paused_until: string | null } | null;
+  devices?: { accounts_on_device?: number | null; role: string; label: string | null; active: boolean; added_at: string | null; last_used_at: string | null; ip_address: string | null }[];
   bans?: { kind: string; active: boolean; reason: string | null; banned_by: string | null; created_at: string | null }[];
   device_events?: { event: string; method: string | null; at: string | null; ip_address: string | null; label: string | null }[];
   payments_detail?: UserPaymentDetail[];
@@ -1116,4 +1117,9 @@ export type DbHistory = {
   applied_files: { available: boolean; generated_from: string | null; written: string | null; sections: { title: string; entries: { files: string[]; status: "applied" | "kept" | "not_applied" | "pending" | "note"; text: string }[] }[] };
   migrations: { current: string | null; latest: string | null; up_to_date: boolean; chain: { revision: string; title: string; created: string | null; status: "applied" | "pending" | "unknown" }[] };
   console_runs: { id: string; admin: string; at: string | null; target: DbTarget; verb: string; risk: string; tables: string[]; statement: string; outcome: string; rows_affected: number | null; error: string | null; duration_ms: number | null }[];
+};
+
+export type DeviceFlags = {
+  paused: { teacher_id: string; name: string | null; email: string | null; paused_until: string }[];
+  banned: { teacher_id: string | null; name: string | null; email: string | null; account_exists: boolean; kinds: string[]; reason: string | null; banned_by: string | null; created_at: string | null }[];
 };

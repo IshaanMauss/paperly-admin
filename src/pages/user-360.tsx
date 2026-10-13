@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 
 import { AppShell } from "@/components/AppShell";
 import { panel, planLabel } from "@/components/ui";
+import { DeviceSafetyPanel } from "@/components/DeviceSafetyPanel";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
 import { usePersistedState } from "@/lib/draftStore";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
@@ -196,6 +197,10 @@ export default function UserThreeSixtyPage() {
   const [devBusy, setDevBusy] = useState(false);
   const [devError, setDevError] = useState<string | null>(null);
   const [devSuccess, setDevSuccess] = useState<string | null>(null);
+  const [unpauseReason, setUnpauseReason] = useState("");
+  const [unpauseBusy, setUnpauseBusy] = useState(false);
+  const [unpauseError, setUnpauseError] = useState<string | null>(null);
+  const [unpauseSuccess, setUnpauseSuccess] = useState<string | null>(null);
   const [banReason, setBanReason] = useState("");
   const [banBusy, setBanBusy] = useState(false);
   const [banError, setBanError] = useState<string | null>(null);
@@ -218,6 +223,26 @@ export default function UserThreeSixtyPage() {
       setDevError(err instanceof Error ? err.message : "Could not reset devices.");
     } finally {
       setDevBusy(false);
+    }
+  }
+
+  async function submitUnpause() {
+    if (!teacherIdParam || unpauseReason.trim().length < 8) {
+      setUnpauseError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setUnpauseBusy(true);
+    setUnpauseError(null);
+    setUnpauseSuccess(null);
+    try {
+      const result = await api.unpauseUserDevices(teacherIdParam, { reason: unpauseReason.trim() });
+      setUnpauseSuccess(result.was_paused ? "Pause lifted. The device-change count restarted." : "There was no pause, but the device-change count was restarted.");
+      setUnpauseReason("");
+      reload();
+    } catch (err) {
+      setUnpauseError(err instanceof Error ? err.message : "Could not lift the pause.");
+    } finally {
+      setUnpauseBusy(false);
     }
   }
 
@@ -773,6 +798,8 @@ export default function UserThreeSixtyPage() {
             {tab === "messages" && <MessagesPanel messages={data.messages ?? []} tickets={data.tickets ?? []} />}
             {tab === "signin" && data.sign_in && <SignInSummary info={data.sign_in} />}
 
+            {tab === "signin" && <DeviceSafetyPanel data={data} />}
+
             {tab === "signin" && data.auth && (
               <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-soft">
                 <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Login / auth record - use this to verify a "login isn't working" claim</p>
@@ -936,6 +963,25 @@ export default function UserThreeSixtyPage() {
                     placeholder="Reason (required) - e.g. OTP kept expiring before they could complete onboarding"
                     value={verifyReason}
                     onChange={(event) => setVerifyReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Unpause device changes"
+                  description={data.device_state?.paused_until ? `Paused until ${formatDateTime(data.device_state.paused_until)}. Lifting it restarts the 2-changes-in-24-hours count and keeps their devices as they are.` : "Not paused right now. Use this only if they say they were blocked; it restarts the count."}
+                  busy={unpauseBusy}
+                  error={unpauseError}
+                  success={unpauseSuccess}
+                  submitLabel="Unpause"
+                  confirmMessage="Lift the device-change pause for this user now?"
+                  onSubmit={submitUnpause}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. genuine user, identity confirmed"
+                    value={unpauseReason}
+                    onChange={(event) => setUnpauseReason(event.target.value)}
                   />
                 </ActionCard>
 

@@ -6,6 +6,7 @@ import { panel, planLabel } from "@/components/ui";
 import { useAdminSession } from "@/lib/adminAuth";
 import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { AdminTeacherRow, api } from "@/lib/apiClient";
+import { DeviceFlagsCard } from "@/components/DeviceFlagsCard";
 
 type UserSegment = "all" | "individual" | "institute";
 type SortMode = "newest" | "oldest" | "most_active" | "paid_first" | "profile_complete";
@@ -142,6 +143,7 @@ export default function UsersPage() {
 
   return (
     <AppShell title="User Monitoring">
+      <DeviceFlagsCard />
       <section className={panel}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>

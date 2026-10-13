@@ -52,6 +52,7 @@ import type {
   PromoCodeRedemptionRow,
   UserResolveHit,
   UserThreeSixty,
+  DeviceFlags,
   DbTarget,
   DbTargetStatus,
   DbOverview,
@@ -562,6 +563,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+  unpauseUserDevices(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; was_paused: boolean }>(`/admin/users/${encodeURIComponent(teacherId)}/devices/unpause`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  getDeviceFlags() {
+    return request<DeviceFlags>("/admin/users/flags");
   },
   resetUserDevices(teacherId: string, payload: { reason: string }) {
     return request<{ teacher_id: string; devices_removed: number; device_account_counts_cleared: number }>(`/admin/users/${encodeURIComponent(teacherId)}/devices/reset`, {
