@@ -127,6 +127,11 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
 - Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
 
+## 2026-10-14 - Needs review signals
+
+- Users page: the `DeviceFlagsCard` gains a "Needs review" list of abuse signals with Dismiss and Open user. `GET /admin/users/flags` now returns signals too; `POST /admin/users/signals/{id}/dismiss` needs `users.write`. Signals only warn; no automatic ban. Behaviour and settings: `paperly-mvp/docs/one-device-rule.md`.
+- The backend migration `abuse-signals-migration.sql` is NOT YET APPLIED to production; until then the list stays empty.
+
 ## 2026-10-13 - Device sign-in controls: Sign-in and Fix tabs, Paused and banned accounts
 
 - User 360, Sign-in tab: shows device_state, devices (with accounts_on_device), bans and device_events for the one-ID-one-device rule (cookie `paperly_device`; detail in `paperly-mvp/docs/one-device-rule.md`).

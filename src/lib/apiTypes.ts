@@ -1122,4 +1122,5 @@ export type DbHistory = {
 export type DeviceFlags = {
   paused: { teacher_id: string; name: string | null; email: string | null; paused_until: string }[];
   banned: { teacher_id: string | null; name: string | null; email: string | null; account_exists: boolean; kinds: string[]; reason: string | null; banned_by: string | null; created_at: string | null }[];
+  signals: { id: string; kind: string; label: string; teacher_id: string | null; name?: string | null; email?: string | null; detail: Record<string, unknown>; created_at: string | null }[];
 };

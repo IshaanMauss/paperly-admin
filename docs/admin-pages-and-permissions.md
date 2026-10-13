@@ -17,7 +17,7 @@ Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 |---|---|---|
 | Sign in (`login.tsx`) | `POST /admin/auth/login`, `/refresh`, `/logout`, `GET /me`, `POST /change-password` | none (the sign-in route); lockout after repeated failures |
 | Overview (`index.tsx`) | `GET /overview` | `admin.read` |
-| Users (`teachers.tsx`, includes the "Paused and banned accounts" card, `DeviceFlagsCard`) | `GET /teachers`; `GET /users/flags` (accounts paused for device changes, accounts with an active ban); `PATCH /teachers/{id}/test-flag` | `users.read`; `users.write` |
+| Users (`teachers.tsx`, includes the "Paused and banned accounts" and "Needs review" cards, `DeviceFlagsCard`) | `GET /teachers`; `GET /users/flags` (accounts paused for device changes, accounts with an active ban, and open review signals); `POST /users/signals/{id}/dismiss`; `PATCH /teachers/{id}/test-flag` | `users.read`; `users.write` |
 | User 360 (`user-360.tsx`, tabs: Summary with dispute checklist, Payments, Papers, Sign-in, Messages & tickets, Timeline, Fix account; the Sign-in tab shows device_state, devices (with accounts_on_device), bans and device_events; panels in `components/user360/EvidencePanels.tsx`) | `GET /users/resolve`, `GET /users/{id}/three-sixty`, `GET /teachers/{id}/export` | `users.read` |
 | | `POST /users/{id}/grant-plan`, `/session/reset`, `/verify-email`; `POST /teachers/{id}/suspend`, `/unsuspend`, `/delete` | `users.write` |
 | | Fix-tab device and ban actions: `POST /users/{id}/devices/unpause` (restarts the device-change count), `POST /users/{id}/devices/reset` (clears registered devices), `POST /teachers/{id}/ban` and `/unban` (reason of at least 8 characters, written to the admin action log) | `users.write` |

@@ -570,6 +570,9 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  dismissReviewSignal(signalId: string) {
+    return request<{ id: string; status: string }>(`/admin/users/signals/${encodeURIComponent(signalId)}/dismiss`, { method: "POST", body: JSON.stringify({}) });
+  },
   getDeviceFlags() {
     return request<DeviceFlags>("/admin/users/flags");
   },
