@@ -563,6 +563,24 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+  resetUserDevices(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; devices_removed: number; device_account_counts_cleared: number }>(`/admin/users/${encodeURIComponent(teacherId)}/devices/reset`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  banTeacherAccount(teacherId: string, payload: { reason: string; scopes?: string[] }) {
+    return request<{ teacher_id: string; is_suspended: boolean }>(`/admin/teachers/${encodeURIComponent(teacherId)}/ban`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+  unbanTeacherAccount(teacherId: string, payload: { reason: string }) {
+    return request<{ teacher_id: string; is_suspended: boolean }>(`/admin/teachers/${encodeURIComponent(teacherId)}/unban`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
   verifyUserEmail(teacherId: string, payload: { reason: string }) {
     return request<{ teacher_id: string; email_verified: boolean }>(`/admin/users/${encodeURIComponent(teacherId)}/verify-email`, {
       method: "POST",

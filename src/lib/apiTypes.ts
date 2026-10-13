@@ -698,6 +698,9 @@ export type UserSignInBlock = {
 
 export type UserUsageEntry = { used: number; limit: number | null; window?: string };
 export type UserThreeSixty = {
+  devices?: { role: string; label: string | null; active: boolean; added_at: string | null; last_used_at: string | null; ip_address: string | null }[];
+  bans?: { kind: string; active: boolean; reason: string | null; banned_by: string | null; created_at: string | null }[];
+  device_events?: { event: string; method: string | null; at: string | null; ip_address: string | null; label: string | null }[];
   payments_detail?: UserPaymentDetail[];
   dispute_checks?: UserDisputeCheck[];
   messages?: UserMessageRow[];

@@ -192,6 +192,57 @@ export default function UserThreeSixtyPage() {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [verifySuccess, setVerifySuccess] = useState<string | null>(null);
 
+  const [devReason, setDevReason] = useState("");
+  const [devBusy, setDevBusy] = useState(false);
+  const [devError, setDevError] = useState<string | null>(null);
+  const [devSuccess, setDevSuccess] = useState<string | null>(null);
+  const [banReason, setBanReason] = useState("");
+  const [banBusy, setBanBusy] = useState(false);
+  const [banError, setBanError] = useState<string | null>(null);
+  const [banSuccess, setBanSuccess] = useState<string | null>(null);
+
+  async function submitResetDevices() {
+    if (!teacherIdParam || devReason.trim().length < 8) {
+      setDevError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setDevBusy(true);
+    setDevError(null);
+    setDevSuccess(null);
+    try {
+      const result = await api.resetUserDevices(teacherIdParam, { reason: devReason.trim() });
+      setDevSuccess(`Signed out everywhere; ${result.devices_removed} device(s) forgotten and the device count restarted.`);
+      setDevReason("");
+      reload();
+    } catch (err) {
+      setDevError(err instanceof Error ? err.message : "Could not reset devices.");
+    } finally {
+      setDevBusy(false);
+    }
+  }
+
+  async function submitBan(lift: boolean) {
+    if (!teacherIdParam || banReason.trim().length < 8) {
+      setBanError("Write a reason of at least 8 characters.");
+      return;
+    }
+    setBanBusy(true);
+    setBanError(null);
+    setBanSuccess(null);
+    try {
+      if (lift) await api.unbanTeacherAccount(teacherIdParam, { reason: banReason.trim() });
+      else await api.banTeacherAccount(teacherIdParam, { reason: banReason.trim() });
+      setBanSuccess(lift ? "Ban lifted and account unsuspended." : "Banned: phone, email and devices blocked, signed out everywhere.");
+      setBanReason("");
+      reload();
+      requestAdminDataRefresh();
+    } catch (err) {
+      setBanError(err instanceof Error ? err.message : "Could not change the ban.");
+    } finally {
+      setBanBusy(false);
+    }
+  }
+
   useEffect(() => {
     api.getPromoCodes().then((response) => setPlanOptions(response.plan_options)).catch(() => undefined);
   }, []);
@@ -885,6 +936,46 @@ export default function UserThreeSixtyPage() {
                     placeholder="Reason (required) - e.g. OTP kept expiring before they could complete onboarding"
                     value={verifyReason}
                     onChange={(event) => setVerifyReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title="Reset this user's devices"
+                  description={`One-ID-one-device unlock (lost device, switch limit). Signs them out everywhere, forgets main and backup device, restarts the switch count and the 2-accounts-per-device count. Known devices: ${(data.devices || []).filter((d) => d.active).map((d) => `${d.role}${d.label ? ` (${d.label})` : ""}`).join(", ") || "none"}.`}
+                  busy={devBusy}
+                  error={devError}
+                  success={devSuccess}
+                  submitLabel="Reset devices"
+                  confirmMessage="Sign this user out everywhere and forget their devices?"
+                  onSubmit={submitResetDevices}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required) - e.g. lost phone, identity confirmed by support"
+                    value={devReason}
+                    onChange={(event) => setDevReason(event.target.value)}
+                  />
+                </ActionCard>
+
+                <ActionCard
+                  title={(data.bans || []).some((b) => b.active) ? "Lift this user's ban" : "Ban this user"}
+                  description={(data.bans || []).some((b) => b.active)
+                    ? `Active bans: ${(data.bans || []).filter((b) => b.active).map((b) => b.kind).join(", ")}. Lifting also unsuspends the account.`
+                    : "Suspends the account, signs it out everywhere and bans its phone number, email (Gmail dots and +tags ignored) and devices, even after the account is deleted. A device ban only holds until the person clears cookies."}
+                  busy={banBusy}
+                  error={banError}
+                  success={banSuccess}
+                  submitLabel={(data.bans || []).some((b) => b.active) ? "Lift ban" : "Ban user"}
+                  confirmMessage={(data.bans || []).some((b) => b.active) ? "Lift every active ban for this user?" : "Ban this user's phone, email and devices?"}
+                  onSubmit={() => submitBan((data.bans || []).some((b) => b.active))}
+                >
+                  <textarea
+                    className="w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-slate-900"
+                    rows={2}
+                    placeholder="Reason (required, kept in the audit log)"
+                    value={banReason}
+                    onChange={(event) => setBanReason(event.target.value)}
                   />
                 </ActionCard>
 
