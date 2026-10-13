@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { AppShell } from "@/components/AppShell";
@@ -682,6 +683,7 @@ export default function UserThreeSixtyPage() {
                     )}
                   </h3>
                   <p className="mt-1 font-mono text-xs text-slate-500">{data.profile.teacher_id}</p>
+                  <Link href={`/messaging?user=${encodeURIComponent(data.profile.email || data.profile.teacher_id)}`} className="mt-1 inline-block text-xs font-bold text-purple-700 underline underline-offset-2">Message this user</Link>
                   <p className="mt-2 text-sm font-bold text-slate-600">
                     {data.profile.email} {data.profile.email_verified ? "(verified)" : "(not verified)"}
                     {data.profile.phone ? ` - ${data.profile.phone}` : ""}

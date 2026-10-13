@@ -141,3 +141,8 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Production database: the device-lock migration was applied on 2026-10-13 before this release (migration first, then backend, then teacher module and admin panel).
 - Architecture: the device sign-in and ban flow was added as Mermaid source in `docs/architecture-diagrams.md`; the entry is not yet in the page catalog.
 - Commits (local, not pushed): `72c0e69`, `488a8e5`.
+
+## 2026-10-14 - Messaging page
+
+- New page `src/pages/messaging.tsx` (tabs Send, History, Emails, Templates) and a "Message this user" link in User 360. Push, bell and email channels, audiences, scheduling and templates are described in `paperly-mvp/docs/push-notifications-and-messaging.md`; routes and permissions in `docs/admin-pages-and-permissions.md`.
+- Checked: type check and lint. NOT yet seen in a browser.

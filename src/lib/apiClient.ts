@@ -62,6 +62,16 @@ import type {
   DbReview,
   DbRunResponse,
   DbHistory,
+  MessageHistory,
+  MessageHistoryParams,
+  MessageEstimate,
+  MessageSendPayload,
+  MessageDetail,
+  MessageEmailLog,
+  MessageTemplate,
+  MessageTemplatePayload,
+  MessageAudienceIn,
+  MessageKind,
 } from "@/lib/apiTypes";
 
 // Every response/payload type lives in apiTypes.ts; re-exported here so existing
@@ -693,5 +703,35 @@ export const api = {
   },
   wipeTestDatabase() {
     return request<{ users: number; institutes: number; promo_codes: number }>("/admin/test-center/test-db/wipe", { method: "POST" });
+  },
+  getMessageHistory(params?: MessageHistoryParams) {
+    return request<MessageHistory>(`/admin/notifications${adminQuery(params)}`);
+  },
+  estimateMessage(payload: { kind: MessageKind; audience: MessageAudienceIn }) {
+    return request<MessageEstimate>("/admin/notifications/estimate", { method: "POST", body: JSON.stringify(payload) });
+  },
+  sendMessage(payload: MessageSendPayload) {
+    return request<{ id: string; status: string; scheduled_at: string | null }>("/admin/notifications", { method: "POST", body: JSON.stringify(payload) });
+  },
+  getMessageDetail(id: string, params?: { channel?: string; status?: string }) {
+    return request<MessageDetail>(`/admin/notifications/${encodeURIComponent(id)}${adminQuery(params)}`);
+  },
+  cancelMessage(id: string) {
+    return request<{ id: string; status: string }>(`/admin/notifications/${encodeURIComponent(id)}/cancel`, { method: "POST" });
+  },
+  getMessageEmailLog(params?: { source?: "admin" | "system"; q?: string; status?: string; limit?: number }) {
+    return request<MessageEmailLog>(`/admin/notifications/emails/log${adminQuery(params)}`);
+  },
+  listMessageTemplates() {
+    return request<{ items: MessageTemplate[] }>("/admin/notifications/templates");
+  },
+  createMessageTemplate(payload: MessageTemplatePayload) {
+    return request<{ id: string }>("/admin/notifications/templates", { method: "POST", body: JSON.stringify(payload) });
+  },
+  updateMessageTemplate(id: string, payload: MessageTemplatePayload) {
+    return request<{ id: string }>(`/admin/notifications/templates/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  deleteMessageTemplate(id: string) {
+    return request<{ id: string }>(`/admin/notifications/templates/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
 };

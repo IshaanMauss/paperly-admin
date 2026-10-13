@@ -110,6 +110,7 @@ The shell uses admin session readiness to show a splash, redirect unsigned acces
 - `index.tsx`: overview metrics and entry cards.
 - `teachers.tsx`: user list, segments, test flag, account visibility, and the "Paused and banned accounts" card (`GET /admin/users/flags`).
 - `user-360.tsx`: single-user operational actions, including plan grants, promo force redeem, session reset, quota reset, unsticking generation, email verification, suspend/unsuspend, export/delete on behalf, billing cancel/refund, export regeneration, and the device and ban controls (Sign-in tab state; unpause device changes, reset devices, ban and lift ban).
+- `messaging.tsx`: send in-app, push and email messages to chosen audiences now or scheduled, history with delivery lines, email log, saved templates (`/admin/notifications`).
 - `users.tsx`: admin team and permission management.
 - `organizations.tsx`: organization list, branding, feature flags, institute requests.
 - `billing.tsx`: subscriptions and payment events.

@@ -11,7 +11,7 @@ export const adminDiagrams: Diagram[] = [
     summary: "The admin panel is a Next.js app: pages, a shell that handles navigation and access, a session library, and a server-side gateway that is its only door to the backend.",
     source: String.raw`flowchart TD
   subgraph Pages[pages/ - one per area]
-    P1[teachers, user-360, organizations, users]
+    P1[teachers, user-360, messaging, organizations, users]
     P2[payments, billing, plans, offers, promo-codes]
     P3[paper-builders, checking, variant-health]
     P4[support, maintenance, backups, health, logs, run-tests]
@@ -63,7 +63,7 @@ export const adminDiagrams: Diagram[] = [
   Home --> Product
   Home --> Operations
   subgraph People
-    U[Users] --- U3[User 360] --- O[Organizations] --- T[Admin Team]
+    U[Users] --- U3[User 360] --- Ms[Messaging] --- O[Organizations] --- T[Admin Team]
   end
   subgraph Money
     Pay[Payments] --- Bil[Billing] --- Pl[Plans and Features] --- Of[Offers] --- Pr[Promo Codes]

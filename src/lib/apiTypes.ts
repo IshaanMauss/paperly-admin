@@ -1124,3 +1124,109 @@ export type DeviceFlags = {
   banned: { teacher_id: string | null; name: string | null; email: string | null; account_exists: boolean; kinds: string[]; reason: string | null; banned_by: string | null; created_at: string | null }[];
   signals: { id: string; kind: string; label: string; teacher_id: string | null; name?: string | null; email?: string | null; detail: Record<string, unknown>; created_at: string | null }[];
 };
+
+// ---- Admin Messaging (GET/POST /admin/notifications) ----
+export type MessageKind = "account" | "offer" | "news";
+export type MessageChannel = "inbox" | "push" | "email";
+export type MessageAudienceIn = {
+  type: "all" | "plans" | "signup" | "users" | "organization";
+  plans?: string[];
+  which?: "new" | "old";
+  days?: number;
+  users?: string[];
+  organization_id?: string | null;
+};
+export type MessageAudienceStored = {
+  type?: string;
+  plans?: string[];
+  which?: "new" | "old";
+  days?: number;
+  teacher_ids?: string[];
+  organization_id?: string;
+};
+export type MessageStats = {
+  users?: number;
+  devices?: number;
+  accepted?: number;
+  emails_sent?: number;
+  emails_failed?: number;
+  [key: string]: number | string | null | undefined;
+};
+export type MessageRow = {
+  id: string;
+  kind: MessageKind;
+  title: string;
+  body: string;
+  url: string | null;
+  audience: MessageAudienceStored | null;
+  channels: MessageChannel[];
+  status: string;
+  teacher_id: string | null;
+  scheduled_at: string | null;
+  created_at: string | null;
+  sent_at: string | null;
+  created_by: string | null;
+  stats: MessageStats;
+  opened_count: number;
+};
+export type MessageHistory = {
+  ready: boolean;
+  push_enabled: boolean;
+  email_enabled: boolean;
+  devices: number;
+  users: number;
+  offers_opted_in: number;
+  items: MessageRow[];
+  plans: { code: string; label: string }[];
+};
+export type MessageHistoryParams = { scope?: "sent" | "automatic"; teacher_id?: string; kind?: string; status?: string; q?: string; limit?: number };
+export type MessageEstimate = { users: number; email_addresses: number; push_devices: number };
+export type MessageSendPayload = {
+  kind: MessageKind;
+  title: string;
+  body: string;
+  url?: string | null;
+  channels: MessageChannel[];
+  audience: MessageAudienceIn;
+  send_at?: string | null;
+};
+export type MessageDeliveryLine = {
+  teacher_id: string | null;
+  name: string | null;
+  channel: string;
+  recipient: string | null;
+  status: string;
+  error: string | null;
+  created_at: string | null;
+};
+export type MessageDetail = MessageRow & {
+  email_preview: { subject: string; text: string; html: string };
+  deliveries: MessageDeliveryLine[];
+  deliveries_note: string;
+};
+export type MessageEmailLogRow = {
+  id: string;
+  notification_id?: string;
+  recipient: string;
+  teacher_id?: string | null;
+  purpose?: string;
+  status: string;
+  error: string | null;
+  created_at: string | null;
+  title: string;
+  body?: string;
+  kind: string;
+};
+export type MessageEmailLog = { items: MessageEmailLogRow[]; note?: string };
+export type MessageTemplate = {
+  id: string;
+  name: string;
+  kind: MessageKind;
+  title: string;
+  body: string;
+  url: string | null;
+  channels: MessageChannel[];
+  created_by: string | null;
+  updated_at: string | null;
+};
+export type MessageTemplatePayload = { name: string; kind: MessageKind; title: string; body: string; url?: string | null; channels: MessageChannel[] };
