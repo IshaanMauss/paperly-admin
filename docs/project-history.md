@@ -127,7 +127,7 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
 - Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
 
-## 2026-10-14 - Needs review signals
+## 2026-10-13 - Needs review signals
 
 - Users page: the `DeviceFlagsCard` gains a "Needs review" list of abuse signals with Dismiss and Open user. `GET /admin/users/flags` now returns signals too; `POST /admin/users/signals/{id}/dismiss` needs `users.write`. Signals only warn; no automatic ban. Behaviour and settings: `paperly-mvp/docs/one-device-rule.md`.
 - The backend migration `abuse-signals-migration.sql` is NOT YET APPLIED to production; until then the list stays empty.
@@ -142,7 +142,7 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Architecture: the device sign-in and ban flow was added as Mermaid source in `docs/architecture-diagrams.md`; the entry is not yet in the page catalog.
 - Commits (local, not pushed): `72c0e69`, `488a8e5`.
 
-## 2026-10-14 - Messaging page
+## 2026-10-13 - Messaging page
 
 - New page `src/pages/messaging.tsx` (tabs Send, History, Emails, Templates) and a "Message this user" link in User 360. Push, bell and email channels, audiences, scheduling and templates are described in `paperly-mvp/docs/push-notifications-and-messaging.md`; routes and permissions in `docs/admin-pages-and-permissions.md`.
 - Checked: type check and lint. NOT yet seen in a browser.
