@@ -14,7 +14,7 @@ function fmt(value: number | null | undefined, digits = 2): string {
 
 /**
  * Explains, in plain words, how Variant Health numbers are worked out. The rules here mirror the backend
- * (admin_overview.get_template_variant_health): ratio = total usage / capacity, watch from 50%, exhausted from 90%.
+ * (admin_overview.get_template_variant_health): capacity = distinct final answers, ratio = total usage / capacity, watch from 50%, exhausted from 90%.
  * Usage is shown as an aggregate across all real accounts (and its average per account), never as a per-user list.
  */
 export function VariantFormulaGuide({ open, onClose, example }: { open: boolean; onClose: () => void; example?: VariantHealthRow | null }) {
@@ -53,11 +53,11 @@ export function VariantFormulaGuide({ open, onClose, example }: { open: boolean;
           </button>
         </div>
 
-        <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">1. Capacity (how many different questions exist)</h3>
+        <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">1. Capacity (how many different answers exist)</h3>
         <p className="text-sm font-semibold leading-6 text-slate-600">
-          The number of different questions the template can show. When a calculated count is stored and the template has not changed since, that exact count is used. Otherwise it is an upper bound: every variable&apos;s possible values multiplied together, ignoring rules that reject some combinations, so the real number can only be smaller.
+          Capacity is the number of different final answers the template can show. It is the answers count, not the number of number sets, because different numbers can give the same answer and a user notices a repeated answer. An exact count is used when the template can be fully counted; a large one is an estimate and is shown as &quot;at least&quot;; a very large one shows as 1,000,000+. Only when no answer count exists does the page fall back to combinations (shown as &quot;(combinations)&quot;) and then to an upper bound (every variable&apos;s possible values multiplied together, shown as &quot;(upper bound)&quot;).
         </p>
-        <Formula>{"capacity = number of distinct valid questions   (exact)\ncapacity ≈ range(a) × range(b) × range(c) …      (upper bound)"}</Formula>
+        <Formula>{"capacity = distinct final answers a user can see   (exact, or at least N for an estimate)\nfallback 1: combinations   (distinct valid number sets)\nfallback 2: range(a) × range(b) × range(c) …   (upper bound)"}</Formula>
 
         <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">2. Usage (how much it has been drawn from)</h3>
         <p className="text-sm font-semibold leading-6 text-slate-600">
@@ -68,7 +68,7 @@ export function VariantFormulaGuide({ open, onClose, example }: { open: boolean;
         <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">3. Health (Healthy, Watch, Exhausted)</h3>
         <Formula>{"usage ratio = total usage ÷ capacity\n\nHealthy    ratio below 50%\nWatch      50% up to 90%\nExhausted  90% or more\nUnknown    no capacity could be worked out"}</Formula>
         <p className="text-sm font-semibold leading-6 text-slate-600">
-          This is a team-wide early warning, not proof that one person has seen a repeat. Each account also has its own memory of its last 20 questions and avoids repeats from that on its own.
+          This is a team-wide early warning, not proof that one person has seen a repeat. Each account also has its own memory of its recent questions and answers (the last 20 number sets and the last 12 final answers) and avoids repeats from that on its own.
         </p>
 
         <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">4. How to read the average per account</h3>
@@ -91,7 +91,7 @@ export function VariantFormulaGuide({ open, onClose, example }: { open: boolean;
         ) : null}
 
         <h3 className="mt-5 text-sm font-extrabold uppercase tracking-wider text-purple-800">5. Calculated numbers (combinations, answers, wordings)</h3>
-        <Formula>{"combinations = distinct number sets that can appear\nanswers      = distinct final answers a user can see\nwordings     = different ways the question is phrased"}</Formula>
+        <Formula>{"answers      = distinct final answers a user can see   (the capacity used above)\ncombinations = distinct number sets that can appear   (always at least as large)\nwordings     = different ways the question is phrased"}</Formula>
         <p className="text-sm font-semibold leading-6 text-slate-600">
           Small templates are counted exactly by trying every valid combination. Large ones are estimated from real generated questions and marked as an estimate. A template that takes too long to calculate is set aside and shows as unknown until it is edited.
         </p>

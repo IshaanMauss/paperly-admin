@@ -78,8 +78,8 @@ function formatCapacity(row: VariantHealthRow) {
   if (row.capacity == null) return "—";
   const prefix = row.capacity_uncertain ? "at least " : "";
   const suffix = row.capacity_capped ? "+" : "";
-  // exact = a stored exact distinct-question count that still matches the template; otherwise a raw upper bound.
-  const bound = row.capacity_exact === false ? " (upper bound)" : "";
+  // Capacity is the number of different final answers. Combinations or a raw upper bound only stand in when no answer count exists.
+  const bound = row.capacity_basis === "combinations" ? " (combinations)" : row.capacity_basis === "upper bound" || (row.capacity_basis === undefined && row.capacity_exact === false) ? " (upper bound)" : "";
   return `${prefix}${row.capacity.toLocaleString()}${suffix}${bound}`;
 }
 
@@ -365,10 +365,10 @@ export default function VariantHealthPage() {
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
           Every number on this page is computed live from the real database on each load — nothing here is
           sampled, cached, or estimated from a subset. Two numbers are explicitly approximations and are labeled
-          as such rather than presented as exact: capacity is the exact number of distinct questions when one is
-          stored for the template, and otherwise a raw upper-bound labelled "(upper bound)" (the product of each
-          variable's independent value range, ignoring how many combinations `constraints` reject — shown as
-          "at least N" whenever a variable's range couldn't be sized), and "Exports" counts whole worksheets that
+          as such rather than presented as exact: capacity is the number of different final answers a user can see
+          (exact when the calculated count is exact, "at least N" when it is an estimate, "1,000,000+" when very
+          large). Only when no answer count has been calculated does it fall back to the combinations count or a raw
+          upper bound, and those rows say so in brackets. "Exports" counts whole worksheets that
           included this template and were opened/downloaded at least once, not individual question variants.
           Usage and export counts themselves are exact SQL aggregates. Treat "Exhausted" as a signal to widen the
           template's ranges (superset) or bring in a sibling from the same subtopic pool — not as proof any
@@ -376,7 +376,7 @@ export default function VariantHealthPage() {
         </p>
         <p className="mt-3 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2 text-xs font-semibold leading-5 text-slate-700">
           <strong className="font-extrabold text-slate-900">How "Usage" is calculated:</strong> the ratio is the SUM of
-          every real user's usage_count divided by the template's estimated capacity — so a small capacity
+          every real user's usage_count divided by the template's capacity (its number of different final answers) — so a small capacity
           (some templates only have 6–15 real variants) can read "Exhausted" from a handful of ordinary users,
           not from one user hitting repeats. The table's Usage column now shows the <em>median</em> (the typical
           user's count — resistant to outliers) alongside the mean ± standard deviation across users, so you
