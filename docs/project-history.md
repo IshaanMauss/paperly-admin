@@ -146,3 +146,7 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 
 - New page `src/pages/messaging.tsx` (tabs Send, History, Emails, Templates) and a "Message this user" link in User 360. Push, bell and email channels, audiences, scheduling and templates are described in `paperly-mvp/docs/push-notifications-and-messaging.md`; routes and permissions in `docs/admin-pages-and-permissions.md`.
 - Checked: type check and lint. NOT yet seen in a browser.
+
+## 2026-10-16 - Question Memory page
+
+- New page `/question-memory` (Product group): Summary, Template lists, Not enough questions (supply gaps), Flags, One user (progress per template, restart, memory and rotation switches). Backend: `/api/admin/memory/*`. New permissions `memory.read` (admin role) and `memory.write`; every restart or setting change asks for a reason and is audited. Behaviour: `paperly-mvp/docs/question-memory.md`.

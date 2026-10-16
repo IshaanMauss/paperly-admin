@@ -44,6 +44,7 @@ Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | | `GET /full-portion/subtopic-cap-settings`; `POST` the same path | `billing.read`; `billing.write` |
 | AI Checking (`checking.tsx`) | `GET /checking/overview`, `/checking/submissions`, `/checking/submissions/{id}`, `GET /worksheets/{id}` | `admin.read` |
 | Variant Health (`variant-health.tsx`) | `GET /templates/variant-health` | `admin.read` |
+| Question Memory (`question-memory.tsx`) | `GET /admin/memory/overview`, `/templates`, `/supply`, `/events`, `/users/{id}`; `POST /users/{id}/reset`, `PUT /users/{id}/settings` | `memory.read`; writes need `memory.write` |
 | | `PATCH /api/templates/{id}/admin-state` (templates router, not under `/admin`) | `templates.write` |
 | Support (`support.tsx`) | `GET /support-tickets` | `support.read` |
 | | `PATCH /support-tickets/{id}/resolve` | `support.write` |

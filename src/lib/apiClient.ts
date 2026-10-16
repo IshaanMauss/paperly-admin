@@ -1,4 +1,5 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
+import type { MemoryEventRow, MemoryOverview, MemorySupplyRow, MemoryTemplateRow, MemoryUserView } from "./memoryTypes";
 import type {
   TestDatabaseReport,
   AuthOutboxMessage,
@@ -250,6 +251,31 @@ async function formRequest<T>(path: string, formData: FormData): Promise<T> {
 }
 
 export const api = {
+  getMemoryOverview(days = 30) {
+    return request<MemoryOverview>(`/admin/memory/overview?days=${days}`);
+  },
+  getMemoryTemplates(params: { search?: string; sort?: string; offset?: number; limit?: number } = {}) {
+    const query = new URLSearchParams({ sort: params.sort ?? "near", limit: String(params.limit ?? 50), offset: String(params.offset ?? 0) });
+    if (params.search) query.set("search", params.search);
+    return request<{ items: MemoryTemplateRow[]; limit: number; offset: number }>(`/admin/memory/templates?${query.toString()}`);
+  },
+  getMemorySupply(days = 30) {
+    return request<{ days: number; items: MemorySupplyRow[] }>(`/admin/memory/supply?days=${days}`);
+  },
+  getMemoryEvents(params: { kinds?: string[]; days?: number; offset?: number } = {}) {
+    const query = new URLSearchParams({ days: String(params.days ?? 30), limit: "100", offset: String(params.offset ?? 0) });
+    for (const kind of params.kinds ?? []) query.append("kind", kind);
+    return request<{ total: number; items: MemoryEventRow[] }>(`/admin/memory/events?${query.toString()}`);
+  },
+  getMemoryUser(teacherId: string) {
+    return request<MemoryUserView>(`/admin/memory/users/${encodeURIComponent(teacherId)}`);
+  },
+  resetMemoryUser(teacherId: string, body: { reason: string; template_code?: string; topic?: string }) {
+    return request<{ ok: boolean; rows_reset: number }>(`/admin/memory/users/${encodeURIComponent(teacherId)}/reset`, { method: "POST", body: JSON.stringify(body) });
+  },
+  saveMemoryUserSettings(teacherId: string, body: { reason: string; enabled: boolean; rotation: "off" | "soft" }) {
+    return request<{ ok: boolean }>(`/admin/memory/users/${encodeURIComponent(teacherId)}/settings`, { method: "PUT", body: JSON.stringify(body) });
+  },
   listTemplates(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
     return request<TemplateListResponse>(`/templates${query ? `?${query}` : ""}`);
