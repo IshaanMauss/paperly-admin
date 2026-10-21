@@ -41,7 +41,8 @@ Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 | Promo Codes (`promo-codes.tsx`) | `GET /promo-codes`, `/promo-codes/{id}/redemptions`, `/promo-codes/export` | `promo.read` |
 | | `POST /promo-codes`, `PATCH /promo-codes/{id}/active` | `promo.write` |
 | Paper Builders (`paper-builders.tsx`; `/full-portion` redirects here) | `GET /full-portion/overview` | `admin.read` |
-| | `GET /full-portion/subtopic-cap-settings`; `POST` the same path | `billing.read`; `billing.write` |
+| | Old subtopic cap routes (`/full-portion/subtopic-cap-settings`) are no longer used by this page (removed 2026-10-21) | |
+| Paper Styles (`paper-styles.tsx`) | `GET /paper-styles/overview`, `/paper-styles/users/{teacher_id}`, `/paper-styles/papers/{worksheet_id}` (also feeds the Papers tab of User 360) | `users.read` |
 | AI Checking (`checking.tsx`) | `GET /checking/overview`, `/checking/submissions`, `/checking/submissions/{id}`, `GET /worksheets/{id}` | `admin.read` |
 | Variant Health (`variant-health.tsx`) | `GET /templates/variant-health` | `admin.read` |
 | Question Memory (`question-memory.tsx`) | `GET /admin/memory/overview`, `/templates`, `/supply`, `/events`, `/users/{id}`; `POST /users/{id}/reset`, `PUT /users/{id}/settings` | `memory.read`; writes need `memory.write` |

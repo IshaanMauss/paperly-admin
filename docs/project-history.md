@@ -1,6 +1,6 @@
 # Project History
 
-Last updated: 2026-10-13.
+Last updated: 2026-10-21.
 
 This file is the month-level product history for the admin panel. The panel's role stays clear: monitoring, support, billing, plans, safety and operations. The file must not drift into template ingestion, which remains outside this panel.
 
@@ -150,3 +150,8 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 ## 2026-10-16 - Question Memory page
 
 - New page `/question-memory` (Product group): Summary, Template lists, Not enough questions (supply gaps), Flags, One user (progress per template, restart, memory and rotation switches). Backend: `/api/admin/memory/*`. New permissions `memory.read` (admin role) and `memory.write`; every restart or setting change asks for a reason and is audited. Behaviour: `paperly-mvp/docs/question-memory.md`.
+
+## 2026-10-21 - Paper Styles page and paper records
+
+- New page Paper Styles (styles in use, one user's saved styles); User 360 Papers tab shows the stored paper record (style, paper name, Popular skills, one-paper changes). Backend: `paperly-mvp/docs/changelog.md` (2026-10-21) (`d9be9b1`).
+- Paper Builders: the old subtopic cap and its tile removed, a mark-scheme download column added to the plan table, and a pointer to Paper Styles (`05275c0`).
