@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { errorNotice, panel, primaryButton, table, td, th } from "@/components/ui";
+import { errorNotice, panel, table, td, th } from "@/components/ui";
 import type { BuilderUsage } from "@/lib/apiTypes";
-import { useAdminSession } from "@/lib/adminAuth";
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
-import { api, type FullPortionOverview, type SubtopicCapPlanRow } from "@/lib/apiClient";
+import { api, type FullPortionOverview } from "@/lib/apiClient";
 
 function UsageCard({ title, note, data }: { title: string; note: string; data?: BuilderUsage }) {
   return (
@@ -26,13 +25,7 @@ function UsageCard({ title, note, data }: { title: string; note: string; data?: 
 }
 
 export default function PaperBuildersPage() {
-  const { hasPermission } = useAdminSession();
-  const canWrite = hasPermission("billing.write");
-
   const [overview, setOverview] = useState<FullPortionOverview | null>(null);
-  const [plans, setPlans] = useState<SubtopicCapPlanRow[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [savingPlan, setSavingPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -40,17 +33,9 @@ export default function PaperBuildersPage() {
   function load() {
     setLoading(true);
     setError(null);
-    Promise.all([api.getFullPortionOverview(), api.getSubtopicCapSettings()])
-      .then(([overviewResponse, capResponse]) => {
-        setOverview(overviewResponse);
-        const rows = Object.values(capResponse.plans || {});
-        setPlans(rows);
-        const nextDrafts: Record<string, string> = {};
-        rows.forEach((row) => {
-          nextDrafts[row.plan_code] = row.effective_max_subtopics_per_topic === null ? "" : String(row.effective_max_subtopics_per_topic);
-        });
-        setDrafts(nextDrafts);
-      })
+    api
+      .getFullPortionOverview()
+      .then((overviewResponse) => setOverview(overviewResponse))
       .catch((err) => setError(err instanceof Error ? err.message : "Could not load Paper Builders data."))
       .finally(() => setLoading(false));
   }
@@ -59,28 +44,6 @@ export default function PaperBuildersPage() {
   useEffect(() => {
     load();
   }, [refreshTick]);
-
-  async function saveCap(planCode: string) {
-    if (!canWrite) return;
-    setSavingPlan(planCode);
-    setError(null);
-    const rawValue = (drafts[planCode] ?? "").trim();
-    const value = rawValue === "" ? null : Number(rawValue);
-    if (value !== null && (!Number.isInteger(value) || value < 0)) {
-      setError("Subtopic cap must be a non-negative whole number, or left blank for Unlimited.");
-      setSavingPlan(null);
-      return;
-    }
-    try {
-      const response = await api.updateSubtopicCapSetting({ plan_code: planCode, max_subtopics_per_topic: value, updated_by: "admin" });
-      const rows = Object.values(response.plans || {});
-      setPlans(rows);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save the subtopic cap.");
-    } finally {
-      setSavingPlan(null);
-    }
-  }
 
   const fmt = (value: number | null | undefined, unit = "") => (value === null || value === undefined ? "Unlimited" : `${value}${unit}`);
   const usage = overview?.usage;
@@ -96,7 +59,7 @@ export default function PaperBuildersPage() {
         {!loading && overview ? (
           <>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <UsageCard title="Full Portion papers" data={usage?.full_portion} note="One paper that covers several whole topics, in the proportions the user picks." />
+              <UsageCard title="Full Portion papers" data={usage?.full_portion} note="One paper that covers several topics, built from the user's style (Easy/Medium/Hard mix, marks, skills)." />
               <UsageCard title="Topical papers" data={usage?.topical} note="One paper on a single topic or hand-picked subtopics." />
               <article className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">AI checking</p>
@@ -113,8 +76,7 @@ export default function PaperBuildersPage() {
               </article>
             </div>
             <p className="mt-4 text-xs font-semibold text-slate-500">
-              {overview.full_portion_with_required_subtopics} Full Portion papers asked for specific subtopics (on average {overview.average_required_subtopics} each).
-              "Unique users" means each person is counted once, however many papers they made.
+              "Unique users" means each person is counted once, however many papers they made. How Full Portion papers were built (style, marks, skills) is on the Paper Styles page.
             </p>
           </>
         ) : null}
@@ -131,7 +93,7 @@ export default function PaperBuildersPage() {
           <p>
             <b>Topics per paper</b> is how many main topics a user may combine in one Full Portion paper.{" "}
             <b>Full Portion papers a day / a month</b> caps just that builder, inside the overall allowance.{" "}
-            <b>Max subtopics per topic</b> is how many subtopics a user may tick as "must include" under each topic (blank means no limit).
+            <b>Popular filter</b> lets a plan use Popular IGCSE questions (the Popular % and the Popular skills list). <b>Mark scheme</b> is whether the user can open the answers, and <b>MS download</b> whether they can save them as a PDF.
           </p>
           <p>
             <b>"Default" versus "Effective cap" versus "Overridden".</b> Default is what the plan was built with. If you type a number in the box
@@ -160,6 +122,7 @@ export default function PaperBuildersPage() {
                 <th className={th}>Full Portion papers a month</th>
                 <th className={th}>AI checks a month</th>
                 <th className={th}>Mark scheme</th>
+                <th className={th}>MS download</th>
                 <th className={th}>Popular filter</th>
               </tr>
             </thead>
@@ -174,6 +137,7 @@ export default function PaperBuildersPage() {
                   <td className={td}>{fmt(row.full_portion_papers_per_month)}</td>
                   <td className={td}>{row.ai_checks_per_month === 0 ? "None" : fmt(row.ai_checks_per_month)}</td>
                   <td className={td}>{row.can_view_mark_scheme ? "Yes" : "No"}</td>
+                  <td className={td}>{row.can_download_mark_scheme ? "Yes" : "No"}</td>
                   <td className={td}>{row.can_use_popular_filter ? "Yes" : "No"}</td>
                 </tr>
               ))}
@@ -190,65 +154,6 @@ export default function PaperBuildersPage() {
         ) : null}
       </section>
 
-      <section className={panel}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Editable here</p>
-            <h2 className="mt-2 text-xl font-extrabold text-slate-950">Max subtopics per topic (Full Portion "must include" picker)</h2>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              Leave a plan blank for unlimited. A change here is enforced immediately in paper generation, with no deploy.
-            </p>
-          </div>
-          {!canWrite ? <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-extrabold uppercase text-amber-900">Read-only: requires billing.write</span> : null}
-        </div>
-
-        <div className="mt-6 overflow-x-auto">
-          <table className={table}>
-            <thead>
-              <tr>
-                <th className={th}>Plan</th>
-                <th className={th}>Default</th>
-                <th className={th}>Effective cap (enforced now)</th>
-                <th className={th}>Overridden?</th>
-                <th className={th}>Change it</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.map((plan) => (
-                <tr key={plan.plan_code}>
-                  <td className={td}>
-                    <p className="font-extrabold text-slate-950">{plan.plan_label}</p>
-                  </td>
-                  <td className={td}>{plan.default_max_subtopics_per_topic === null ? "Unlimited" : plan.default_max_subtopics_per_topic}</td>
-                  <td className={td}>{plan.effective_max_subtopics_per_topic === null ? "Unlimited" : plan.effective_max_subtopics_per_topic}</td>
-                  <td className={td}>
-                    {plan.is_overridden ? <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-extrabold uppercase text-purple-800">Overridden</span> : <span className="text-xs font-bold text-slate-400">Default</span>}
-                  </td>
-                  <td className={td}>
-                    <div className="flex items-center gap-2">
-                      <input
-                        className="w-24 rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-violet-400 disabled:bg-slate-50 disabled:text-slate-400"
-                        placeholder="Unlimited"
-                        value={drafts[plan.plan_code] ?? ""}
-                        disabled={!canWrite}
-                        onChange={(event) => setDrafts((current) => ({ ...current, [plan.plan_code]: event.target.value }))}
-                      />
-                      <button
-                        type="button"
-                        className={primaryButton}
-                        disabled={!canWrite || savingPlan === plan.plan_code}
-                        onClick={() => saveCap(plan.plan_code)}
-                      >
-                        {savingPlan === plan.plan_code ? "Saving" : "Save"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </AppShell>
   );
 }

@@ -217,6 +217,7 @@ export type BuilderPlanLimits = {
   full_portion_papers_per_month: number | null;
   ai_checks_per_month: number | null;
   can_view_mark_scheme: boolean;
+  can_download_mark_scheme?: boolean;
   can_use_popular_filter: boolean;
 };
 
