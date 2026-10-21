@@ -718,6 +718,7 @@ export type UserThreeSixty = {
     title: string;
     created_at: string | null;
     pdf_ready: boolean;
+    record?: import("./paperStyleTypes").PaperRecordSummary | null;
   }[];
   profile: {
     teacher_id: string;

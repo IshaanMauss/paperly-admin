@@ -1,4 +1,5 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
+import type { PaperRecordResponse, PaperStylesOverview, UserPaperStyles } from "./paperStyleTypes";
 import type { MemoryEventRow, MemoryOverview, MemorySupplyRow, MemoryTemplateRow, MemoryUserView } from "./memoryTypes";
 import type {
   TestDatabaseReport,
@@ -251,6 +252,15 @@ async function formRequest<T>(path: string, formData: FormData): Promise<T> {
 }
 
 export const api = {
+  getPaperStylesOverview() {
+    return request<PaperStylesOverview>("/admin/paper-styles/overview");
+  },
+  getUserPaperStyles(teacherId: string) {
+    return request<UserPaperStyles>(`/admin/paper-styles/users/${encodeURIComponent(teacherId)}`);
+  },
+  getPaperRecord(worksheetId: string) {
+    return request<PaperRecordResponse>(`/admin/paper-styles/papers/${encodeURIComponent(worksheetId)}`);
+  },
   getMemoryOverview(days = 30) {
     return request<MemoryOverview>(`/admin/memory/overview?days=${days}`);
   },

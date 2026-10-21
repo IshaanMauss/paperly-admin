@@ -796,7 +796,7 @@ export default function UserThreeSixtyPage() {
             )}
 
             {tab === "payments" && <PaymentsPanel payments={data.payments_detail ?? []} />}
-            {tab === "papers" && <PapersPanel worksheets={data.worksheets} />}
+            {tab === "papers" && <PapersPanel worksheets={data.worksheets} teacherId={data.profile.teacher_id} />}
             {tab === "messages" && <MessagesPanel messages={data.messages ?? []} tickets={data.tickets ?? []} />}
             {tab === "signin" && data.sign_in && <SignInSummary info={data.sign_in} />}
 
