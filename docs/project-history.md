@@ -1,6 +1,6 @@
 # Project History
 
-Last updated: 2026-10-21.
+Last updated: 2026-10-22.
 
 This file is the month-level product history for the admin panel. The panel's role stays clear: monitoring, support, billing, plans, safety and operations. The file must not drift into template ingestion, which remains outside this panel.
 
@@ -155,3 +155,8 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 
 - New page Paper Styles (styles in use, one user's saved styles); User 360 Papers tab shows the stored paper record (style, paper name, Popular skills, one-paper changes). Backend: `paperly-mvp/docs/changelog.md` (2026-10-21) (`d9be9b1`).
 - Paper Builders: the old subtopic cap and its tile removed, a mark-scheme download column added to the plan table, and a pointer to Paper Styles (`05275c0`).
+
+## 2026-10-22 - Referrals page (Refer and Unlock Yearly)
+
+- New page `/referrals` (Money group): Summary (switch state, counts, review flags), Trials (list, end a trial now), One person (invite code, trial, friend discount, friends invited with their checks, Keep Yearly payments, recent events; switch off a code, withdraw a discount), Event log. Backend: `/api/admin/referrals/*`. New permissions `referrals.read` (admin role) and `referrals.write` (owner by default); every write asks for a reason of at least 8 characters and is audited. Behaviour and rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
+

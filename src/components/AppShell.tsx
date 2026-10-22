@@ -57,6 +57,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
       { href: "/plans", label: "Plans & Features", icon: "layers" },
       { href: "/offers", label: "Offers", icon: "spark" },
       { href: "/promo-codes", label: "Promo Codes", icon: "tag" },
+      { href: "/referrals", label: "Referrals", icon: "spark" },
     ],
   },
   {

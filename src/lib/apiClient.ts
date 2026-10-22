@@ -1,5 +1,6 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type { PaperRecordResponse, PaperStylesOverview, UserPaperStyles } from "./paperStyleTypes";
+import type { ReferralEventRow, ReferralOverview, ReferralPerson, ReferralTrialRow } from "./referralTypes";
 import type { MemoryEventRow, MemoryOverview, MemorySupplyRow, MemoryTemplateRow, MemoryUserView } from "./memoryTypes";
 import type {
   TestDatabaseReport,
@@ -260,6 +261,35 @@ export const api = {
   },
   getPaperRecord(worksheetId: string) {
     return request<PaperRecordResponse>(`/admin/paper-styles/papers/${encodeURIComponent(worksheetId)}`);
+  },
+  getReferralOverview() {
+    return request<ReferralOverview>("/admin/referrals/overview");
+  },
+  getReferralTrials(params: { state?: string; limit?: number; offset?: number } = {}) {
+    const query = new URLSearchParams();
+    if (params.state) query.set("state", params.state);
+    query.set("limit", String(params.limit ?? 50));
+    query.set("offset", String(params.offset ?? 0));
+    return request<{ total: number; items: ReferralTrialRow[] }>(`/admin/referrals/trials?${query.toString()}`);
+  },
+  getReferralPerson(teacherId: string) {
+    return request<ReferralPerson>(`/admin/referrals/people/${encodeURIComponent(teacherId)}`);
+  },
+  getReferralEvents(params: { eventType?: string; limit?: number; offset?: number } = {}) {
+    const query = new URLSearchParams();
+    if (params.eventType) query.set("event_type", params.eventType);
+    query.set("limit", String(params.limit ?? 100));
+    query.set("offset", String(params.offset ?? 0));
+    return request<{ items: ReferralEventRow[] }>(`/admin/referrals/events?${query.toString()}`);
+  },
+  revokeReferralTrial(trialId: number, reason: string) {
+    return request<{ ok: boolean }>(`/admin/referrals/trials/${trialId}/revoke`, { method: "POST", body: JSON.stringify({ reason }) });
+  },
+  disableReferralCode(teacherId: string, reason: string) {
+    return request<{ ok: boolean }>(`/admin/referrals/codes/${encodeURIComponent(teacherId)}/disable`, { method: "POST", body: JSON.stringify({ reason }) });
+  },
+  revokeReferralDiscount(discountId: number, reason: string) {
+    return request<{ ok: boolean }>(`/admin/referrals/discounts/${discountId}/revoke`, { method: "POST", body: JSON.stringify({ reason }) });
   },
   getMemoryOverview(days = 30) {
     return request<MemoryOverview>(`/admin/memory/overview?days=${days}`);
