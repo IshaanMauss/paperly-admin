@@ -805,7 +805,7 @@ export type OfferOptions = {
   plans: Record<string, string>;
   audience: Record<string, string>;
   styles: string[];
-  prices?: Record<string, { list_rupees: number; standing_percent: number }>;
+  prices?: Record<string, { list_rupees: number; everyday_rupees?: number; standing_percent: number; max_total_discount_percent?: number }>;
   usd_rate?: number;
 };
 

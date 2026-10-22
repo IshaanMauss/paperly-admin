@@ -18,17 +18,20 @@ function usd(rupees: number, rate: number) {
   return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2, maximumFractionDigits: 2 })}`;
 }
 
-// What the customer really pays: the larger of the plan's standing offer and this offer, GST included.
+// What the customer really pays: a sale is a percentage off the plan's EVERYDAY price (GST included), and the total
+// off the everyday price is held at the plan's limit.
 function priceLine(options: OfferOptions, planCode: string, discount: number) {
   const price = options.prices?.[planCode];
   if (!price) return null;
   const rate = options.usd_rate || 97;
-  const effective = Math.max(discount, price.standing_percent);
-  const pays = Math.round((price.list_rupees * (100 - effective)) / 100);
+  const everyday = price.everyday_rupees ?? price.list_rupees;
+  const limit = price.max_total_discount_percent ?? 100;
+  const effective = Math.min(discount, limit);
+  const pays = Math.round((everyday * (100 - effective)) / 100);
   return {
-    text: `List ${usd(price.list_rupees, rate)}; the customer pays ${usd(pays, rate)} (Rs ${pays.toLocaleString("en-IN")}, GST included) at ${effective}% off.`,
-    useless: discount <= price.standing_percent,
-    standing: price.standing_percent,
+    text: `Everyday price ${usd(everyday, rate)}; during the sale the customer pays ${usd(pays, rate)} (Rs ${pays.toLocaleString("en-IN")}, GST included) at ${effective}% off. A promo code or invite discount then comes off that sale price.`,
+    tooDeep: discount > limit,
+    limit,
   };
 }
 
@@ -109,9 +112,9 @@ function CreateOfferForm({ options, onCreated }: { options: OfferOptions; onCrea
           const line = priceLine(options, planCode, Number(discount) || 0);
           if (!line) return null;
           return (
-            <p className={`sm:col-span-2 text-sm font-semibold ${line.useless ? "text-rose-700" : "text-emerald-800"}`}>
+            <p className={`sm:col-span-2 text-sm font-semibold ${line.tooDeep ? "text-rose-700" : "text-emerald-800"}`}>
               {line.text}
-              {line.useless ? ` This plan already has a standing offer of ${line.standing}% (set on the Plans screen), so an offer of ${Number(discount) || 0}% changes nothing. Use a bigger percentage.` : ""}
+              {line.tooDeep ? ` This plan allows at most ${line.limit}% off the everyday price in total (set on the Plans screen), so a sale of ${Number(discount) || 0}% cannot be saved. Lower it.` : ""}
             </p>
           );
         })()}
@@ -187,7 +190,7 @@ function OfferRow({ offer, audienceNames, options, onToggled }: { offer: PlanOff
       </td>
       <td className={td}>
         {offer.plan_label}
-        <p className="text-[11px] font-semibold text-slate-500">{offer.discount_percent}% off, {offer.duration_hours} h countdown{(options.prices?.[offer.plan_code]?.standing_percent ?? 0) >= offer.discount_percent ? " (no effect: below the standing offer)" : ""}</p>
+        <p className="text-[11px] font-semibold text-slate-500">{offer.discount_percent}% off, {offer.duration_hours} h countdown{(options.prices?.[offer.plan_code]?.max_total_discount_percent ?? 100) < offer.discount_percent ? " (held at the plan's discount limit)" : ""}</p>
       </td>
       <td className={td}>{offer.audience_plans.map((code) => audienceNames[code] || code).join(", ")}</td>
       <td className={td}>
@@ -240,9 +243,10 @@ export default function OffersPage() {
           Pick a plan and a discount, choose how many hours each person has, and who sees it. Eligible people get a
           popup with the countdown, the plan card on their Billing page changes look, and checkout charges the
           discounted price. The countdown starts when each person first sees the offer; when it ends the price really
-          goes back to normal. Every plan already shows a standing offer (set on the Plans screen), and an offer here only
-          matters if its percentage is bigger than that standing offer: the customer gets the larger of the two, never both.
-          Prices are GST included and shown in dollars. People on Yearly never see an offer, and an offer can be used once per person.
+          goes back to the everyday price. A sale is a percentage off the plan's everyday price (set on the Plans screen).
+          A promo code or the invite discount, one of them and never both, then comes off the sale price, and the total
+          can never go below the plan's discount limit. Prices are GST included and shown in dollars. People on a bought
+          Yearly plan never see a sale, and a sale can be used once per person.
         </p>
         {error ? <p className={errorNotice}>{error}</p> : null}
         {loading ? <p className="mt-4 text-sm font-bold text-slate-500">Loading...</p> : null}

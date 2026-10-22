@@ -37,7 +37,8 @@ function show(value: PlanFieldValue | undefined, field?: PlanField): string {
   if (value === null || value === undefined) return field?.kind === "int" ? "No limit" : "(empty)";
   if (typeof value === "boolean") return value ? "On" : "Off";
   if (Array.isArray(value)) return value.length ? `${value.length} item${value.length === 1 ? "" : "s"}` : "(none)";
-  if (field?.key === "price_rupees" && typeof value === "number") return `${usd(value)} (Rs ${value}, GST included)`;
+  if ((field?.key === "price_rupees" || field?.key === "offer_price_rupees") && typeof value === "number") return `${usd(value)} (Rs ${value}, GST included)`;
+  if (field?.key === "max_total_discount_percent") return `${value}% of the everyday price`;
   if (field?.key === "standing_offer_percent") return `${value}% off`;
   return String(value);
 }
@@ -174,8 +175,8 @@ function FieldRow({ field, value, live, def, onChange, onReset }: { field: PlanF
 function PlanCardPreview({ values }: { values: PlanValues }) {
   const rows = (values.rows as PlanRowValue[]) || [];
   const price = values.price_rupees as number | undefined;
-  const offerPercent = Number(values.standing_offer_percent || 0);
-  const offerPrice = price ? Math.round((price * (100 - offerPercent)) / 100) : 0;
+  const offerPrice = price ? Number(values.offer_price_rupees || price) : 0;
+  const offerPercent = price && offerPrice < price ? 1 : 0;
   return (
     <div className="rounded-2xl border border-violet-200 bg-white p-4 shadow-soft">
       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">How it reads to customers</p>
@@ -204,7 +205,7 @@ function ChangeList({ changes }: { changes: PlanConfigChange[] }) {
             <span className="line-through">{Array.isArray(change.before) ? `${change.before.length} items` : show(change.before)}</span> → <span className="font-extrabold text-slate-950">{Array.isArray(change.after) ? `${change.after.length} items` : show(change.after)}</span>
           </p>
           <p className="mt-1 text-[11px] font-bold text-slate-500">
-            {change.grandfathered ? "Existing subscribers keep their current value until they renew." : change.key === "price_rupees" ? "Applies to new purchases and renewals. Nobody is charged extra before they renew." : "Words only: shown straight away."}
+            {change.grandfathered ? "Existing subscribers keep their current value until they renew." : change.key === "price_rupees" || change.key === "offer_price_rupees" ? "Applies to new purchases and renewals. Nobody is charged extra before they renew." : "Words only: shown straight away."}
           </p>
         </div>
       ))}
