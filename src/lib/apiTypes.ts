@@ -58,6 +58,7 @@ export type MaintenanceStatus = {
   title: string;
   message: string;
   reason?: string | null;
+  include_super_admin?: boolean;
   updated_by?: string | null;
   updated_at?: string | null;
   source?: string;

@@ -362,7 +362,7 @@ export const api = {
   getMaintenanceStatus() {
     return request<MaintenanceStatus>("/admin/maintenance");
   },
-  updateMaintenanceStatus(payload: { maintenance_active: boolean; confirmation: string; title: string; message: string; reason?: string; updated_by?: string }) {
+  updateMaintenanceStatus(payload: { maintenance_active: boolean; confirmation: string; title: string; message: string; reason?: string; include_super_admin?: boolean; updated_by?: string }) {
     return request<MaintenanceStatus>("/admin/maintenance", { method: "POST", body: JSON.stringify(payload) });
   },
   getAdminOverview() {

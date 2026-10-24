@@ -26,6 +26,7 @@ export default function MaintenancePage() {
   const [title, setTitle] = useState(DEFAULT_STATUS.title);
   const [message, setMessage] = useState(DEFAULT_STATUS.message);
   const [reason, setReason] = useState("");
+  const [includeSuperAdmin, setIncludeSuperAdmin] = useState(true);
   const [updatedBy, setUpdatedBy] = useState("admin");
 
   const [cleanupDryRun, setCleanupDryRun] = useState(true);
@@ -68,6 +69,7 @@ export default function MaintenancePage() {
         setTitle(next.title || DEFAULT_STATUS.title);
         setMessage(next.message || DEFAULT_STATUS.message);
         setReason(next.reason || "");
+        setIncludeSuperAdmin(next.include_super_admin !== false);
         setError(null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Could not load maintenance state."))
@@ -93,7 +95,7 @@ export default function MaintenancePage() {
   function submit() {
     setSaving(true);
     api
-      .updateMaintenanceStatus({ maintenance_active: targetActive, confirmation, title, message, reason, updated_by: updatedBy })
+      .updateMaintenanceStatus({ maintenance_active: targetActive, confirmation, title, message, reason, include_super_admin: includeSuperAdmin, updated_by: updatedBy })
       .then((next) => {
         setStatus(next);
         setModalOpen(false);
@@ -143,6 +145,13 @@ export default function MaintenancePage() {
             <label className="mt-3 block text-xs font-extrabold uppercase tracking-wider text-slate-500">
               Message
               <textarea className="mt-1 min-h-24 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-violet-400" value={message} onChange={(event) => setMessage(event.target.value)} />
+            </label>
+            <label className="mt-3 flex items-start gap-3 rounded-xl border border-violet-200 bg-white px-3 py-3 text-sm font-bold text-slate-800">
+              <input type="checkbox" className="mt-1 h-4 w-4" checked={includeSuperAdmin} onChange={(event) => setIncludeSuperAdmin(event.target.checked)} />
+              <span>
+                Include super admin
+                <span className="mt-0.5 block text-xs font-semibold text-slate-500">Ticked: the super admin account also sees the maintenance page. Unticked: only that account can still use the live site to check how it works.</span>
+              </span>
             </label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Reason<input className="mt-1 w-full rounded-xl border border-violet-200 px-3 py-2 text-sm font-bold normal-case tracking-normal text-slate-900 outline-none focus:border-violet-400" value={reason} onChange={(event) => setReason(event.target.value)} /></label>
