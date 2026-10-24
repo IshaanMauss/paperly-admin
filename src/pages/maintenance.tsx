@@ -161,8 +161,8 @@ export default function MaintenancePage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <button className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-extrabold text-amber-900 shadow-soft transition-colors disabled:opacity-50" disabled={status.maintenance_active} onClick={() => openAction(true)}>
-            Put the product in maintenance
+          <button className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-extrabold text-amber-900 shadow-soft transition-colors disabled:opacity-50" onClick={() => openAction(true)}>
+            {status.maintenance_active ? "Save maintenance settings" : "Put the product in maintenance"}
           </button>
           <button className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-extrabold text-emerald-800 shadow-soft transition-colors disabled:opacity-50" disabled={!status.maintenance_active} onClick={() => openAction(false)}>
             Restore the product
