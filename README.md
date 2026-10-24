@@ -33,7 +33,7 @@ Set in `.env.local` (git-ignored). Never put real API keys in frontend env files
 | Variable | Used for |
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | Where the browser sends API calls. `/api/gateway` (the proxy, normal setup), or `http://127.0.0.1:8003/api` for a purely local backend with no gateway secret. |
-| `ADMIN_BACKEND_URL` | Server-side only. Backend API root the gateway proxy forwards to (for example `https://<railway-host>/api`). Required for the proxy. |
+| `ADMIN_BACKEND_URL` | Server-side only. Backend API root the gateway proxy forwards to (for example `https://<backend-host>, e.g. paperly-mvp.vercel.app/api`). Required for the proxy. |
 | `ADMIN_GATEWAY_SECRET` | Server-side only. Same value as the backend's `ZTNA_GATEWAY_SECRET` (at least 40 random characters). |
 | `ADMIN_GATEWAY_HEADER` | Optional. Defaults to `X-Ztna-Gateway-Secret`. |
 | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` | Optional. Set both to require a valid Cloudflare Access login at the proxy. |

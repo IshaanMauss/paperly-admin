@@ -27,7 +27,7 @@ The admin panel runs on the admin's own computer (`npm run dev`) and talks to th
 1. Create `paperly-admin-panel/.env.local` (git-ignored) with:
    ```
    NEXT_PUBLIC_API_BASE_URL=/api/gateway
-   ADMIN_BACKEND_URL=https://<your-railway-host>/api
+   ADMIN_BACKEND_URL=https://paperly-mvp.vercel.app/api
    ADMIN_GATEWAY_SECRET=<a new long random value, at least 40 characters>
    ```
    Remove or override any `NEXT_PUBLIC_API_BASE_URL` line in other `.env` files so this one wins.
