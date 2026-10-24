@@ -185,6 +185,7 @@ export default function PaymentsPage() {
                         </td>
                         <td className={`${td} text-xs font-semibold text-slate-700`}>
                           {row.method || "-"}
+                          {/mock/i.test(`${row.payment_id ?? ""}${row.order_id ?? ""}`) ? <p className="mt-0.5 inline-block rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700">Test payment</p> : null}
                           {row.gateway_status ? <p className="text-slate-500">{row.gateway_status}</p> : null}
                           {row.error ? <p className="mt-1 text-rose-700">{row.error}</p> : null}
                         </td>

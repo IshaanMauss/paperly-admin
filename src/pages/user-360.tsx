@@ -9,6 +9,7 @@ import { DeviceSafetyPanel } from "@/components/DeviceSafetyPanel";
 import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from "@/lib/apiClient";
 import { usePersistedState } from "@/lib/draftStore";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
+import { PaperHabitsPanel } from "@/components/user360/PaperHabitsPanel";
 import { DisputeChecklist, MessagesPanel, PapersPanel, PaymentsPanel, SignInSummary } from "@/components/user360/EvidencePanels";
 
 type TabKey = "summary" | "payments" | "papers" | "signin" | "messages" | "timeline" | "fix";
@@ -796,6 +797,7 @@ export default function UserThreeSixtyPage() {
             )}
 
             {tab === "payments" && <PaymentsPanel payments={data.payments_detail ?? []} />}
+            {tab === "papers" && <PaperHabitsPanel teacherId={data.profile.teacher_id} />}
             {tab === "papers" && <PapersPanel worksheets={data.worksheets} teacherId={data.profile.teacher_id} />}
             {tab === "messages" && <MessagesPanel messages={data.messages ?? []} tickets={data.tickets ?? []} />}
             {tab === "signin" && data.sign_in && <SignInSummary info={data.sign_in} />}

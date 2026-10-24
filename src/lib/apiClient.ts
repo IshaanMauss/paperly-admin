@@ -263,6 +263,12 @@ export const api = {
   getPaperRecord(worksheetId: string) {
     return request<PaperRecordResponse>(`/admin/paper-styles/papers/${encodeURIComponent(worksheetId)}`);
   },
+  getPaperHabits(teacherId: string) {
+    return request<Record<string, unknown>>(`/admin/users/${encodeURIComponent(teacherId)}/paper-profile`);
+  },
+  getPaperExport(offset: number) {
+    return request<{ count: number; items: unknown[] }>(`/admin/exports/paper-data?offset=${offset}&limit=5000`);
+  },
   getRatings(stars?: number) {
     return request<RatingsResponse>(`/admin/ratings${stars ? `?stars=${stars}` : ""}`);
   },
