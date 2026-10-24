@@ -168,3 +168,4 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 ## 2026-10-24 - launch day
 
 - Gateway address fixed (it still pointed at the old host). Maintenance settings can be saved while active. Promo codes and Offers take decimal percentages. Refund action lives in User 360 and now notifies the person.
+- New Ratings page (stars, comments, device, remind-later and no-thanks counts). User 360 > Papers now opens with a Paper habits panel: a short summary and the full JSON for the person, with Copy, Download and an owner-only download of everyone's paper data. Payments marks test payments. All 121 admin calls were checked against the backend routes (all match).
