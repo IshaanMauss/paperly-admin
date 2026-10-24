@@ -106,7 +106,7 @@ function CreateOfferForm({ options, onCreated }: { options: OfferOptions; onCrea
         </label>
         <label className={labelClass}>
           Discount % (1 to 90)
-          <input className={input} type="number" min={1} max={90} value={discount} onChange={(e) => setDiscount(e.target.value)} required />
+          <input className={input} type="number" min={0.01} max={90} step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} required />
         </label>
         {(() => {
           const line = priceLine(options, planCode, Number(discount) || 0);

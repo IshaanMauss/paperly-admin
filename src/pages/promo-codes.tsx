@@ -96,7 +96,7 @@ function CreateCodeForm({ planOptions, onCreated }: { planOptions: Record<string
       </label>
       <label className={labelClass}>
         Discount % (display only — 100 = free)
-        <input className={input} type="number" min={0} max={100} value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} />
+        <input className={input} type="number" min={0} max={100} step="0.01" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} />
       </label>
       <label className={labelClass}>
         Max redemptions (blank = unlimited)
