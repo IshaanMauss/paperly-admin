@@ -66,6 +66,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
       { href: "/paper-builders", label: "Paper Builders", icon: "layers" },
       { href: "/checking", label: "AI Checking", icon: "check" },
       { href: "/variant-health", label: "Variant Health", icon: "pulse" },
+      { href: "/ratings", label: "Ratings", icon: "spark" },
       { href: "/question-memory", label: "Question Memory", icon: "layers" },
       { href: "/paper-styles", label: "Paper Styles", icon: "layers" },
     ],

@@ -1,5 +1,6 @@
 import { getAdminAccessToken, isAdminAccessTokenExpiring, refreshAdminAccessToken } from "@/lib/adminToken";
 import type { PaperRecordResponse, PaperStylesOverview, UserPaperStyles } from "./paperStyleTypes";
+import type { RatingsResponse } from "./ratingTypes";
 import type { ReferralEventRow, ReferralOverview, ReferralPerson, ReferralTrialRow } from "./referralTypes";
 import type { MemoryEventRow, MemoryOverview, MemorySupplyRow, MemoryTemplateRow, MemoryUserView } from "./memoryTypes";
 import type {
@@ -261,6 +262,9 @@ export const api = {
   },
   getPaperRecord(worksheetId: string) {
     return request<PaperRecordResponse>(`/admin/paper-styles/papers/${encodeURIComponent(worksheetId)}`);
+  },
+  getRatings(stars?: number) {
+    return request<RatingsResponse>(`/admin/ratings${stars ? `?stars=${stars}` : ""}`);
   },
   getReferralOverview() {
     return request<ReferralOverview>("/admin/referrals/overview");
