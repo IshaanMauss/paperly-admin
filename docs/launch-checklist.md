@@ -1,6 +1,6 @@
 # Admin Panel Launch Checklist
 
-Last updated: 2026-10-13.
+Last updated: 2026-10-24.
 
 This repo is the owner/admin monitoring and response panel. The panel must not duplicate the template ingestion dashboard. Dated history is in `project-history.md`; current behaviour is in `README.md`; page-by-page routes and permission keys are in `admin-pages-and-permissions.md`.
 
@@ -67,3 +67,11 @@ Reset is a launch-cleanup action on a separate owner-only page (not beside user 
 The panel has the right boundary (monitoring and business control, not ingestion). Remaining launch risk: the ZTNA hosting layer (OWNER), admin two-factor and step-up prompts, scheduled and off-site backups, and switching this app's Content-Security-Policy from report-only to enforce. The teacher module's sign-in does not secure this panel.
 
 The admin panel now also sends a Permissions-Policy header (camera, microphone, geolocation and similar off) next to the report-only CSP. The panel runs on the owner's local machine only, so there is nothing to scan yet: scan the hosted panel with Security Headers and CSP Evaluator once hosted, and again after `CSP_MODE=enforce`; results for the teacher site are in `paperly-teacher-module/docs/launch-checklist.md` ("Security scans").
+
+## Launch day status - 2026-10-24
+
+- The panel talks to the backend on Vercel (`ADMIN_BACKEND_URL` points to the Vercel backend's `/api` address; the old host is gone). Set it in `.env.local` when running locally.
+- Maintenance page: the "include super admin" option can be saved while maintenance is already on.
+- Promo codes and Offers accept decimal percentages (two decimals).
+- Refunds: User 360 is the only place to send a refund (the Payments page has no button yet). A refund sent from there also tells the person (inbox notice and email) and shows on their Payment history; a refund done in the payment gateway's own dashboard does not.
+- OWNER: change the admin password that appeared in a screenshot; keep the admin panel behind the gateway secret; run the Referrals page check after the referral switch is turned on.

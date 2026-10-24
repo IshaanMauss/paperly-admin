@@ -70,3 +70,8 @@ Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and 
 - No route that sets a security event's status (resolved, false positive); the Security page only filters on statuses the events already carry.
 - No admin route for support priority, owner or callback fields.
 - Roles `reviewer` and `uploader` are defined but not enforced anywhere yet.
+
+## Update - 2026-10-24
+
+- Promo codes and Offers: the percent field accepts two decimals (promo 0 to 100, sale 0.01 to 90). The list shows the value as stored (for example 12.5% off).
+- Maintenance: "Include super admin" can be changed and saved while maintenance is on.

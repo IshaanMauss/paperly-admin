@@ -165,3 +165,6 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 
 - New page `/referrals` (Money group): Summary (switch state, counts, review flags), Trials (list, end a trial now), One person (invite code, trial, friend discount, friends invited with their checks, Keep Yearly payments, recent events; switch off a code, withdraw a discount), Event log. Backend: `/api/admin/referrals/*`. New permissions `referrals.read` (admin role) and `referrals.write` (owner by default); every write asks for a reason of at least 8 characters and is audited. Behaviour and rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
 
+## 2026-10-24 - launch day
+
+- Gateway address fixed (it still pointed at the old host). Maintenance settings can be saved while active. Promo codes and Offers take decimal percentages. Refund action lives in User 360 and now notifies the person.

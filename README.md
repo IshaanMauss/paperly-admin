@@ -83,7 +83,7 @@ Notes on individual pages:
 
 ## Deployment
 
-Currently run locally by the admin against the Railway backend through the proxy (`docs/admin-gateway-setup.md`). If hosted, set the same three server variables in the hosting project, add this panel's origin to the backend `CORS_ORIGINS`, and put an access wall in front of the panel.
+Currently run locally by the admin against the Vercel backend through the proxy (`docs/admin-gateway-setup.md`). If hosted, set the same three server variables in the hosting project, add this panel's origin to the backend `CORS_ORIGINS`, and put an access wall in front of the panel.
 
 ## Known limitations
 
