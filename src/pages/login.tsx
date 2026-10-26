@@ -51,7 +51,7 @@ export default function LoginPage() {
             <img src="/paperly-mark.png?v=2026-09-04-3" alt="Paperly-NT" className="h-16 w-16 object-contain drop-shadow-sm" />
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-purple-800">Paperly-NT Admin</p>
-              <h1 className="text-2xl font-extrabold text-slate-950">Sign in to control plane</h1>
+              <h1 className="text-2xl font-extrabold text-slate-950">Admin sign-in</h1>
             </div>
           </div>
           {error ? <div className={errorNotice}>{error}</div> : null}

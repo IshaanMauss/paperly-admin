@@ -10,13 +10,15 @@ import { api, UserResolveHit, UserThreeSixty, UserThreeSixtyTimelineItem } from 
 import { usePersistedState } from "@/lib/draftStore";
 import { requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { PaperHabitsPanel } from "@/components/user360/PaperHabitsPanel";
+import { UserDataPanel } from "@/components/user360/DataPanels";
 import { DisputeChecklist, MessagesPanel, PapersPanel, PaymentsPanel, SignInSummary } from "@/components/user360/EvidencePanels";
 
-type TabKey = "summary" | "payments" | "papers" | "signin" | "messages" | "timeline" | "fix";
+type TabKey = "summary" | "payments" | "papers" | "data" | "signin" | "messages" | "timeline" | "fix";
 const TABS: Array<{ key: TabKey; label: string }> = [
   { key: "summary", label: "Summary" },
   { key: "payments", label: "Payments" },
   { key: "papers", label: "Papers" },
+  { key: "data", label: "Data" },
   { key: "signin", label: "Sign-in" },
   { key: "messages", label: "Messages & tickets" },
   { key: "timeline", label: "Timeline" },
@@ -799,6 +801,7 @@ export default function UserThreeSixtyPage() {
             {tab === "payments" && <PaymentsPanel payments={data.payments_detail ?? []} />}
             {tab === "papers" && <PaperHabitsPanel teacherId={data.profile.teacher_id} />}
             {tab === "papers" && <PapersPanel worksheets={data.worksheets} teacherId={data.profile.teacher_id} />}
+            {tab === "data" && <UserDataPanel teacherId={data.profile.teacher_id} />}
             {tab === "messages" && <MessagesPanel messages={data.messages ?? []} tickets={data.tickets ?? []} />}
             {tab === "signin" && data.sign_in && <SignInSummary info={data.sign_in} />}
 

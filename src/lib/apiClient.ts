@@ -184,6 +184,24 @@ export async function downloadRequest(path: string, body?: unknown): Promise<{ b
   return { blob: await response.blob(), filename: match ? match[1] : "paperly-nt-download" };
 }
 
+/** GET that returns a file (data downloads). Same sign-in handling as downloadRequest; the server picks the file name. */
+export async function downloadGet(path: string): Promise<{ blob: Blob; filename: string }> {
+  const send = () => {
+    const token = getAdminAccessToken();
+    return fetch(`${API_BASE_URL}${path}`, { method: "GET", credentials: "include", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  };
+  if (isAdminAccessTokenExpiring()) await refreshAdminAccessToken();
+  let response = await send();
+  if (response.status === 401 && (await refreshAdminAccessToken())) response = await send();
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(adminApiErrorMessage(text, `Request failed with status ${response.status}`));
+  }
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  return { blob: await response.blob(), filename: match ? match[1] : "paperly-nt-data" };
+}
+
 export function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -192,6 +210,24 @@ export function saveBlob(blob: Blob, filename: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export type DataField = { name: string; kind: string; meaning: string };
+export type DataDataset = {
+  key: string; title: string; about: string; why_it_helps: string; privacy: string; key_points_for_learning: string[];
+  fields: DataField[]; rows: number | null; set_up: boolean;
+};
+export type DataDatasetList = { format_version: number | string; datasets: DataDataset[]; people_note: string };
+export type DataEnvelope = {
+  dataset: string; title: string; about: string; row_count: number; available: boolean; note: string | null;
+  fields: DataField[]; rows: Array<Record<string, unknown>>; people_shown_as: string;
+};
+export type PersonData = {
+  person: string; about: string; generated_at: string;
+  plan_history: Array<Record<string, unknown>>; orders: Array<Record<string, unknown>>;
+  ai_checks: { by_topic: Array<Record<string, unknown>>; recent: Array<Record<string, unknown>> };
+  paper_actions: Array<Record<string, unknown>>; screen_errors: Array<Record<string, unknown>>;
+  profile_answers: Record<string, unknown> | null; ratings: Array<Record<string, unknown>>;
+};
 
 export type AuditLogItem = {
   id: string;
@@ -732,6 +768,33 @@ export const api = {
     if (params.admin) query.set("admin", params.admin);
     if (params.onlyFailed) query.set("only_failed", "true");
     return request<{ items: AuditLogItem[]; total: number; window_days: number }>(`/admin/audit-log?${query.toString()}`);
+  },
+  getDataDatasets() {
+    return request<DataDatasetList>("/admin/data/datasets");
+  },
+  getDataPreview(key: string, limit = 20) {
+    return request<DataEnvelope>(`/admin/data/${encodeURIComponent(key)}/preview?limit=${limit}`);
+  },
+  downloadDataset(key: string, opts: { format: "json" | "csv"; realIds: boolean; from?: string; to?: string }) {
+    const q = new URLSearchParams({ format: opts.format, real_ids: String(opts.realIds) });
+    if (opts.from) q.set("date_from", opts.from);
+    if (opts.to) q.set("date_to", opts.to);
+    return downloadGet(`/admin/data/${encodeURIComponent(key)}/download?${q.toString()}`);
+  },
+  downloadDataBundle(opts: { realIds: boolean; from?: string; to?: string }) {
+    const q = new URLSearchParams({ real_ids: String(opts.realIds) });
+    if (opts.from) q.set("date_from", opts.from);
+    if (opts.to) q.set("date_to", opts.to);
+    return downloadGet(`/admin/data/bundle.zip?${q.toString()}`);
+  },
+  downloadDataDictionary() {
+    return downloadGet("/admin/data/dictionary.md");
+  },
+  getPersonData(teacherId: string) {
+    return request<PersonData>(`/admin/users/${encodeURIComponent(teacherId)}/data`);
+  },
+  downloadPersonData(teacherId: string) {
+    return downloadGet(`/admin/users/${encodeURIComponent(teacherId)}/data/download`);
   },
   getSystemStatus() {
     return request<SystemStatus>("/admin/system-status");

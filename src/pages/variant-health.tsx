@@ -358,7 +358,7 @@ export default function VariantHealthPage() {
   const activeFilterCount = [riskFilter, topicFilter, popularFilter, exportFilter].filter((v) => v !== "all").length;
 
   return (
-    <AppShell title="Variant Health">
+    <AppShell title="Question quality">
       <section className={panel}>
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-800">Template capacity</p>
         <h2 className="mt-2 text-2xl font-extrabold text-slate-950">Which templates are running low on distinct variants</h2>

@@ -65,7 +65,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
     items: [
       { href: "/paper-builders", label: "Paper Builders", icon: "layers" },
       { href: "/checking", label: "AI Checking", icon: "check" },
-      { href: "/variant-health", label: "Variant Health", icon: "pulse" },
+      { href: "/variant-health", label: "Question quality", icon: "pulse" },
       { href: "/ratings", label: "Ratings", icon: "spark" },
       { href: "/question-memory", label: "Question Memory", icon: "layers" },
       { href: "/paper-styles", label: "Paper Styles", icon: "layers" },
@@ -77,6 +77,7 @@ const navGroups: { heading: string; items: { href: string; label: string; icon: 
       { href: "/support", label: "Support", icon: "headset" },
       { href: "/maintenance", label: "Maintenance", icon: "wrench" },
       { href: "/backups", label: "Export & Backup", icon: "database" },
+      { href: "/data", label: "Data", icon: "database" },
       { href: "/database", label: "Database", icon: "database", ownerOnly: true },
       { href: "/architecture", label: "Architecture", icon: "layers", ownerOnly: true },
       { href: "/health", label: "Health", icon: "pulse" },
@@ -109,7 +110,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
     setDrawer(false);
   }, [router.pathname]);
 
-  if (!ready) return <Splash eyebrow="Checking admin session" title="Opening control plane" />;
+  if (!ready) return <Splash eyebrow="Checking admin session" title="Opening admin panel" />;
 
   if (!admin) {
     void router.replace(`/login?next=${encodeURIComponent(router.asPath || "/")}`);

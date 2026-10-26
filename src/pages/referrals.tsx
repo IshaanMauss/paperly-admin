@@ -6,6 +6,7 @@ import { errorNotice, input, notice, panel, primaryButton, secondaryButton, tabl
 import { onAdminDataRefresh } from "@/lib/adminRefresh";
 import { api } from "@/lib/apiClient";
 import type { ReferralEventRow, ReferralOverview, ReferralPerson, ReferralTrialRow } from "@/lib/referralTypes";
+import { PlanHistoryList } from "@/components/user360/DataPanels";
 
 // Refer and Unlock Yearly: who has invited whom, who is on the Yearly trial, the invited friends' discounts, and the
 // few actions an admin may take (end a trial early, switch off an invite code, withdraw a discount). Every action
@@ -156,6 +157,8 @@ function TrialsTab() {
                 <th className={th}>Started</th>
                 <th className={th}>Ends</th>
                 <th className={th}>Was on</th>
+                <th className={th}>Days given</th>
+                <th className={th}>What happened</th>
                 <th className={th} />
               </tr>
             </thead>
@@ -172,6 +175,8 @@ function TrialsTab() {
                   <td className={td}>{when(r.starts_at)}</td>
                   <td className={td}>{when(r.ends_at)}</td>
                   <td className={td}>{r.prior_plan_code ?? "-"}</td>
+                  <td className={td}>{r.reward_days ?? "-"}</td>
+                  <td className={`${td} text-xs`}>{r.story ?? "-"}</td>
                   <td className={td}>
                     {r.state === "active" ? (
                       <button type="button" className={secondaryButton} disabled={!reasonOk} onClick={() => void revoke(r.id)}>End trial now</button>
@@ -266,7 +271,7 @@ function PersonTab({ initialUser }: { initialUser: string }) {
             {view.trial.length ? view.trial.map((t) => (
               <p key={t.id} className="mt-1 text-sm font-semibold text-slate-700">
                 {t.state}, {when(t.starts_at)} to {when(t.ends_at)}, was on {t.prior_plan_code ?? "-"}, {Math.round(t.frozen_seconds / 86400)} paid days kept aside
-                {t.revoke_reason ? `. Ended early by ${t.revoked_by}: ${t.revoke_reason}` : ""}{" "}
+                {t.revoke_reason ? `. Ended early by ${t.revoked_by}: ${t.revoke_reason}` : ""}{t.story ? <span className="block text-xs font-semibold text-slate-500">{t.story}</span> : null}{" "}
                 {t.state === "active" ? <button type="button" className="ml-2 text-xs font-bold text-purple-700 underline disabled:opacity-40" disabled={!reasonOk} onClick={() => void act(() => api.revokeReferralTrial(t.id, reason.trim()), "Trial ended.")}>End trial now</button> : null}
               </p>
             )) : <p className="text-sm font-semibold text-slate-500">No trial.</p>}
@@ -289,19 +294,24 @@ function PersonTab({ initialUser }: { initialUser: string }) {
             <h3 className="text-sm font-extrabold text-slate-900">Friends this person invited ({view.friends.length})</h3>
             {view.friends.length ? (
               <table className={table}>
-                <thead><tr><th className={th}>Friend</th><th className={th}>State</th><th className={th}>Why</th><th className={th}>Checks</th></tr></thead>
+                <thead><tr><th className={th}>Friend</th><th className={th}>State</th><th className={th}>Why</th><th className={th}>Steps done</th></tr></thead>
                 <tbody>
                   {view.friends.map((f) => (
                     <tr key={f.referee_teacher_id}>
                       <td className={td}>{who(f.referee_teacher_id)}</td>
                       <td className={td}>{f.state}</td>
                       <td className={td}>{f.reason ?? "-"}</td>
-                      <td className={`${td} text-xs`}>{Object.entries(f.checks || {}).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v ? "yes" : "no"}`).join(", ")}</td>
+                      <td className={`${td} text-xs`}>{f.steps ? `Signed up: ${f.steps.signed_up ? "yes" : "no"}, Email verified: ${f.steps.email_verified ? "yes" : "no"}, Exported a paper: ${f.steps.paper_exported ? "yes" : "no"}` : Object.entries(f.checks || {}).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v ? "yes" : "no"}`).join(", ")}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : <p className="text-sm font-semibold text-slate-500">None yet.</p>}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-900">Plan history</h3>
+            <PlanHistoryList rows={view.plan_history ?? []} />
           </div>
 
           <div>
@@ -374,7 +384,7 @@ export default function ReferralsPage() {
       <section className={panel}>
         <h2 className="text-xl font-extrabold text-slate-950">Refer and Unlock Yearly</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          A Monthly or Quarterly member who brings in two friends (each verified, with a phone number and a first paper) gets Yearly for 28 days; a friend gets two months off Yearly for 14 days. Only one offer can be used on a payment: a promo code, the friend discount and Keep Yearly never combine. Ending a trial early, switching off a code or withdrawing a discount needs a written reason.
+          A member who brings in two friends (each with a verified email who has exported a paper) gets Yearly: 9 days for a Free member, 28 days for a Monthly or Quarterly member. A friend gets two months off Yearly for 14 days. Only one offer can be used on a payment: a promo code, the friend discount and Keep Yearly never combine. Ending a trial early, switching off a code or withdrawing a discount needs a written reason.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {TABS.map((t) => (

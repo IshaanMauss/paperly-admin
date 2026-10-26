@@ -1,6 +1,6 @@
 # Project History
 
-Last updated: 2026-10-22.
+Last updated: 2026-10-26.
 
 This file is the month-level product history for the admin panel. The panel's role stays clear: monitoring, support, billing, plans, safety and operations. The file must not drift into template ingestion, which remains outside this panel.
 
@@ -9,6 +9,13 @@ This file is the month-level product history for the admin panel. The panel's ro
 - Active docs should use project-owned wording and should not mention outside tools, reviewers, or handoff agents.
 - Current behaviour belongs in `README.md`, `docs/admin-pages-and-permissions.md`, `docs/launch-checklist.md` and `docs/admin-gateway-setup.md`. This file holds dated history only.
 - The launch checklist remains the operational source of truth; this file records history and intent.
+
+## 2026-10-26 - Data page, User 360 Data tab and referral stories
+
+- New **Data** page: 15 datasets with plain descriptions, key points, field meanings, a 10-row anonymous preview and (owner only) JSON, CSV, one zip and the dictionary. Optional dates and a "real account ids" tick; every download is audited.
+- User 360 has a **Data** tab: referral story and friend steps, plan history, orders and refunds, AI-check marks by topic, paper actions, browser problems, profile answers, and a per-person JSON download.
+- Referrals page: days given and a one-sentence story per trial, plan history and each friend's steps in the one-person view; the introduction text now states 9 days for Free and 28 days for paid members.
+- Labels: "Admin sign-in" instead of "control plane"; "Question quality" (variant health) in the menu.
 
 ## August 2026
 
