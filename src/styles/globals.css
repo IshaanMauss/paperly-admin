@@ -86,3 +86,14 @@
 @media (prefers-reduced-motion: reduce) {
   .offer-card--shiny, .offer-card--starry::before { animation: none; }
 }
+
+/* Phones: each table row becomes a small card, with the column name above each value.
+   Labels come from the header cells (see StackTableLabels). */
+@media (max-width: 640px) {
+  table.stack-table, table.stack-table tbody, table.stack-table tr, table.stack-table td { display: block; width: 100%; }
+  table.stack-table thead { display: none; }
+  table.stack-table tr { margin-bottom: 0.75rem; border: 1px solid #ddd6fe; border-radius: 0.75rem; background: #fff; padding: 0.25rem 0.75rem; }
+  table.stack-table td { border-bottom: 1px solid #f5f3ff; padding: 0.5rem 0; word-break: break-word; }
+  table.stack-table td:last-child { border-bottom: 0; }
+  table.stack-table td[data-label]:not([data-label=""])::before { content: attr(data-label); display: block; margin-bottom: 0.125rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+}

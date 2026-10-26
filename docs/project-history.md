@@ -16,6 +16,7 @@ This file is the month-level product history for the admin panel. The panel's ro
 
 ### 2026-10-26 - Data page, User 360 Data tab and referral stories
 
+- **Tables on phones:** on a narrow screen every table row shows as a small card with the column name above each value (`stack-table` style plus `StackTableLabels`); wide screens are unchanged.
 - **Refund button on Payments:** each paid, unrefunded row has a Refund button (reason, optional amount, cancel plan) that refunds that exact payment; refunded rows say so.
 - New **Data** page: 15 datasets with plain descriptions, key points, field meanings, a 10-row anonymous preview and (owner only) JSON, CSV, one zip and the dictionary. Optional dates and a "real account ids" tick; every download is audited.
 - User 360 has a **Data** tab: referral story and friend steps, plan history, orders and refunds, AI-check marks by topic, paper actions, browser problems, profile answers, and a per-person JSON download.
