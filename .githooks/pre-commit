@@ -1,0 +1,5 @@
+#!/bin/sh
+# Blocks a commit when a Markdown file breaks docs/markdown-writing-standard.md.
+if git diff --cached --name-only | grep -q '\.md$'; then
+  python3 scripts/check_markdown_docs.py --strict || { echo "Markdown standard check failed. Fix the errors above."; exit 1; }
+fi

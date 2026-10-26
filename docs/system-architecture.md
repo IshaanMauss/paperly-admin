@@ -1,5 +1,7 @@
 # Paperly Admin Panel System Architecture
 
+Purpose: Give a system-level view of the admin panel.
+
 Date: 2026-10-03
 
 This record describes the admin frontend as the code stands. The record is a control-plane map: how the panel is structured, how the panel reaches the backend, what operational workflows the panel exposes, and which risks matter before changing the code.

@@ -1,5 +1,7 @@
 # Project History
 
+Purpose: Record the dated history of the admin panel, newest first.
+
 Last updated: 2026-10-26.
 
 This file is the month-level product history for the admin panel. The panel's role stays clear: monitoring, support, billing, plans, safety and operations. The file must not drift into template ingestion, which remains outside this panel.
@@ -10,64 +12,109 @@ This file is the month-level product history for the admin panel. The panel's ro
 - Current behaviour belongs in `README.md`, `docs/admin-pages-and-permissions.md`, `docs/launch-checklist.md` and `docs/admin-gateway-setup.md`. This file holds dated history only.
 - The launch checklist remains the operational source of truth; this file records history and intent.
 
-## 2026-10-26 - Data page, User 360 Data tab and referral stories
+## 2026-10
+
+### 2026-10-26 - Data page, User 360 Data tab and referral stories
 
 - New **Data** page: 15 datasets with plain descriptions, key points, field meanings, a 10-row anonymous preview and (owner only) JSON, CSV, one zip and the dictionary. Optional dates and a "real account ids" tick; every download is audited.
 - User 360 has a **Data** tab: referral story and friend steps, plan history, orders and refunds, AI-check marks by topic, paper actions, browser problems, profile answers, and a per-person JSON download.
 - Referrals page: days given and a one-sentence story per trial, plan history and each friend's steps in the one-person view; the introduction text now states 9 days for Free and 28 days for paid members.
 - Labels: "Admin sign-in" instead of "control plane"; "Question quality" (variant health) in the menu.
 
-## August 2026
+### 2026-10-24 - launch day
 
-Reconstructed from surviving README/launch-checklist/DFD notes and the August git history. Early August admin work was mostly planning and boundary documentation, so this section records the product decisions and the confirmed implementation movement.
+- Gateway address fixed (it still pointed at the old host). Maintenance settings can be saved while active. Promo codes and Offers take decimal percentages. Refund action lives in User 360 and now notifies the person.
+- New Ratings page (stars, comments, device, remind-later and no-thanks counts). User 360 > Papers now opens with a Paper habits panel: a short summary and the full JSON for the person, with Copy, Download and an owner-only download of everyone's paper data. Payments marks test payments. All 121 admin calls were checked against the backend routes (all match).
 
-### 2026-08-08 to 2026-08-21: Admin-panel boundary and P0 security alignment
+### 2026-10-22
 
-- Defined the admin panel as the owner/admin monitoring and response panel, not the ingestion dashboard and not the user-facing product.
-- Set the product boundary: backend owns data, billing, exports and admin APIs; MVP dashboard owns template ingestion/review; teacher module owns paper-building; admin panel owns operations.
-- Captured P0 launch requirements: admin RBAC, separate admin sessions, route-level permission checks, denied-attempt security logging, production ZTNA, restricted CORS, and actor-traced admin actions.
-- Recorded that template upload/review/approve/QA preview must remain in the MVP dashboard.
+**Plans and Offers screens follow the new price order**
 
-### 2026-08-26 to 2026-08-27: Launch checks and RBAC truth
+- Plans: two price fields per paid plan, the reference (crossed-out) price and the everyday price, plus "Most a sale plus a code may take off (%)"; the old standing offer percentage is no longer edited (worked out from the two prices). Changing either price asks for the usual price confirmation.
+- Offers: a sale is a percentage off the everyday price; the form shows what the customer pays and refuses a sale deeper than the plan's limit. Text explains that one promo code or invite discount, never both, then comes off the sale price. Backend rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
 
-- Updated launch checks for independent admin sessions, admin-only routes, backup/export identity evidence, billing outage display and separation from teacher sessions.
-- Recorded the admin RBAC security check: valid admin session plus route-specific permissions, denied attempts logged as security events, fallback-token removal as a deployment risk, and ZTNA as a hosted-production requirement.
-- Updated DFD documentation for the admin panel and backend/admin boundary.
+**Referrals page (Refer and Unlock Yearly)**
 
-### 2026-08-31: Access hardening
+- New page `/referrals` (Money group): Summary (switch state, counts, review flags), Trials (list, end a trial now), One person (invite code, trial, friend discount, friends invited with their checks, Keep Yearly payments, recent events; switch off a code, withdraw a discount), Event log. Backend: `/api/admin/referrals/*`. New permissions `referrals.read` (admin role) and `referrals.write` (owner by default); every write asks for a reason of at least 8 characters and is audited. Behaviour and rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
 
-- Hardened admin access and documentation.
-- Established the path toward exposing the panel only after ZTNA, step-up auth for backup/maintenance and full success-path audit coverage are ready.
+### 2026-10-21 - Paper Styles page and paper records
 
-## September 2026
+- New page Paper Styles (styles in use, one user's saved styles); User 360 Papers tab shows the stored paper record (style, paper name, Popular skills, one-paper changes). Backend: `paperly-mvp/docs/changelog.md` (2026-10-21) (`d9be9b1`).
+- Paper Builders: the old subtopic cap and its tile removed, a mark-scheme download column added to the plan table, and a pointer to Paper Styles (`05275c0`).
 
-### 2026-09-02 to 2026-09-10: Admin visibility and organisation operations
+### 2026-10-16 - Question Memory page
 
-- Improved mobile maintenance controls.
-- Added Full Portion, AI Checking, and RLS status visibility.
-- Added DFD documentation for the admin-panel gap-closing pass.
-- Added server-log troubleshoot diagnostics and status-code breakdown UI.
-- Added Organisations page for per-institute white-label theming and feature flags.
-- Added Requests inbox to the Organisations page.
+- New page `/question-memory` (Product group): Summary, Template lists, Not enough questions (supply gaps), Flags, One user (progress per template, restart, memory and rotation switches). Backend: `/api/admin/memory/*`. New permissions `memory.read` (admin role) and `memory.write`; every restart or setting change asks for a reason and is audited. Behaviour: `paperly-mvp/docs/question-memory.md`.
 
-### 2026-09-15 to 2026-09-17: Promo, User 360 and security checklist correction
+### 2026-10-13
 
-- Added Promo Codes tab with creation, live redemption tracking, toggles, redeemer name/email, CSV export, and clearer expiry/duration wording.
-- Added User 360 with full per-user history and remediation actions.
-- Fixed Users filter layout and hardened shared inputs.
-- Sanitised raw backend error bodies and fixed clipped Users table.
-- Re-verified the launch checklist so stale claims about webhook verification and route-level rate limits were corrected.
+**Needs review signals**
 
-### 2026-09-28 to 2026-09-30: Admin tests, API split and rename
+- Users page: the `DeviceFlagsCard` gains a "Needs review" list of abuse signals with Dismiss and Open user. `GET /admin/users/flags` now returns signals too; `POST /admin/users/signals/{id}/dismiss` needs `users.write`. Signals only warn; no automatic ban. Behaviour and settings: `paperly-mvp/docs/one-device-rule.md`.
+- The backend migration `abuse-signals-migration.sql` is NOT YET APPLIED to production; until then the list stays empty.
 
-- Added missing taxonomy value support for admin-facing views.
-- Added Vitest, first unit tests, and CI.
-- Added admin UI coverage for support resolution, log acknowledgement/deletion, suspend, export/delete on behalf, billing cancellation, backup restore, checking drill-down and worksheet drill-down.
-- Split `apiClient.ts` into request helpers and response/payload types.
-- Added variant health page and API type updates.
-- Completed user-facing product rename in the admin panel without changing package names, API paths, or environment variable names.
+**Device sign-in controls: Sign-in and Fix tabs, Paused and banned accounts**
 
-## October 2026
+- User 360, Sign-in tab: shows device_state, devices (with accounts_on_device), bans and device_events for the one-ID-one-device rule (cookie `paperly_device`; detail in `paperly-mvp/docs/one-device-rule.md`).
+- User 360, Fix tab: Unpause device changes, Reset devices, and Ban / Lift ban (reason of at least 8 characters, written to the admin action log). Endpoints: `POST /admin/users/{id}/devices/unpause`, `/devices/reset`, `POST /admin/teachers/{id}/ban`, `/unban`.
+- Users page: new "Paused and banned accounts" card (`DeviceFlagsCard`) reading `GET /admin/users/flags`.
+- Rule behind the controls: the device-change limit is now 2 per 24 hours; after two completed switches the ID is paused 24 hours after the newest switch (refused attempts do not count). Bans cover phone, email (Gmail dots and +tags ignored) and device, survive account deletion, and a device may hold at most 2 accounts ever (test accounts exempt).
+- Production database: the device-lock migration was applied on 2026-10-13 before this release (migration first, then backend, then teacher module and admin panel).
+- Architecture: the device sign-in and ban flow was added as Mermaid source in `docs/architecture-diagrams.md`; the entry is not yet in the page catalog.
+- Commits (local, not pushed): `72c0e69`, `488a8e5`.
+
+**Messaging page**
+
+- New page `src/pages/messaging.tsx` (tabs Send, History, Emails, Templates) and a "Message this user" link in User 360. Push, bell and email channels, audiences, scheduling and templates are described in `paperly-mvp/docs/push-notifications-and-messaging.md`; routes and permissions in `docs/admin-pages-and-permissions.md`.
+- Checked: type check and lint. NOT yet seen in a browser.
+
+### 2026-10-12
+
+- Added the owner-only Database page: Production and Test buttons, schema browser, SQL console with preview, typed confirmations and password re-entry for changes, and a history of SQL applied. Backend routes, safety rules and tests are described in `paperly-mvp/docs/admin-database-console.md`.
+
+**Architecture page**
+
+- Added an owner-only Architecture page with 88 Mermaid diagrams covering the backend, the teacher module and this panel: data flow diagrams level 0 to 3 (27), C4 views, sequences, database ER, state machines, flows and maps, deployment and security. Each diagram links deeper ("Go deeper") and sideways, lists checked notes and the real files.
+- New code: `src/lib/architecture/` (types, catalog, `diagrams/*.ts`, `catalog.test.ts`), `src/pages/architecture.tsx`, `src/components/architecture/DiagramViewer.tsx`, a nav entry in `AppShell.tsx` and a new dependency, `mermaid` (loaded only when the page is opened). How to add a diagram: `docs/architecture-diagrams.md`.
+- Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
+- Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
+
+### 2026-10-10 - Payments page, Offers price preview, dollar prices
+
+- New Payments page (`src/pages/payments.tsx`, nav entry in `AppShell.tsx`) reading `GET /admin/payments`: summary tiles (collected, last 30 days, last 24 hours, checkouts not completed), filter tabs, search by name, email, payment or order id and promo code, dollar and rupee amounts with the GST inside, offer or code used, method, IDs and a link to User 360. Unfinished checkouts are the first place to look when a user reports a payment and nothing happened.
+- Offers: a new offer shows the customer price after the discount in dollars and rupees; the fixed dollar rate is 97.
+- Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or the per-month price is above Quarterly.
+- Organizations and User 360 evidence panels show the new amounts.
+
+### 2026-10-08 (night) - Export data, plans apply bar, Variant Health, User 360 tabs
+
+- Backups page: the Excel action is now **Export data** with Everything, Last 7 days, Last month and a custom range (Indian time, both days included); the JSON action is **Download backup**. The workbook gained Billing Summary, Payments and Customer Contacts sheets.
+- Features & Plans: sections open and close, a top overview shows what changed, and an apply bar is the one place to publish a draft. A backend test proves each toggle and limit reaches the product through the same computed status the app reads.
+- Variant Health: the page shows why a size calculation stopped and no longer times out on large templates.
+- User 360 is split into Summary, Payments, Papers, Sign-in, Messages & tickets, Timeline and Fix account. Summary has a refund and dispute checklist; Payments shows every attempt in full; messages never show the text of a sign-in code.
+- Still open: nothing here is committed or deployed; the panel has not been built on the Windows machine.
+
+### 2026-10-03
+
+**Sign-in codes operations**
+
+- Added Run Tests sign-in-code panel showing status, outbox, and send-test-code controls.
+
+**(later): Audit Log, backups, evidence, live status**
+
+- Added the Audit Log page (every admin write, filter by admin and failures).
+- Backups page now shows last export, who ran the export and a stale warning; downloads use readable file names.
+- Security page can export incident evidence for an account.
+- Health page now shows a live system-status panel.
+- User 360 gained a Refund card (real Razorpay refund, once per payment, behind the separate `billing.refund` permission).
+- Backend gained a Content-Security-Policy and a per-account admin login lockout; CI gained `security.yml` (non-blocking `npm audit`, secret scan, weekly run).
+- Wrote `docs/admin-pages-and-permissions.md` from the code: every page, with backend routes and permission keys.
+
+**Variant Health tab redesigned**
+
+- The tab now lists each template with the dates added, updated and approved, and the exhaustion. Show more opens possible number combinations, possible different answers and wordings, labelled exact, estimate or very large.
+- A Calculate missing numbers button fills the sizes for templates that have none, in small batches until none remain. The button must be pressed once after deploy for the 125 approved templates.
+- Still open: changes are uncommitted and not deployed.
 
 ### 2026-10-01 to 2026-10-02: Gateway, offers, plans and Run Tests
 
@@ -80,19 +127,55 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Added test-database panel, write-test labels and blocked-for-safety states.
 - Documented Run Tests, database guards, and test database behaviour.
 
-### 2026-10-03: Sign-in codes operations
+## 2026-09
 
-- Added Run Tests sign-in-code panel showing status, outbox, and send-test-code controls.
+### 2026-09-28 to 2026-09-30: Admin tests, API split and rename
 
-### 2026-10-03 (later): Audit Log, backups, evidence, live status
+- Added missing taxonomy value support for admin-facing views.
+- Added Vitest, first unit tests, and CI.
+- Added admin UI coverage for support resolution, log acknowledgement/deletion, suspend, export/delete on behalf, billing cancellation, backup restore, checking drill-down and worksheet drill-down.
+- Split `apiClient.ts` into request helpers and response/payload types.
+- Added variant health page and API type updates.
+- Completed user-facing product rename in the admin panel without changing package names, API paths, or environment variable names.
 
-- Added the Audit Log page (every admin write, filter by admin and failures).
-- Backups page now shows last export, who ran the export and a stale warning; downloads use readable file names.
-- Security page can export incident evidence for an account.
-- Health page now shows a live system-status panel.
-- User 360 gained a Refund card (real Razorpay refund, once per payment, behind the separate `billing.refund` permission).
-- Backend gained a Content-Security-Policy and a per-account admin login lockout; CI gained `security.yml` (non-blocking `npm audit`, secret scan, weekly run).
-- Wrote `docs/admin-pages-and-permissions.md` from the code: every page, with backend routes and permission keys.
+### 2026-09-15 to 2026-09-17: Promo, User 360 and security checklist correction
+
+- Added Promo Codes tab with creation, live redemption tracking, toggles, redeemer name/email, CSV export, and clearer expiry/duration wording.
+- Added User 360 with full per-user history and remediation actions.
+- Fixed Users filter layout and hardened shared inputs.
+- Sanitised raw backend error bodies and fixed clipped Users table.
+- Re-verified the launch checklist so stale claims about webhook verification and route-level rate limits were corrected.
+
+### 2026-09-02 to 2026-09-10: Admin visibility and organisation operations
+
+- Improved mobile maintenance controls.
+- Added Full Portion, AI Checking, and RLS status visibility.
+- Added DFD documentation for the admin-panel gap-closing pass.
+- Added server-log troubleshoot diagnostics and status-code breakdown UI.
+- Added Organisations page for per-institute white-label theming and feature flags.
+- Added Requests inbox to the Organisations page.
+
+## 2026-08
+
+Reconstructed from surviving README/launch-checklist/DFD notes and the August git history. Early August admin work was mostly planning and boundary documentation, so this section records the product decisions and the confirmed implementation movement.
+
+### 2026-08-31: Access hardening
+
+- Hardened admin access and documentation.
+- Established the path toward exposing the panel only after ZTNA, step-up auth for backup/maintenance and full success-path audit coverage are ready.
+
+### 2026-08-26 to 2026-08-27: Launch checks and RBAC truth
+
+- Updated launch checks for independent admin sessions, admin-only routes, backup/export identity evidence, billing outage display and separation from teacher sessions.
+- Recorded the admin RBAC security check: valid admin session plus route-specific permissions, denied attempts logged as security events, fallback-token removal as a deployment risk, and ZTNA as a hosted-production requirement.
+- Updated DFD documentation for the admin panel and backend/admin boundary.
+
+### 2026-08-08 to 2026-08-21: Admin-panel boundary and P0 security alignment
+
+- Defined the admin panel as the owner/admin monitoring and response panel, not the ingestion dashboard and not the user-facing product.
+- Set the product boundary: backend owns data, billing, exports and admin APIs; MVP dashboard owns template ingestion/review; teacher module owns paper-building; admin panel owns operations.
+- Captured P0 launch requirements: admin RBAC, separate admin sessions, route-level permission checks, denied-attempt security logging, production ZTNA, restricted CORS, and actor-traced admin actions.
+- Recorded that template upload/review/approve/QA preview must remain in the MVP dashboard.
 
 ## Current Open Threads
 
@@ -101,78 +184,3 @@ Reconstructed from surviving README/launch-checklist/DFD notes and the August gi
 - Add a way to mark a security event resolved or false positive from the panel (no backend route exists yet).
 - Keep Run Tests read/write safety clearly separated: production read-only checks, write tests on the locked test database.
 - Keep launch checklist wording current after every security or deployment change.
-
-## 2026-10-03 - Variant Health tab redesigned
-
-- The tab now lists each template with the dates added, updated and approved, and the exhaustion. Show more opens possible number combinations, possible different answers and wordings, labelled exact, estimate or very large.
-- A Calculate missing numbers button fills the sizes for templates that have none, in small batches until none remain. The button must be pressed once after deploy for the 125 approved templates.
-- Still open: changes are uncommitted and not deployed.
-
-## 2026-10-08 (night) - Export data, plans apply bar, Variant Health, User 360 tabs
-
-- Backups page: the Excel action is now **Export data** with Everything, Last 7 days, Last month and a custom range (Indian time, both days included); the JSON action is **Download backup**. The workbook gained Billing Summary, Payments and Customer Contacts sheets.
-- Features & Plans: sections open and close, a top overview shows what changed, and an apply bar is the one place to publish a draft. A backend test proves each toggle and limit reaches the product through the same computed status the app reads.
-- Variant Health: the page shows why a size calculation stopped and no longer times out on large templates.
-- User 360 is split into Summary, Payments, Papers, Sign-in, Messages & tickets, Timeline and Fix account. Summary has a refund and dispute checklist; Payments shows every attempt in full; messages never show the text of a sign-in code.
-- Still open: nothing here is committed or deployed; the panel has not been built on the Windows machine.
-
-## 2026-10-10 - Payments page, Offers price preview, dollar prices
-
-- New Payments page (`src/pages/payments.tsx`, nav entry in `AppShell.tsx`) reading `GET /admin/payments`: summary tiles (collected, last 30 days, last 24 hours, checkouts not completed), filter tabs, search by name, email, payment or order id and promo code, dollar and rupee amounts with the GST inside, offer or code used, method, IDs and a link to User 360. Unfinished checkouts are the first place to look when a user reports a payment and nothing happened.
-- Offers: a new offer shows the customer price after the discount in dollars and rupees; the fixed dollar rate is 97.
-- Plans: list prices are GST-inclusive rupees with a standing offer percent per plan; new warnings when the Yearly price after offer is above 12 times Monthly or the per-month price is above Quarterly.
-- Organizations and User 360 evidence panels show the new amounts.
-
-## October 2026 (12th)
-
-- Added the owner-only Database page: Production and Test buttons, schema browser, SQL console with preview, typed confirmations and password re-entry for changes, and a history of SQL applied. Backend routes, safety rules and tests are described in `paperly-mvp/docs/admin-database-console.md`.
-
-## October 2026 (12th, later) - Architecture page
-
-- Added an owner-only Architecture page with 88 Mermaid diagrams covering the backend, the teacher module and this panel: data flow diagrams level 0 to 3 (27), C4 views, sequences, database ER, state machines, flows and maps, deployment and security. Each diagram links deeper ("Go deeper") and sideways, lists checked notes and the real files.
-- New code: `src/lib/architecture/` (types, catalog, `diagrams/*.ts`, `catalog.test.ts`), `src/pages/architecture.tsx`, `src/components/architecture/DiagramViewer.tsx`, a nav entry in `AppShell.tsx` and a new dependency, `mermaid` (loaded only when the page is opened). How to add a diagram: `docs/architecture-diagrams.md`.
-- Checked: every diagram draws in a real browser, type check and all 58 tests pass; facts were checked against the backend models, billing service, template routes and teacher module code.
-- Still open: committed locally only; run `npm install` after pulling so `mermaid` is installed.
-
-## 2026-10-13 - Needs review signals
-
-- Users page: the `DeviceFlagsCard` gains a "Needs review" list of abuse signals with Dismiss and Open user. `GET /admin/users/flags` now returns signals too; `POST /admin/users/signals/{id}/dismiss` needs `users.write`. Signals only warn; no automatic ban. Behaviour and settings: `paperly-mvp/docs/one-device-rule.md`.
-- The backend migration `abuse-signals-migration.sql` is NOT YET APPLIED to production; until then the list stays empty.
-
-## 2026-10-13 - Device sign-in controls: Sign-in and Fix tabs, Paused and banned accounts
-
-- User 360, Sign-in tab: shows device_state, devices (with accounts_on_device), bans and device_events for the one-ID-one-device rule (cookie `paperly_device`; detail in `paperly-mvp/docs/one-device-rule.md`).
-- User 360, Fix tab: Unpause device changes, Reset devices, and Ban / Lift ban (reason of at least 8 characters, written to the admin action log). Endpoints: `POST /admin/users/{id}/devices/unpause`, `/devices/reset`, `POST /admin/teachers/{id}/ban`, `/unban`.
-- Users page: new "Paused and banned accounts" card (`DeviceFlagsCard`) reading `GET /admin/users/flags`.
-- Rule behind the controls: the device-change limit is now 2 per 24 hours; after two completed switches the ID is paused 24 hours after the newest switch (refused attempts do not count). Bans cover phone, email (Gmail dots and +tags ignored) and device, survive account deletion, and a device may hold at most 2 accounts ever (test accounts exempt).
-- Production database: the device-lock migration was applied on 2026-10-13 before this release (migration first, then backend, then teacher module and admin panel).
-- Architecture: the device sign-in and ban flow was added as Mermaid source in `docs/architecture-diagrams.md`; the entry is not yet in the page catalog.
-- Commits (local, not pushed): `72c0e69`, `488a8e5`.
-
-## 2026-10-13 - Messaging page
-
-- New page `src/pages/messaging.tsx` (tabs Send, History, Emails, Templates) and a "Message this user" link in User 360. Push, bell and email channels, audiences, scheduling and templates are described in `paperly-mvp/docs/push-notifications-and-messaging.md`; routes and permissions in `docs/admin-pages-and-permissions.md`.
-- Checked: type check and lint. NOT yet seen in a browser.
-
-## 2026-10-16 - Question Memory page
-
-- New page `/question-memory` (Product group): Summary, Template lists, Not enough questions (supply gaps), Flags, One user (progress per template, restart, memory and rotation switches). Backend: `/api/admin/memory/*`. New permissions `memory.read` (admin role) and `memory.write`; every restart or setting change asks for a reason and is audited. Behaviour: `paperly-mvp/docs/question-memory.md`.
-
-## 2026-10-21 - Paper Styles page and paper records
-
-- New page Paper Styles (styles in use, one user's saved styles); User 360 Papers tab shows the stored paper record (style, paper name, Popular skills, one-paper changes). Backend: `paperly-mvp/docs/changelog.md` (2026-10-21) (`d9be9b1`).
-- Paper Builders: the old subtopic cap and its tile removed, a mark-scheme download column added to the plan table, and a pointer to Paper Styles (`05275c0`).
-
-## 2026-10-22 - Plans and Offers screens follow the new price order
-
-- Plans: two price fields per paid plan, the reference (crossed-out) price and the everyday price, plus "Most a sale plus a code may take off (%)"; the old standing offer percentage is no longer edited (worked out from the two prices). Changing either price asks for the usual price confirmation.
-- Offers: a sale is a percentage off the everyday price; the form shows what the customer pays and refuses a sale deeper than the plan's limit. Text explains that one promo code or invite discount, never both, then comes off the sale price. Backend rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
-
-## 2026-10-22 - Referrals page (Refer and Unlock Yearly)
-
-- New page `/referrals` (Money group): Summary (switch state, counts, review flags), Trials (list, end a trial now), One person (invite code, trial, friend discount, friends invited with their checks, Keep Yearly payments, recent events; switch off a code, withdraw a discount), Event log. Backend: `/api/admin/referrals/*`. New permissions `referrals.read` (admin role) and `referrals.write` (owner by default); every write asks for a reason of at least 8 characters and is audited. Behaviour and rules: `paperly-mvp/docs/changelog.md` (2026-10-22).
-
-## 2026-10-24 - launch day
-
-- Gateway address fixed (it still pointed at the old host). Maintenance settings can be saved while active. Promo codes and Offers take decimal percentages. Refund action lives in User 360 and now notifies the person.
-- New Ratings page (stars, comments, device, remind-later and no-thanks counts). User 360 > Papers now opens with a Paper habits panel: a short summary and the full JSON for the person, with Copy, Download and an owner-only download of everyone's paper data. Payments marks test payments. All 121 admin calls were checked against the backend routes (all match).

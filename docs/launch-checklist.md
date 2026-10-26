@@ -1,5 +1,7 @@
 # Admin Panel Launch Checklist
 
+Purpose: List the actions and conditions that must hold before the admin panel is relied on.
+
 Last updated: 2026-10-24.
 
 This repo is the owner/admin monitoring and response panel. The panel must not duplicate the template ingestion dashboard. Dated history is in `project-history.md`; current behaviour is in `README.md`; page-by-page routes and permission keys are in `admin-pages-and-permissions.md`.

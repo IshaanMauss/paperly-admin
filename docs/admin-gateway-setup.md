@@ -1,5 +1,7 @@
 # Admin gateway setup
 
+Purpose: Describe how the admin panel reaches the backend through the gateway.
+
 Last updated: 2026-10-03. Status: the proxy route is DONE in code (`src/pages/api/gateway/[...path].ts`, helpers in `src/lib/server/gatewayProxy.ts` and `cfAccess.ts`). The current deployment is a locally run panel (below). Hosting the panel, Cloudflare Access and a second login wall are OWNER decisions and are not set up.
 
 Problem this solves: the backend refuses every `/api/admin*` request unless the request carries the gateway secret header (`ZTNA_GATEWAY_SECRET` on Railway). A browser cannot hold that secret (anything in browser code is public), so the admin panel was blocked with a 403 before the password was even checked.

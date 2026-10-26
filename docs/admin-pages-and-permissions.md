@@ -1,5 +1,7 @@
 # Admin pages, backend routes and permission keys
 
+Purpose: List the admin pages, their backend routes and permission keys.
+
 Last updated: 2026-10-13. Verified from `src/pages`, `src/lib/apiClient.ts` and `src/components/AppShell.tsx` in this repo, and from the route modules `admin*.py` under `paperly-mvp/backend/app/api/routes` (guards written as `_require_admin_permission("<key>")`). All routes are under `/api/admin` except where stated; the browser reaches the routes through `/api/gateway`.
 
 ## How permissions work

@@ -1,5 +1,7 @@
 # Architecture diagrams (the Architecture page)
 
+Purpose: Describe the Architecture page and the diagrams it holds.
+
 Last updated: 2026-10-13. The Architecture page (owner only) holds 88 diagrams covering all three repositories: the backend (`paperly-mvp`), the teacher module and this admin panel. The page is a library, not one picture: each diagram links to more detailed ones, so a reader can stop at level 0 or go down to level 3 and beyond.
 
 ## Contents
