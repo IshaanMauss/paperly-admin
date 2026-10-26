@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { UserLabel } from "@/components/UserLabel";
-import { input, panel, secondaryButton, table, td, th } from "@/components/ui";
-import { onAdminDataRefresh } from "@/lib/adminRefresh";
+import { input, panel, primaryButton, secondaryButton, table, td, th } from "@/components/ui";
+import { onAdminDataRefresh, requestAdminDataRefresh } from "@/lib/adminRefresh";
 import { api, type AdminPaymentRow, type AdminPaymentsResponse } from "@/lib/apiClient";
 
 const PAGE_SIZE = 25;
@@ -38,6 +38,71 @@ const STATE_STYLE: Record<AdminPaymentRow["state"], { label: string; cls: string
   not_completed: { label: "Not completed", cls: "border-amber-200 bg-amber-50 text-amber-800" },
   failed: { label: "Failed", cls: "border-rose-200 bg-rose-50 text-rose-800" },
 };
+
+function RefundDialog({ row, onClose }: { row: AdminPaymentRow; onClose: (done: boolean) => void }) {
+  const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState("");
+  const [cancelPlan, setCancelPlan] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
+  async function send() {
+    if (!row.teacher_id || !row.payment_id) return;
+    if (reason.trim().length < 8) return setError("Write a reason of at least 8 characters.");
+    const value = amount.trim() ? Number(amount) : undefined;
+    if (value !== undefined && (!Number.isFinite(value) || value <= 0)) return setError("Enter the refund in rupees, or leave it empty to refund everything.");
+    setBusy(true);
+    setError(null);
+    try {
+      const out = await api.refundTeacherPayment(row.teacher_id, { reason: reason.trim(), amount_rupees: value, cancel_plan: cancelPlan, payment_id: row.payment_id });
+      const sent = out.refund.amount_paise != null ? ` of ${rupees(out.refund.amount_paise)}` : "";
+      setDone(`Refund${sent} sent (${out.refund.status ?? "requested"}), reference ${out.refund.refund_id}.${out.plan_cancelled ? " Plan cancelled." : ""}`);
+      requestAdminDataRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the refund.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="refund-title">
+      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+        <h3 id="refund-title" className="text-lg font-extrabold text-slate-950">Refund this payment</h3>
+        <p className="mt-1 text-sm font-semibold text-slate-600">
+          {row.plan_label || "Plan"} · {rupees(row.amount_paise)} · {row.teacher_name || row.payer_name || row.teacher_email || row.teacher_id}
+        </p>
+        <p className="mt-0.5 break-all font-mono text-[11px] text-slate-500">{row.payment_id}</p>
+        {done ? (
+          <>
+            <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">{done}</p>
+            <button type="button" className={`${primaryButton} mt-4 w-full`} onClick={() => onClose(true)}>Close</button>
+          </>
+        ) : (
+          <>
+            <label className="mt-4 block text-xs font-extrabold uppercase tracking-wide text-slate-500">
+              Reason (kept in the audit trail)
+              <textarea className={`${input} mt-1 normal-case tracking-normal`} rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
+            </label>
+            <label className="mt-3 block text-xs font-extrabold uppercase tracking-wide text-slate-500">
+              Amount in rupees (empty = refund everything)
+              <input className={`${input} mt-1 normal-case tracking-normal`} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            </label>
+            <label className="mt-3 flex items-center gap-2 text-sm font-bold text-slate-700">
+              <input type="checkbox" checked={cancelPlan} onChange={(e) => setCancelPlan(e.target.checked)} /> Also cancel the plan
+            </label>
+            {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p> : null}
+            <div className="mt-4 flex gap-2">
+              <button type="button" className={`${secondaryButton} flex-1`} onClick={() => onClose(false)} disabled={busy}>Cancel</button>
+              <button type="button" className={`${primaryButton} flex-1`} onClick={() => void send()} disabled={busy}>{busy ? "Sending..." : "Send refund"}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -83,6 +148,7 @@ export default function PaymentsPage() {
     };
   }, [page, search, status, tick]);
 
+  const [refundRow, setRefundRow] = useState<AdminPaymentRow | null>(null);
   const summary = data?.summary || {};
   const items = data?.items || [];
   const total = data?.total || 0;
@@ -151,6 +217,7 @@ export default function PaymentsPage() {
                     <th className={th}>How</th>
                     <th className={th}>IDs</th>
                     <th className={th}>Status</th>
+                    <th className={th}>Refund</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,6 +263,19 @@ export default function PaymentsPage() {
                         <td className={td}>
                           <span className={`rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${state.cls}`}>{state.label}</span>
                         </td>
+                        <td className={td}>
+                          {row.state !== "paid" ? (
+                            "-"
+                          ) : row.refunded ? (
+                            <span className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-extrabold text-slate-600">Refunded</span>
+                          ) : row.teacher_id && row.payment_id && !/mock/i.test(`${row.payment_id}${row.order_id ?? ""}`) ? (
+                            <button type="button" className={`${secondaryButton} !px-3 !py-1.5 !text-xs`} onClick={() => setRefundRow(row)}>
+                              Refund
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -219,6 +299,15 @@ export default function PaymentsPage() {
           </div>
         ) : null}
       </section>
+      {refundRow ? (
+        <RefundDialog
+          row={refundRow}
+          onClose={(sent) => {
+            setRefundRow(null);
+            if (sent) setTick((v) => v + 1);
+          }}
+        />
+      ) : null}
     </AppShell>
   );
 }

@@ -137,6 +137,7 @@ export type AdminPaymentRow = {
   promo_code?: string | null;
   offer_id?: string | null;
   payment_id?: string | null;
+  refunded?: boolean;
   order_id?: string | null;
   method?: string | null;
   gateway_status?: string | null;

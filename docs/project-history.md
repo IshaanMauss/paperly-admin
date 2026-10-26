@@ -16,6 +16,7 @@ This file is the month-level product history for the admin panel. The panel's ro
 
 ### 2026-10-26 - Data page, User 360 Data tab and referral stories
 
+- **Refund button on Payments:** each paid, unrefunded row has a Refund button (reason, optional amount, cancel plan) that refunds that exact payment; refunded rows say so.
 - New **Data** page: 15 datasets with plain descriptions, key points, field meanings, a 10-row anonymous preview and (owner only) JSON, CSV, one zip and the dictionary. Optional dates and a "real account ids" tick; every download is audited.
 - User 360 has a **Data** tab: referral story and friend steps, plan history, orders and refunds, AI-check marks by topic, paper actions, browser problems, profile answers, and a per-person JSON download.
 - Referrals page: days given and a one-sentence story per trial, plan history and each friend's steps in the one-person view; the introduction text now states 9 days for Free and 28 days for paid members.

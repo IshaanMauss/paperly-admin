@@ -751,7 +751,7 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
-  refundTeacherPayment(teacherId: string, payload: { reason: string; amount_rupees?: number; cancel_plan: boolean }) {
+  refundTeacherPayment(teacherId: string, payload: { reason: string; amount_rupees?: number; cancel_plan: boolean; payment_id?: string }) {
     return request<{ refund: { refund_id: string; amount_paise: number | null; status: string | null }; plan_cancelled: boolean }>(
       `/admin/teachers/${encodeURIComponent(teacherId)}/billing/refund`,
       { method: "POST", body: JSON.stringify(payload) }
