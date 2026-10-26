@@ -1,0 +1,5 @@
+#!/bin/sh
+if grep -Eiq '(^|[[:space:]])co-authored-by:|Claude|Codex|ChatGPT' "$1"; then
+  echo "Commit blocked: co-author or assistant attribution is not allowed."
+  exit 1
+fi

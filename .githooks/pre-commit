@@ -1,4 +1,16 @@
 #!/bin/sh
+EXPECTED_NAME="Ishaan Chaturvedi"
+EXPECTED_EMAIL="ishaanchaturvedi444@gmail.com"
+AUTHOR_IDENT="$(git var GIT_AUTHOR_IDENT)"
+case "$AUTHOR_IDENT" in
+  "$EXPECTED_NAME <$EXPECTED_EMAIL>"*) ;;
+  *)
+    echo "Commit blocked: author must be $EXPECTED_NAME <$EXPECTED_EMAIL>."
+    echo "Current author: $AUTHOR_IDENT"
+    exit 1
+    ;;
+esac
+
 # Blocks a commit when a Markdown file breaks docs/markdown-writing-standard.md.
 if git diff --cached --name-only | grep -q '\.md$'; then
   python3 scripts/check_markdown_docs.py --strict || { echo "Markdown standard check failed. Fix the errors above."; exit 1; }
