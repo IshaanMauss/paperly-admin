@@ -165,7 +165,7 @@ export default function PaymentsPage() {
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Tile label="Collected (all time)" value={rupees(summary.collected_paise)} sub={`${summary.paid_count ?? 0} paid payments`} />
+          <Tile label="Collected (all time)" value={rupees(summary.collected_paise)} sub={`${summary.paid_count ?? 0} paid payments${summary.paid_without_amount_count ? `, ${summary.paid_without_amount_count} with no amount saved (check Razorpay)` : ""}`} />
           <Tile label="Last 30 days" value={rupees(summary.last_30_days_paise)} />
           <Tile label="Last 24 hours" value={rupees(summary.last_24_hours_paise)} />
           <Tile label="Checkouts not completed" value={String(summary.not_completed_count ?? 0)} sub="opened, never paid" />

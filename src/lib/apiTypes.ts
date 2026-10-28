@@ -157,6 +157,7 @@ export type AdminPaymentsResponse = {
     last_30_days_paise?: number;
     last_24_hours_paise?: number;
     not_completed_count?: number;
+    paid_without_amount_count?: number;
     usd_rate?: number;
   };
 };
@@ -469,6 +470,7 @@ export type OrganizationRequestRow = {
   requested_features: string[];
   notes: string | null;
   estimated_monthly_rupees: number | null;
+  estimated_monthly_usd?: number | null;
   status: string;
   organization_id: string | null;
   activation_link: string | null;
@@ -675,6 +677,7 @@ export type UserPaymentDetail = {
   billable: boolean;
   bill_number: string | null;
   amount_saved: boolean;
+  amount_usd?: number | null;
 };
 export type UserDisputeCheck = { label: string; result: "yes" | "no" | "unknown" | "info"; evidence: string };
 export type UserMessageRow = { at: string | null; channel: string; recipient: string; purpose: string; provider: string; status: string; error: string | null };
@@ -865,6 +868,7 @@ export type PlanConfigState = {
   working_plans: Record<string, PlanValues>;
   history: PlanConfigVersionMeta[];
   subscribers: Record<string, number>;
+  usd_rate?: number;
 };
 export type PlanConfigPreview = {
   has_draft: boolean;

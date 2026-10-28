@@ -88,7 +88,7 @@ export default function BillingAdminPage() {
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-purple-700">Revenue operations</p>
             <h2 className="mt-1 text-3xl font-extrabold text-slate-950">Billing and gateway readiness</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-              Server-side paged billing views for subscriptions and gateway events. Razorpay checkout still needs signed webhook verification before paid launch.
+              Server-side paged billing views for subscriptions and gateway events. Razorpay payments are confirmed by a signed webhook, and an unsigned or forged message is refused.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm font-extrabold text-slate-700">

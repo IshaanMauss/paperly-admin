@@ -22,10 +22,13 @@ import type {
 const PUBLISH_PHRASE = "PUBLISH PLAN CHANGES";
 const PRICE_PHRASE = "CHANGE PRICES";
 
-// One fixed display rate, same as the backend (plan_config_registry.USD_INR_RATE) and the customer site.
-const USD_INR_RATE = 97;
+// The dollar rate comes from the server with the plan data (the single source is the backend's USD_INR_RATE), so
+// this page can never show a different dollar price from the one customers are charged. Until the data has loaded
+// there is no rate, and prices are shown in rupees only.
+let displayRate: number | null = null;
 function usd(rupees: number) {
-  const dollars = Math.round((rupees / USD_INR_RATE) * 100) / 100;
+  if (!displayRate) return `Rs ${rupees.toLocaleString("en-IN")}`;
+  const dollars = Math.round((rupees / displayRate) * 100) / 100;
   return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(dollars) ? 0 : 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -37,7 +40,7 @@ function show(value: PlanFieldValue | undefined, field?: PlanField): string {
   if (value === null || value === undefined) return field?.kind === "int" ? "No limit" : "(empty)";
   if (typeof value === "boolean") return value ? "On" : "Off";
   if (Array.isArray(value)) return value.length ? `${value.length} item${value.length === 1 ? "" : "s"}` : "(none)";
-  if ((field?.key === "price_rupees" || field?.key === "offer_price_rupees") && typeof value === "number") return `${usd(value)} (Rs ${value}, GST included)`;
+  if ((field?.key === "price_rupees" || field?.key === "offer_price_rupees") && typeof value === "number") return displayRate ? `${usd(value)} (Rs ${value}, GST included)` : `Rs ${value} (GST included)`;
   if (field?.key === "max_total_discount_percent") return `${value}% of the everyday price`;
   if (field?.key === "standing_offer_percent") return `${value}% off`;
   return String(value);
@@ -215,6 +218,7 @@ function ChangeList({ changes }: { changes: PlanConfigChange[] }) {
 
 export default function PlansPage() {
   const [state, setState] = useState<PlanConfigState | null>(null);
+  displayRate = state?.usd_rate && state.usd_rate > 0 ? state.usd_rate : null;
   const [values, setValues] = useState<Record<string, PlanValues>>({});
   const [activePlan, setActivePlan] = useState("teacher_monthly");
   const [preview, setPreview] = useState<PlanConfigPreview | null>(null);

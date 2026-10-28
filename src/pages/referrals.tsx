@@ -384,7 +384,7 @@ export default function ReferralsPage() {
       <section className={panel}>
         <h2 className="text-xl font-extrabold text-slate-950">Refer and Unlock Yearly</h2>
         <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-          A member who brings in two friends (each with a verified email who has exported a paper) gets Yearly: 9 days for a Free member, 28 days for a Monthly or Quarterly member. A friend gets two months off Yearly for 14 days. Only one offer can be used on a payment: a promo code, the friend discount and Keep Yearly never combine. Ending a trial early, switching off a code or withdrawing a discount needs a written reason.
+          A member who brings in two friends (each with a verified email who has exported a paper) gets Yearly for 28 days (a Free, Monthly or Quarterly member; a Yearly member has nothing to earn). A friend gets two months off Yearly for 14 days. Only one offer can be used on a payment: a promo code, the friend discount and Keep Yearly never combine. Ending a trial early, switching off a code or withdrawing a discount needs a written reason.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {TABS.map((t) => (

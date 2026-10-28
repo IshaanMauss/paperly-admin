@@ -23,7 +23,8 @@ function usd(rupees: number, rate: number) {
 function priceLine(options: OfferOptions, planCode: string, discount: number) {
   const price = options.prices?.[planCode];
   if (!price) return null;
-  const rate = options.usd_rate || 97;
+  const rate = options.usd_rate;
+  if (!rate) return null;
   const everyday = price.everyday_rupees ?? price.list_rupees;
   const limit = price.max_total_discount_percent ?? 100;
   const effective = Math.min(discount, limit);

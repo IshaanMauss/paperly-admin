@@ -1,8 +1,9 @@
 import type { TemplateSummary } from "@/lib/apiClient";
 import { subtopicsFor } from "@/lib/taxonomy";
+import { labelCase } from "@/lib/labelStyle";
 
 export function titleCase(value: string) {
-  return value.replace(/\b\w/g, (char) => char.toUpperCase());
+  return labelCase(value);
 }
 
 export function subtopicLabel(topic: string, value?: string | null) {
